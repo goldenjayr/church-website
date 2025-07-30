@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  blogPosts BlogPost[]
+  events    Event[]
+}
+
+model DailyVerse {
+  id        String   @id @default(cuid())
+  verse     String
+  reference String
+  date      DateTime @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogPost {
+  id          String      @id @default(cuid())
+  title       String
+  slug        String      @unique
+  content     String
+  excerpt     String?
+  published   Boolean     @default(false)
+  featured    Boolean     @default(false)
+  tags        String[]
+  category    BlogCategory @default(DEVOTIONAL)
+  authorId    String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id])
+}
+
+model Doctrine {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String
+  order       Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  date        DateTime
+  time        String
+  location    String
+  image       String?
+  maxAttendees Int?
+  published   Boolean   @default(true)
+  authorId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id])
+  rsvps  EventRSVP[]
+}
+
+model EventRSVP {
+  id      String @id @default(cuid())
+  eventId String
+  name    String
+  email   String
+  phone   String?
+  message String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, email])
+}
+
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  category    String   @default("general")
+  eventDate   DateTime?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SabbathSchedule {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  theme       String
+  speaker     String
+  scripture   String?
+  notes       String?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Sermon {
+  id          String   @id @default(cuid())
+  title       String
+  speaker     String
+  date        DateTime
+  scripture   String?
+  description String?
+  videoUrl    String?
+  audioUrl    String?
+  transcript  String?
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Ministry {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  leader      String?
+  meetingTime String?
+  location    String?
+  image       String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PrayerRequest {
+  id        String      @id @default(cuid())
+  name      String
+  email     String?
+  request   String
+  isPublic  Boolean     @default(false)
+  status    PrayerStatus @default(ACTIVE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  content   String
+  image     String?
+  published Boolean  @default(false)
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Volunteer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  ministry    String
+  availability String?
+  skills      String?
+  message     String?
+  status      VolunteerStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BlogCategory {
+  DEVOTIONAL
+  SERMON
+  ARTICLE
+  ANNOUNCEMENT
+}
+
+enum PrayerStatus {
+  ACTIVE
+  ANSWERED
+  ARCHIVED
+}
+
+enum VolunteerStatus {
+  PENDING
+  APPROVED
+  CONTACTED
+  DECLINED
+}
