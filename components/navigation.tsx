@@ -27,7 +27,7 @@ export function Navigation() {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-xl text-slate-800">Divine Jesus</span>
+            <span className="font-bold text-xl text-slate-800">Divine Jesus Church</span>
           </Link>
 
           {/* Desktop Navigation */}

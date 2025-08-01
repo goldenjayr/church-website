@@ -12,7 +12,7 @@ export function HeroSection() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/placeholder.svg?height=1080&width=1920')`,
+          backgroundImage: `url('/hero.jpg?height=1080&width=1920')`,
         }}
       >
         <div className="absolute inset-0 bg-black/40" />
@@ -28,7 +28,7 @@ export function HeroSection() {
         >
           Welcome to
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
-            Divine Jesus
+            Divine Jesus Church
           </span>
         </motion.h1>
 
@@ -71,7 +71,7 @@ export function HeroSection() {
           className="mt-12 text-center"
         >
           <p className="text-lg text-gray-200 mb-2">Join us for worship</p>
-          <p className="text-2xl font-semibold">Saturdays at 10:00 AM</p>
+          <p className="text-2xl font-semibold">Saturdays at 8:00 AM</p>
         </motion.div>
       </div>
 

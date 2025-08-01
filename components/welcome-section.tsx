@@ -38,7 +38,7 @@ export function WelcomeSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-6">Why Choose Grace Community?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-6">Why Choose Divine Jesus Church?</h2>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto">
             We're more than just a church – we're a family united by faith, hope, and love, committed to growing
             together and serving our community.

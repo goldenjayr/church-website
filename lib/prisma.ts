@@ -9,7 +9,7 @@ export interface User {
 
 export interface DailyVerse {
   id: string
-  verse: string
+  text: string
   reference: string
   date: string
 }

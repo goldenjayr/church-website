@@ -4,14 +4,14 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen } from "lucide-react"
-import { getDailyVerse, type DailyVerse } from "@/lib/prisma"
+import { IVerse } from "@/lib/types"
 
-export function VerseOfTheDay() {
-  const [verse, setVerse] = useState<DailyVerse | null>(null)
+interface IProps {
+  verse: IVerse
+}
 
-  useEffect(() => {
-    getDailyVerse().then(setVerse)
-  }, [])
+export function VerseOfTheDay(props: IProps) {
+  const { verse } = props
 
   if (!verse) {
     return (

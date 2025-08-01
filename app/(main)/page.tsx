@@ -1,20 +1,20 @@
-"use client"
-
-import { motion } from "framer-motion"
 import { HeroSection } from "@/components/hero-section"
 import { VerseOfTheDay } from "@/components/verse-of-the-day"
 import { UpcomingEvents } from "@/components/upcoming-events"
 import { QuickLinks } from "@/components/quick-links"
 import { WelcomeSection } from "@/components/welcome-section"
+import { getRandomVerse } from "@/lib/api"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const random_verse = await getRandomVerse()
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+    <div >
       <HeroSection />
-      <VerseOfTheDay />
+      <VerseOfTheDay verse={random_verse} />
       <WelcomeSection />
       <QuickLinks />
       <UpcomingEvents />
-    </motion.div>
+    </div>
   )
 }
