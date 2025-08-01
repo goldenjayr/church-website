@@ -7,22 +7,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Eye, FileText } from "lucide-react"
-import { getCurrentUser, mockData, type User, type BlogPost } from "@/lib/prisma"
+import { useRouter } from "next/navigation"
+import { getCurrentUser } from "@/lib/auth-actions"
+import type { User } from "@prisma/client"
+import { getBlogPosts } from "@/lib/blog-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 
 export default function AdminBlogPage() {
+  const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("ALL")
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(mockData.blogPosts)
+  const [blogPosts, setBlogPosts] = useState<any[]>([])
 
   useEffect(() => {
-    getCurrentUser().then((currentUser) => {
+    const loadData = async () => {
+      const currentUser = await getCurrentUser()
       setUser(currentUser)
+      
+      if (currentUser && currentUser.role === "ADMIN") {
+        const posts = await getBlogPosts()
+        setBlogPosts(posts)
+      }
+      
       setLoading(false)
-    })
+    }
+
+    loadData()
   }, [])
 
   const handleLogin = (loggedInUser: User) => {
@@ -36,7 +49,7 @@ export default function AdminBlogPage() {
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
+      (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "ALL" || post.category === selectedCategory
     return matchesSearch && matchesCategory
   })
@@ -65,7 +78,10 @@ export default function AdminBlogPage() {
               <h1 className="text-3xl font-bold text-slate-900">Blog Posts</h1>
               <p className="text-slate-600 mt-2">Manage your church blog content</p>
             </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => router.push("/admin/blog/new")}
+            >
               <Plus className="w-4 h-4 mr-2" />
               New Post
             </Button>
@@ -123,12 +139,12 @@ export default function AdminBlogPage() {
                           <div>
                             <h3 className="text-xl font-bold text-slate-900">{post.title}</h3>
                             <p className="text-sm text-slate-500">
-                              By {post.author} • {new Date(post.createdAt).toLocaleDateString()}
+                              By {post.author?.name || 'Unknown Author'} • {new Date(post.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
 
-                        <p className="text-slate-600 mb-4 line-clamp-2">{post.excerpt}</p>
+                        <p className="text-slate-600 mb-4 line-clamp-2">{post.excerpt || 'No excerpt available'}</p>
 
                         <div className="flex items-center space-x-3">
                           <Badge variant={post.published ? "default" : "secondary"}>
@@ -150,7 +166,12 @@ export default function AdminBlogPage() {
                         <Button size="sm" variant="ghost" className="text-blue-600 hover:text-blue-700">
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-green-600 hover:text-green-700"
+                          onClick={() => router.push(`/admin/blog/${post.id}/edit`)}
+                        >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700">

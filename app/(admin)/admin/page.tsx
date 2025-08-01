@@ -19,7 +19,8 @@ import {
   Edit,
   Eye,
 } from "lucide-react"
-import { getCurrentUser, setCurrentUser, type User } from "@/lib/prisma"
+import { getCurrentUser, setCurrentUser } from "@/lib/auth-actions"
+import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 
@@ -144,12 +145,11 @@ export default function AdminDashboard() {
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser)
-    setCurrentUser(loggedInUser)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await setCurrentUser(null)
     setUser(null)
-    setCurrentUser(null)
   }
 
   if (loading) {

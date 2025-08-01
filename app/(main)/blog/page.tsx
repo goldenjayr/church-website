@@ -1,98 +1,50 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Calendar, User, Tag, MessageCircle } from "lucide-react"
+import { Search, Calendar, User, Tag, MessageCircle, BookOpen } from "lucide-react"
 import Link from "next/link"
+import { getPublishedBlogPosts } from "@/lib/public-blog-actions"
+import type { BlogPost, User as UserType } from "@prisma/client"
+import { BlogListSkeleton } from "@/components/blog/blog-skeleton"
 
-// Mock data - this would come from your database
-const blogPosts = [
-  {
-    id: 1,
-    title: "Walking in Faith Daily",
-    slug: "walking-in-faith-daily",
-    excerpt:
-      "Discover how to make faith a daily practice in your life and maintain a strong relationship with Christ throughout the week.",
-    content: "Faith is not just a Sunday experience, but a daily walk with God...",
-    author: "Pastor John Smith",
-    date: "2024-01-10",
-    category: "Devotional",
-    tags: ["faith", "daily-walk", "spiritual-growth"],
-    featured: true,
-    image: "/placeholder.svg?height=300&width=500",
-  },
-  {
-    id: 2,
-    title: "The Power of Prayer",
-    slug: "the-power-of-prayer",
-    excerpt:
-      "Learn about the transformative power of prayer in your spiritual journey and how it can change your life.",
-    content: "Prayer is our direct line of communication with God...",
-    author: "Elder Mary Johnson",
-    date: "2024-01-08",
-    category: "Devotional",
-    tags: ["prayer", "spiritual-discipline", "communication"],
-    featured: false,
-    image: "/placeholder.svg?height=300&width=500",
-  },
-  {
-    id: 3,
-    title: "Serving Others with Love",
-    slug: "serving-others-with-love",
-    excerpt:
-      "Practical ways to serve your community and demonstrate Christ's love through acts of service and kindness.",
-    content: "Jesus taught us that the greatest among us are those who serve...",
-    author: "Sarah Wilson",
-    date: "2024-01-05",
-    category: "Article",
-    tags: ["service", "community", "love", "outreach"],
-    featured: false,
-    image: "/placeholder.svg?height=300&width=500",
-  },
-  {
-    id: 4,
-    title: "Understanding God's Grace",
-    slug: "understanding-gods-grace",
-    excerpt: "Explore the depth of God's grace and how it transforms our lives and relationships with others.",
-    content: "Grace is the unmerited favor of God...",
-    author: "Pastor John Smith",
-    date: "2024-01-03",
-    category: "Sermon",
-    tags: ["grace", "salvation", "transformation"],
-    featured: true,
-    image: "/placeholder.svg?height=300&width=500",
-  },
-  {
-    id: 5,
-    title: "Building Strong Families",
-    slug: "building-strong-families",
-    excerpt: "Biblical principles for creating loving, supportive families that honor God and strengthen communities.",
-    content: "The family is the foundation of society...",
-    author: "Lisa Brown",
-    date: "2024-01-01",
-    category: "Article",
-    tags: ["family", "relationships", "parenting", "marriage"],
-    featured: false,
-    image: "/placeholder.svg?height=300&width=500",
-  },
-]
-
-const categories = ["All", "Devotional", "Sermon", "Article", "Announcement"]
-const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
+type BlogPostWithAuthor = BlogPost & {
+  author: UserType
+}
 
 export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [blogPosts, setBlogPosts] = useState<BlogPostWithAuthor[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadBlogPosts = async () => {
+      try {
+        const posts = await getPublishedBlogPosts()
+        setBlogPosts(posts as BlogPostWithAuthor[])
+      } catch (error) {
+        console.error("Error loading blog posts:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadBlogPosts()
+  }, [])
+
+  const categories = ["All", "DEVOTIONAL", "SERMON", "ARTICLE", "ANNOUNCEMENT"]
+  const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
 
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
+      (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
     const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags.includes(tag))
 
@@ -101,6 +53,57 @@ export default function BlogPage() {
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+  }
+
+  const getCategoryDisplayName = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      "All": "All",
+      "DEVOTIONAL": "Devotional", 
+      "SERMON": "Sermon",
+      "ARTICLE": "Article",
+      "ANNOUNCEMENT": "Announcement"
+    }
+    return categoryMap[category] || category
+  }
+
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50"
+      >
+        {/* Hero Section */}
+        <section className="py-20 bg-gradient-to-r from-blue-600 to-green-600 text-white">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageCircle className="w-8 h-8" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">Church Blog</h1>
+            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
+              Devotionals, articles, and insights to encourage your spiritual journey
+            </p>
+          </div>
+        </section>
+
+        {/* Loading Content */}
+        <section className="py-12 bg-white border-b">
+          <div className="max-w-6xl mx-auto px-4">
+            <div className="text-center mb-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-slate-600">Loading amazing content...</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12">
+          <div className="max-w-6xl mx-auto px-4">
+            <BlogListSkeleton />
+          </div>
+        </section>
+      </motion.div>
+    )
   }
 
   return (
@@ -150,7 +153,7 @@ export default function BlogPage() {
                   onClick={() => setSelectedCategory(category)}
                   className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
                 >
-                  {category}
+                  {getCategoryDisplayName(category)}
                 </Button>
               ))}
             </div>
@@ -199,34 +202,40 @@ export default function BlogPage() {
                     className={`h-full border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden ${post.featured ? "ring-2 ring-blue-200" : ""}`}
                   >
                     <div className="aspect-video bg-gradient-to-br from-blue-100 to-green-100 relative">
-                      <img
-                        src={post.image || "/placeholder.svg"}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                      />
+                      {post.imageUrl ? (
+                        <img
+                          src={post.imageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <BookOpen className="w-16 h-16 text-blue-400" />
+                        </div>
+                      )}
                       {post.featured && (
                         <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
                           Featured
                         </div>
                       )}
                       <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                        <Badge variant="secondary">{post.category}</Badge>
+                        <Badge variant="secondary">{getCategoryDisplayName(post.category)}</Badge>
                       </div>
                     </div>
 
                     <CardContent className="p-6">
                       <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{post.title}</h3>
 
-                      <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">{post.excerpt}</p>
+                      <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">{post.excerpt || 'No excerpt available'}</p>
 
                       <div className="flex items-center space-x-4 text-sm text-slate-500 mb-4">
                         <div className="flex items-center space-x-1">
                           <User className="w-4 h-4" />
-                          <span>{post.author}</span>
+                          <span>{post.author?.name || 'Unknown Author'}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
-                          <span>{new Date(post.date).toLocaleDateString()}</span>
+                          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
 

@@ -34,32 +34,36 @@ model DailyVerse {
 }
 
 model BlogPost {
-  id          String      @id @default(cuid())
-  title       String
-  slug        String      @unique
-  content     String
-  excerpt     String?
-  published   Boolean     @default(false)
-  featured    Boolean     @default(false)
-  tags        String[]
-  category    BlogCategory @default(DEVOTIONAL)
-  authorId    String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  content         String      // Rich text content (HTML)
+  excerpt         String?
+  metaDescription String?     // For SEO
+  imageUrl        String?     // Featured image
+  published       Boolean     @default(false)
+  featured        Boolean     @default(false)
+  tags            String[]
+  category        BlogCategory @default(DEVOTIONAL)
+  contentType     ContentType @default(HTML)
+  authorId        String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   // Relations
   author User @relation(fields: [authorId], references: [id])
 }
 
 model Doctrine {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   title       String
-  content     String
+  content     String      // Rich text content (HTML)
   category    String
-  order       Int      @default(0)
-  published   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int         @default(0)
+  published   Boolean     @default(true)
+  contentType ContentType @default(HTML)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 model Event {
@@ -207,4 +211,10 @@ enum VolunteerStatus {
   APPROVED
   CONTACTED
   DECLINED
+}
+
+enum ContentType {
+  HTML
+  MARKDOWN
+  PLAIN_TEXT
 }

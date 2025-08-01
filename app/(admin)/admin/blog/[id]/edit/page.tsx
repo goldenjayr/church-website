@@ -1,0 +1,362 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { motion } from "framer-motion"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { ArrowLeft, Save, Eye, X, Trash2 } from "lucide-react"
+import { getCurrentUser } from "@/lib/auth-actions"
+import type { User } from "@prisma/client"
+import { LoginForm } from "@/components/admin/login-form"
+import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { RichTextEditor } from "@/components/admin/rich-text-editor"
+import { getBlogPost, updateBlogPost, deleteBlogPost } from "@/lib/blog-actions"
+import { BlogCategory } from "@prisma/client"
+import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+export default function EditBlogPostPage() {
+  const router = useRouter()
+  const params = useParams()
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    content: "",
+    excerpt: "",
+    metaDescription: "",
+    imageUrl: "",
+    published: false,
+    featured: false,
+    category: "DEVOTIONAL" as BlogCategory,
+    tags: [] as string[],
+  })
+  
+  const [newTag, setNewTag] = useState("")
+
+  useEffect(() => {
+    const loadData = async () => {
+      const currentUser = await getCurrentUser()
+      setUser(currentUser)
+      
+      if (currentUser && params.id) {
+        const post = await getBlogPost(params.id as string)
+        if (post) {
+          setFormData({
+            title: post.title,
+            content: post.content,
+            excerpt: post.excerpt || "",
+            metaDescription: post.metaDescription || "",
+            imageUrl: post.imageUrl || "",
+            published: post.published,
+            featured: post.featured,
+            category: post.category,
+            tags: post.tags,
+          })
+        } else {
+          toast.error("Blog post not found")
+          router.push("/admin/blog")
+        }
+      }
+      
+      setLoading(false)
+    }
+
+    loadData()
+  }, [params.id, router])
+
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser)
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+  }
+
+  const addTag = () => {
+    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()]
+      }))
+      setNewTag("")
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !params.id) return
+
+    setSaving(true)
+    try {
+      const result = await updateBlogPost({
+        id: params.id as string,
+        ...formData,
+        authorId: user.id,
+      })
+
+      if (result.success) {
+        toast.success("Blog post updated successfully!")
+        router.push("/admin/blog")
+      } else {
+        toast.error(result.error || "Failed to update blog post")
+      }
+    } catch (error) {
+      toast.error("An error occurred while updating the blog post")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!params.id) return
+
+    setDeleting(true)
+    try {
+      const result = await deleteBlogPost(params.id as string)
+
+      if (result.success) {
+        toast.success("Blog post deleted successfully!")
+        router.push("/admin/blog")
+      } else {
+        toast.error(result.error || "Failed to delete blog post")
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the blog post")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (!user || user.role !== "ADMIN") {
+    return <LoginForm onLogin={handleLogin} />
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <AdminNavigation user={user} onLogout={handleLogout} />
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.back()}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Edit Blog Post</h1>
+                <p className="text-slate-600 mt-2">Update your blog post</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="text-red-600 hover:text-red-700">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the blog post.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      {deleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button
+                variant="outline"
+                onClick={() => setFormData(prev => ({ ...prev, published: !prev.published }))}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                {formData.published ? "Published" : "Draft"}
+              </Button>
+              <Button
+                type="submit"
+                form="blog-post-form"
+                disabled={saving}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? "Saving..." : "Update Post"}
+              </Button>
+            </div>
+          </div>
+
+          <form id="blog-post-form" onSubmit={handleSubmit} className="space-y-6">
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle>Post Details</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter post title..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="excerpt">Excerpt</Label>
+                  <Textarea
+                    id="excerpt"
+                    value={formData.excerpt}
+                    onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+                    placeholder="Brief description of the post..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value: BlogCategory) => setFormData(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DEVOTIONAL">Devotional</SelectItem>
+                        <SelectItem value="SERMON">Sermon</SelectItem>
+                        <SelectItem value="ARTICLE">Article</SelectItem>
+                        <SelectItem value="ANNOUNCEMENT">Announcement</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="imageUrl">Featured Image URL</Label>
+                    <Input
+                      id="imageUrl"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="metaDescription">Meta Description (SEO)</Label>
+                  <Textarea
+                    id="metaDescription"
+                    value={formData.metaDescription}
+                    onChange={(e) => setFormData(prev => ({ ...prev, metaDescription: e.target.value }))}
+                    placeholder="SEO description for search engines..."
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <Label>Tags</Label>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <Input
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      placeholder="Add a tag..."
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                    />
+                    <Button type="button" variant="outline" onClick={addTag}>
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {formData.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary" className="flex items-center space-x-1">
+                        <span>{tag}</span>
+                        <X
+                          className="w-3 h-3 cursor-pointer"
+                          onClick={() => removeTag(tag)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="featured"
+                      checked={formData.featured}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, featured: checked }))}
+                    />
+                    <Label htmlFor="featured">Featured Post</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle>Content</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RichTextEditor
+                  content={formData.content}
+                  onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  placeholder="Start writing your blog post..."
+                />
+              </CardContent>
+            </Card>
+          </form>
+        </motion.div>
+      </main>
+    </div>
+  )
+}

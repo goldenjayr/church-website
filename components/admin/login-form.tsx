@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Lock, Mail, Heart } from "lucide-react"
-import { authenticateUser, type User } from "@/lib/prisma"
+import { authenticateUser, setCurrentUser } from "@/lib/auth-actions"
+import type { User } from "@prisma/client"
 
 interface LoginFormProps {
   onLogin: (user: User) => void
@@ -30,6 +31,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
     try {
       const user = await authenticateUser(email, password)
       if (user) {
+        await setCurrentUser(user)
         onLogin(user)
       } else {
         setError("Invalid email or password")
