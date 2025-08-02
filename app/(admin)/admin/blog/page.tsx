@@ -28,7 +28,7 @@ export default function AdminBlogPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         const [posts, categoriesData] = await Promise.all([
           getBlogPosts(),
@@ -37,7 +37,7 @@ export default function AdminBlogPage() {
         setBlogPosts(posts)
         setCategories(categoriesData)
       }
-      
+
       setLoading(false)
     }
 
@@ -110,25 +110,24 @@ export default function AdminBlogPage() {
           {/* Filters */}
           <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
                       placeholder="Search posts..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 transition-all duration-200"
+                      className="pl-10 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 transition-all duration-200 w-full"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 overflow-x-auto pb-2">
                   <Button
                     variant={selectedCategory === "ALL" ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedCategory("ALL")}
-                    className={selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700" : ""}
-                  >
+                    className={`whitespace-nowrap ${selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}>
                     ALL
                   </Button>
                   {categories.filter(cat => cat.active).map((category) => (
@@ -137,8 +136,9 @@ export default function AdminBlogPage() {
                       variant={selectedCategory === category.name ? "default" : "outline"}
                       size="sm"
                       onClick={() => setSelectedCategory(category.name)}
-                      className={selectedCategory === category.name ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      className={`whitespace-nowrap ${selectedCategory === category.name ? "text-white" : ""}`}
                       style={{
+                        backgroundColor: selectedCategory === category.name ? category.color : undefined,
                         borderColor: selectedCategory !== category.name ? category.color : undefined,
                         color: selectedCategory !== category.name ? category.color : undefined
                       }}
@@ -183,11 +183,11 @@ export default function AdminBlogPage() {
                             {post.published ? "Published" : "Draft"}
                           </Badge>
                           {post.category && (
-                            <Badge 
-                              variant="outline" 
-                              style={{ 
+                            <Badge
+                              variant="outline"
+                              style={{
                                 borderColor: post.category.color,
-                                color: post.category.color 
+                                color: post.category.color
                               }}
                             >
                               {post.category.name}
@@ -205,18 +205,18 @@ export default function AdminBlogPage() {
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
                           onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
                           title="Preview Post"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="text-green-600 hover:text-green-700"
                           onClick={() => router.push(`/admin/blog/${post.id}/edit`)}
                         >
