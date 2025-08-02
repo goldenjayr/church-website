@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Calendar, User, Tag, MessageCircle, BookOpen } from "lucide-react"
 import Link from "next/link"
-import { getPublishedBlogPosts } from "@/lib/public-blog-actions"
-import type { BlogPost, User as UserType } from "@prisma/client"
+import { getPublishedBlogPosts, getPublishedBlogCategories } from "@/lib/public-blog-actions"
+import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 import { BlogListSkeleton } from "@/components/blog/blog-skeleton"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
+  category: BlogCategory | null
 }
 
 export default function BlogPage() {
@@ -21,31 +22,36 @@ export default function BlogPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [blogPosts, setBlogPosts] = useState<BlogPostWithAuthor[]>([])
+  const [categories, setCategories] = useState<BlogCategory[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadBlogPosts = async () => {
+    const loadData = async () => {
       try {
-        const posts = await getPublishedBlogPosts()
+        const [posts, categoriesData] = await Promise.all([
+          getPublishedBlogPosts(),
+          getPublishedBlogCategories()
+        ])
         setBlogPosts(posts as BlogPostWithAuthor[])
+        setCategories(categoriesData as BlogCategory[])
       } catch (error) {
-        console.error("Error loading blog posts:", error)
+        console.error("Error loading blog data:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadBlogPosts()
+    loadData()
   }, [])
 
-  const categories = ["All", "DEVOTIONAL", "SERMON", "ARTICLE", "ANNOUNCEMENT"]
+  const categoryOptions = ["All", ...categories.map(cat => cat.name)]
   const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
 
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory
+    const matchesCategory = selectedCategory === "All" || post.category?.name === selectedCategory
     const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags.includes(tag))
 
     return matchesSearch && matchesCategory && matchesTags
@@ -145,17 +151,24 @@ export default function BlogPage() {
 
             {/* Categories */}
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
-                >
-                  {getCategoryDisplayName(category)}
-                </Button>
-              ))}
+              {categoryOptions.map((category) => {
+                const categoryData = categories.find(cat => cat.name === category);
+                return (
+                  <Button
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory(category)}
+                    className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
+                    style={{
+                      borderColor: selectedCategory !== category && categoryData ? categoryData.color : undefined,
+                      color: selectedCategory !== category && categoryData ? categoryData.color : undefined
+                    }}
+                  >
+                    {category}
+                  </Button>
+                )
+              })}
             </div>
           </div>
 
@@ -218,9 +231,20 @@ export default function BlogPage() {
                           Featured
                         </div>
                       )}
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                        <Badge variant="secondary">{getCategoryDisplayName(post.category)}</Badge>
-                      </div>
+                      {post.category && (
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
+                          <Badge 
+                            variant="secondary"
+                            style={{ 
+                              backgroundColor: `${post.category.color}20`,
+                              color: post.category.color,
+                              borderColor: post.category.color 
+                            }}
+                          >
+                            {post.category.name}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
 
                     <CardContent className="p-6">

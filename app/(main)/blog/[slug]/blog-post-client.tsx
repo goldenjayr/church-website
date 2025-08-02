@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, User, Tag, ArrowLeft, Share2, Heart, MessageCircle, Clock } from "lucide-react"
 import Link from "next/link"
-import type { BlogPost, User as UserType } from "@prisma/client"
+import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
+  category: BlogCategory | null
 }
 
 interface BlogPostClientProps {
@@ -18,14 +19,8 @@ interface BlogPostClientProps {
 }
 
 export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
-  const getCategoryDisplayName = (category: string) => {
-    const categoryMap: { [key: string]: string } = {
-      "DEVOTIONAL": "Devotional", 
-      "SERMON": "Sermon",
-      "ARTICLE": "Article",
-      "ANNOUNCEMENT": "Announcement"
-    }
-    return categoryMap[category] || category
+  const getCategoryDisplayName = (category: BlogCategory | null) => {
+    return category?.name || 'Uncategorized'
   }
 
   const estimateReadingTime = (content: string) => {
@@ -54,7 +49,18 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             </Button>
 
             <div className="flex items-center space-x-3 mb-4">
-              <Badge variant="outline">{getCategoryDisplayName(post.category)}</Badge>
+              {post.category && (
+                <Badge 
+                  variant="outline"
+                  style={{ 
+                    borderColor: post.category.color,
+                    color: post.category.color,
+                    backgroundColor: `${post.category.color}10`
+                  }}
+                >
+                  {post.category.name}
+                </Badge>
+              )}
               {post.featured && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
             </div>
 
@@ -100,7 +106,24 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             <Card className="border-none shadow-lg mb-8">
               <CardContent className="p-8">
                 <div
-                  className="prose prose-lg max-w-none prose-headings:text-slate-800 prose-p:text-slate-700 prose-p:leading-relaxed prose-strong:text-slate-800 prose-blockquote:border-l-blue-500 prose-blockquote:bg-blue-50 prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-ul:text-slate-700 prose-ol:text-slate-700"
+                  className="blog-content prose prose-lg max-w-none 
+                    prose-headings:text-slate-800 prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8
+                    prose-h1:text-4xl prose-h1:leading-tight prose-h1:border-b prose-h1:border-slate-200 prose-h1:pb-4
+                    prose-h2:text-3xl prose-h2:leading-tight prose-h2:text-blue-700
+                    prose-h3:text-2xl prose-h3:leading-tight prose-h3:text-slate-700
+                    prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-4
+                    prose-strong:text-slate-900 prose-strong:font-semibold
+                    prose-em:text-slate-700 prose-em:italic
+                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 
+                    prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-blockquote:my-6 prose-blockquote:italic
+                    prose-blockquote:text-blue-800 prose-blockquote:font-medium
+                    prose-ul:text-slate-700 prose-ul:mb-4 prose-ul:list-disc prose-ul:pl-6
+                    prose-ol:text-slate-700 prose-ol:mb-4 prose-ol:list-decimal prose-ol:pl-6
+                    prose-li:mb-2 prose-li:leading-relaxed
+                    prose-a:text-blue-600 prose-a:hover:text-blue-800 prose-a:underline
+                    prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-2 prose-code:py-1 prose-code:rounded
+                    prose-hr:border-slate-300 prose-hr:my-8
+                  "
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
               </CardContent>
@@ -146,9 +169,19 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                   >
                     <Card className="h-full border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <CardContent className="p-6">
-                        <Badge variant="outline" className="mb-3">
-                          {getCategoryDisplayName(relatedPost.category)}
-                        </Badge>
+                        {relatedPost.category && (
+                          <Badge 
+                            variant="outline" 
+                            className="mb-3"
+                            style={{ 
+                              borderColor: relatedPost.category.color,
+                              color: relatedPost.category.color,
+                              backgroundColor: `${relatedPost.category.color}10`
+                            }}
+                          >
+                            {relatedPost.category.name}
+                          </Badge>
+                        )}
                         <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{relatedPost.title}</h3>
                         <p className="text-slate-600 mb-4 line-clamp-3">{relatedPost.excerpt || 'No excerpt available'}</p>
                         <div className="flex items-center justify-between text-sm text-slate-500 mb-4">

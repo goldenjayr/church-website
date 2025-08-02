@@ -95,3 +95,21 @@ export async function getDoctrine(id: string) {
     return null
   }
 }
+
+export async function updateDoctrineOrders(doctrineIds: string[]) {
+  try {
+    const updatePromises = doctrineIds.map((id, index) =>
+      prisma.doctrine.update({
+        where: { id },
+        data: { order: index },
+      })
+    )
+
+    await Promise.all(updatePromises)
+    revalidatePath("/admin/doctrines")
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating doctrine orders:", error)
+    return { success: false, error: "Failed to update doctrine orders" }
+  }
+}

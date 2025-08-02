@@ -6,11 +6,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Eye, FileText } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, FileText, Tag } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { getBlogPosts } from "@/lib/blog-actions"
+import { getBlogCategories } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 
@@ -21,6 +22,7 @@ export default function AdminBlogPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("ALL")
   const [blogPosts, setBlogPosts] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
 
   useEffect(() => {
     const loadData = async () => {
@@ -28,8 +30,12 @@ export default function AdminBlogPage() {
       setUser(currentUser)
       
       if (currentUser && currentUser.role === "ADMIN") {
-        const posts = await getBlogPosts()
+        const [posts, categoriesData] = await Promise.all([
+          getBlogPosts(),
+          getBlogCategories()
+        ])
         setBlogPosts(posts)
+        setCategories(categoriesData)
       }
       
       setLoading(false)
@@ -50,7 +56,7 @@ export default function AdminBlogPage() {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "ALL" || post.category === selectedCategory
+    const matchesCategory = selectedCategory === "ALL" || post.category?.name === selectedCategory
     return matchesSearch && matchesCategory
   })
 
@@ -67,7 +73,7 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <AdminNavigation user={user} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -78,17 +84,31 @@ export default function AdminBlogPage() {
               <h1 className="text-3xl font-bold text-slate-900">Blog Posts</h1>
               <p className="text-slate-600 mt-2">Manage your church blog content</p>
             </div>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700"
-              onClick={() => router.push("/admin/blog/new")}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Post
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 transition-all duration-200"
+                onClick={() => router.push("/admin/blog/categories")}
+              >
+                <Tag className="w-4 h-4 mr-2" />
+                Manage Categories
+              </Button>
+              <Button
+                className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                onClick={() => router.push("/admin/blog/new")}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="bg-white/20 rounded-full p-1">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <span className="font-semibold">New Post</span>
+                </div>
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}
-          <Card className="border-none shadow-lg mb-8">
+          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="flex-1">
@@ -98,20 +118,32 @@ export default function AdminBlogPage() {
                       placeholder="Search posts..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 border-slate-200 focus:border-emerald-400 focus:ring-emerald-400 transition-all duration-200"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  {["ALL", "DEVOTIONAL", "SERMON", "ARTICLE", "ANNOUNCEMENT"].map((category) => (
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant={selectedCategory === "ALL" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedCategory("ALL")}
+                    className={selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  >
+                    ALL
+                  </Button>
+                  {categories.filter(cat => cat.active).map((category) => (
                     <Button
-                      key={category}
-                      variant={selectedCategory === category ? "default" : "outline"}
+                      key={category.id}
+                      variant={selectedCategory === category.name ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedCategory(category)}
-                      className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      onClick={() => setSelectedCategory(category.name)}
+                      className={selectedCategory === category.name ? "bg-blue-600 hover:bg-blue-700" : ""}
+                      style={{
+                        borderColor: selectedCategory !== category.name ? category.color : undefined,
+                        color: selectedCategory !== category.name ? category.color : undefined
+                      }}
                     >
-                      {category}
+                      {category.name}
                     </Button>
                   ))}
                 </div>
@@ -150,7 +182,17 @@ export default function AdminBlogPage() {
                           <Badge variant={post.published ? "default" : "secondary"}>
                             {post.published ? "Published" : "Draft"}
                           </Badge>
-                          <Badge variant="outline">{post.category}</Badge>
+                          {post.category && (
+                            <Badge 
+                              variant="outline" 
+                              style={{ 
+                                borderColor: post.category.color,
+                                color: post.category.color 
+                              }}
+                            >
+                              {post.category.name}
+                            </Badge>
+                          )}
                           {post.featured && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
                           <div className="flex space-x-1">
                             {post.tags.slice(0, 3).map((tag) => (
@@ -163,7 +205,13 @@ export default function AdminBlogPage() {
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
-                        <Button size="sm" variant="ghost" className="text-blue-600 hover:text-blue-700">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                          onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                          title="Preview Post"
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                         <Button 

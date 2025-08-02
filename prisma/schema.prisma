@@ -44,14 +44,30 @@ model BlogPost {
   published       Boolean     @default(false)
   featured        Boolean     @default(false)
   tags            String[]
-  category        BlogCategory @default(DEVOTIONAL)
+  categoryId      String?     // Changed from enum to relation
   contentType     ContentType @default(HTML)
   authorId        String
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   // Relations
-  author User @relation(fields: [authorId], references: [id])
+  author   User @relation(fields: [authorId], references: [id])
+  category BlogCategory? @relation(fields: [categoryId], references: [id])
+}
+
+model BlogCategory {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  color       String?    // For UI theming
+  order       Int        @default(0)
+  active      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  blogPosts BlogPost[]
 }
 
 model Doctrine {
@@ -193,12 +209,6 @@ enum Role {
   ADMIN
 }
 
-enum BlogCategory {
-  DEVOTIONAL
-  SERMON
-  ARTICLE
-  ANNOUNCEMENT
-}
 
 enum PrayerStatus {
   ACTIVE

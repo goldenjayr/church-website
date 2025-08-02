@@ -43,6 +43,14 @@ export default function EditDoctrinePage() {
     order: 0,
     published: true,
   })
+  
+  const [originalData, setOriginalData] = useState({
+    title: "",
+    content: "",
+    category: "",
+    order: 0,
+    published: true,
+  })
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,13 +60,15 @@ export default function EditDoctrinePage() {
       if (currentUser && params.id) {
         const doctrine = await getDoctrine(params.id as string)
         if (doctrine) {
-          setFormData({
+          const doctrineData = {
             title: doctrine.title,
             content: doctrine.content,
             category: doctrine.category,
             order: doctrine.order,
             published: doctrine.published,
-          })
+          }
+          setFormData(doctrineData)
+          setOriginalData(doctrineData)
         } else {
           toast.error("Doctrine not found")
           router.push("/admin/doctrines")
@@ -123,6 +133,10 @@ export default function EditDoctrinePage() {
     }
   }
 
+  const hasChanges = () => {
+    return JSON.stringify(formData) !== JSON.stringify(originalData)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -136,7 +150,7 @@ export default function EditDoctrinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <AdminNavigation user={user} onLogout={handleLogout} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -193,19 +207,33 @@ export default function EditDoctrinePage() {
               <Button
                 type="submit"
                 form="doctrine-form"
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700"
+                disabled={saving || !hasChanges()}
+                className={`transition-all duration-300 ${
+                  hasChanges() 
+                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg" 
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
               >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Update Doctrine"}
+                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${
+                  hasChanges() ? "rotate-0" : "rotate-12"
+                }`} />
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Saving...
+                  </>
+                ) : hasChanges() ? "Update Doctrine" : "No Changes"}
               </Button>
             </div>
           </div>
 
           <form id="doctrine-form" onSubmit={handleSubmit} className="space-y-6">
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Doctrine Details</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Doctrine Details</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -214,6 +242,11 @@ export default function EditDoctrinePage() {
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder="Enter doctrine title..."
                     required
                   />
@@ -226,6 +259,11 @@ export default function EditDoctrinePage() {
                       id="category"
                       value={formData.category}
                       onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                        }
+                      }}
                       placeholder="e.g., Core Beliefs, Practices, etc."
                       required
                     />
@@ -238,6 +276,11 @@ export default function EditDoctrinePage() {
                       type="number"
                       value={formData.order}
                       onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                        }
+                      }}
                       placeholder="0"
                       min="0"
                     />
@@ -255,9 +298,12 @@ export default function EditDoctrinePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Content</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Content</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <RichTextEditor

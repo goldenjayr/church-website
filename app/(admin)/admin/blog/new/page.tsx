@@ -18,7 +18,7 @@ import { LoginForm } from "@/components/admin/login-form"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 import { createBlogPost } from "@/lib/blog-actions"
-import { BlogCategory } from "@prisma/client"
+import { getBlogCategories } from "@/lib/blog-category-actions"
 import { toast } from "sonner"
 
 export default function NewBlogPostPage() {
@@ -26,6 +26,7 @@ export default function NewBlogPostPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [categories, setCategories] = useState<any[]>([])
   
   const [formData, setFormData] = useState({
     title: "",
@@ -35,17 +36,26 @@ export default function NewBlogPostPage() {
     imageUrl: "",
     published: false,
     featured: false,
-    category: "DEVOTIONAL" as BlogCategory,
+    categoryId: "",
     tags: [] as string[],
   })
   
   const [newTag, setNewTag] = useState("")
 
   useEffect(() => {
-    getCurrentUser().then((currentUser) => {
+    const loadData = async () => {
+      const [currentUser, categoriesData] = await Promise.all([
+        getCurrentUser(),
+        getBlogCategories()
+      ])
       setUser(currentUser)
+      setCategories(categoriesData.filter(cat => cat.active))
+      if (categoriesData.length > 0) {
+        setFormData(prev => ({ ...prev, categoryId: categoriesData[0].id }))
+      }
       setLoading(false)
-    })
+    }
+    loadData()
   }, [])
 
   const handleLogin = (loggedInUser: User) => {
@@ -110,7 +120,7 @@ export default function NewBlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <AdminNavigation user={user} onLogout={handleLogout} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -141,19 +151,33 @@ export default function NewBlogPostPage() {
               <Button
                 type="submit"
                 form="blog-post-form"
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700"
+                disabled={saving || !formData.title.trim() || !formData.content.trim()}
+                className={`transition-all duration-300 ${
+                  formData.title.trim() && formData.content.trim()
+                    ? "bg-blue-600 hover:bg-blue-700 scale-105 shadow-lg" 
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
               >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Save Post"}
+                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${
+                  formData.title.trim() && formData.content.trim() ? "rotate-0" : "rotate-12"
+                }`} />
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Saving...
+                  </>
+                ) : "Save Post"}
               </Button>
             </div>
           </div>
 
           <form id="blog-post-form" onSubmit={handleSubmit} className="space-y-6">
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Post Details</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <span>Post Details</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -162,6 +186,11 @@ export default function NewBlogPostPage() {
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder="Enter post title..."
                     required
                   />
@@ -173,6 +202,11 @@ export default function NewBlogPostPage() {
                     id="excerpt"
                     value={formData.excerpt}
                     onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder="Brief description of the post..."
                     rows={3}
                   />
@@ -182,17 +216,24 @@ export default function NewBlogPostPage() {
                   <div>
                     <Label htmlFor="category">Category</Label>
                     <Select
-                      value={formData.category}
-                      onValueChange={(value: BlogCategory) => setFormData(prev => ({ ...prev, category: value }))}
+                      value={formData.categoryId}
+                      onValueChange={(value: string) => setFormData(prev => ({ ...prev, categoryId: value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DEVOTIONAL">Devotional</SelectItem>
-                        <SelectItem value="SERMON">Sermon</SelectItem>
-                        <SelectItem value="ARTICLE">Article</SelectItem>
-                        <SelectItem value="ANNOUNCEMENT">Announcement</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: category.color }}
+                              />
+                              <span>{category.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -203,6 +244,11 @@ export default function NewBlogPostPage() {
                       id="imageUrl"
                       value={formData.imageUrl}
                       onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                        }
+                      }}
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
@@ -214,6 +260,11 @@ export default function NewBlogPostPage() {
                     id="metaDescription"
                     value={formData.metaDescription}
                     onChange={(e) => setFormData(prev => ({ ...prev, metaDescription: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder="SEO description for search engines..."
                     rows={2}
                   />
@@ -227,6 +278,12 @@ export default function NewBlogPostPage() {
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="Add a tag..."
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          addTag()
+                        }
+                      }}
                     />
                     <Button type="button" variant="outline" onClick={addTag}>
                       Add
@@ -258,9 +315,12 @@ export default function NewBlogPostPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Content</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>Content</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <RichTextEditor

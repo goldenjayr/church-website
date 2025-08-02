@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma-client"
-import { BlogCategory, ContentType } from "@prisma/client"
+import { ContentType } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
@@ -14,7 +14,7 @@ export interface CreateBlogPostData {
   published: boolean
   featured: boolean
   tags: string[]
-  category: BlogCategory
+  categoryId?: string
   authorId: string
 }
 
@@ -34,6 +34,7 @@ export async function createBlogPost(data: CreateBlogPostData) {
       },
       include: {
         author: true,
+        category: true,
       },
     })
 
@@ -58,6 +59,7 @@ export async function updateBlogPost(data: UpdateBlogPostData) {
       },
       include: {
         author: true,
+        category: true,
       },
     })
 
@@ -89,6 +91,7 @@ export async function getBlogPosts() {
     const posts = await prisma.blogPost.findMany({
       include: {
         author: true,
+        category: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -108,6 +111,7 @@ export async function getBlogPost(id: string) {
       where: { id },
       include: {
         author: true,
+        category: true,
       },
     })
 
@@ -124,6 +128,7 @@ export async function getBlogPostBySlug(slug: string) {
       where: { slug },
       include: {
         author: true,
+        category: true,
       },
     })
 

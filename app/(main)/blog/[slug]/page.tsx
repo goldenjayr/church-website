@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, User, Tag, ArrowLeft, Share2, Heart, MessageCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/public-blog-actions"
-import type { BlogPost, User as UserType } from "@prisma/client"
+import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 import type { Metadata } from "next"
 import { BlogPostClient } from "./blog-post-client"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
+  category: BlogCategory | null
 }
 
 interface BlogPostPageProps {
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   return {
     title: `${post.title} | Divine Jesus Church Blog`,
-    description: post.metaDescription || post.excerpt || `Read ${post.title} - a ${post.category.toLowerCase()} by ${(post as any).author?.name || 'Divine Jesus Church'}`,
+    description: post.metaDescription || post.excerpt || `Read ${post.title} - a ${(post as any).category?.name.toLowerCase() || 'blog post'} by ${(post as any).author?.name || 'Divine Jesus Church'}`,
     keywords: post.tags.join(', '),
     authors: [{ name: (post as any).author?.name || 'Divine Jesus Church' }],
     openGraph: {
@@ -71,7 +72,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   // Get related posts
-  const relatedPosts = await getRelatedBlogPosts(post.id, post.category, 3)
+  const relatedPosts = await getRelatedBlogPosts(post.id, post.categoryId, 3)
 
   return (
     <BlogPostClient 

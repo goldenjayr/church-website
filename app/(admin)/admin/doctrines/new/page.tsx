@@ -80,7 +80,7 @@ export default function NewDoctrinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <AdminNavigation user={user} onLogout={handleLogout} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -111,19 +111,33 @@ export default function NewDoctrinePage() {
               <Button
                 type="submit"
                 form="doctrine-form"
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700"
+                disabled={saving || !formData.title.trim() || !formData.content.trim()}
+                className={`transition-all duration-300 ${
+                  formData.title.trim() && formData.content.trim()
+                    ? "bg-blue-600 hover:bg-blue-700 scale-105 shadow-lg" 
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
               >
-                <Save className="w-4 h-4 mr-2" />
-                {saving ? "Saving..." : "Save Doctrine"}
+                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${
+                  formData.title.trim() && formData.content.trim() ? "rotate-0" : "rotate-12"
+                }`} />
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Saving...
+                  </>
+                ) : "Save Doctrine"}
               </Button>
             </div>
           </div>
 
           <form id="doctrine-form" onSubmit={handleSubmit} className="space-y-6">
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Doctrine Details</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>Doctrine Details</span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -132,6 +146,11 @@ export default function NewDoctrinePage() {
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                      }
+                    }}
                     placeholder="Enter doctrine title..."
                     required
                   />
@@ -144,6 +163,11 @@ export default function NewDoctrinePage() {
                       id="category"
                       value={formData.category}
                       onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                        }
+                      }}
                       placeholder="e.g., Core Beliefs, Practices, etc."
                       required
                     />
@@ -156,6 +180,11 @@ export default function NewDoctrinePage() {
                       type="number"
                       value={formData.order}
                       onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                        }
+                      }}
                       placeholder="0"
                       min="0"
                     />
@@ -173,9 +202,12 @@ export default function NewDoctrinePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle>Content</CardTitle>
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg">
+                <CardTitle className="text-slate-800 flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span>Content</span>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <RichTextEditor
