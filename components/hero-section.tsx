@@ -12,7 +12,7 @@ export function HeroSection() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/hero.jpg?height=1080&width=1920')`,
+          backgroundImage: `url('https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/hero.jpg')`,
         }}
       >
         <div className="absolute inset-0 bg-black/40" />

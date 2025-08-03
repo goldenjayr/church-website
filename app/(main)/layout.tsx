@@ -11,6 +11,18 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Divine Jesus Church",
   description: "A welcoming community of faith, hope, and love",
+  openGraph: {
+    title: "Divine Jesus Church",
+    description: "A welcoming community of faith, hope, and love",
+    images: [
+      {
+        url: "https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/hero.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Divine Jesus Church",
+      },
+    ],
+  },
     generator: 'v0.dev'
 }
 
