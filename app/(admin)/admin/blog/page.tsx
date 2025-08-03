@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Eye, FileText, Tag } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, FileText, Tag, Filter } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
@@ -14,6 +14,7 @@ import { getBlogPosts } from "@/lib/blog-actions"
 import { getBlogCategories } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { MultiSelect, Option } from "@/components/ui/multi-select"
 
 export default function AdminBlogPage() {
   const router = useRouter()
@@ -21,8 +22,10 @@ export default function AdminBlogPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("ALL")
+  const [selectedTags, setSelectedTags] = useState<Option[]>([])
   const [blogPosts, setBlogPosts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
+  const [availableTags, setAvailableTags] = useState<Option[]>([])
 
   useEffect(() => {
     const loadData = async () => {
@@ -36,6 +39,15 @@ export default function AdminBlogPage() {
         ])
         setBlogPosts(posts)
         setCategories(categoriesData)
+        
+        // Extract unique tags from all posts
+        const allTags = posts.flatMap((post: any) => post.tags || [])
+        const uniqueTags = [...new Set(allTags)].sort()
+        const tagOptions: Option[] = uniqueTags.map(tag => ({
+          value: tag,
+          label: tag
+        }))
+        setAvailableTags(tagOptions)
       }
 
       setLoading(false)
@@ -57,7 +69,9 @@ export default function AdminBlogPage() {
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "ALL" || post.category?.name === selectedCategory
-    return matchesSearch && matchesCategory
+    const matchesTags = selectedTags.length === 0 || 
+      selectedTags.some(selectedTag => post.tags?.includes(selectedTag.value))
+    return matchesSearch && matchesCategory && matchesTags
   })
 
   if (loading) {
@@ -122,30 +136,63 @@ export default function AdminBlogPage() {
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  <Button
-                    variant={selectedCategory === "ALL" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedCategory("ALL")}
-                    className={`whitespace-nowrap ${selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}>
-                    ALL
-                  </Button>
-                  {categories.filter(cat => cat.active).map((category) => (
+                
+                {/* Categories */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="w-4 h-4 text-slate-600" />
+                    <label className="text-sm font-medium text-slate-700">Categories</label>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
                     <Button
-                      key={category.id}
-                      variant={selectedCategory === category.name ? "default" : "outline"}
+                      variant={selectedCategory === "ALL" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedCategory(category.name)}
-                      className={`whitespace-nowrap ${selectedCategory === category.name ? "text-white" : ""}`}
-                      style={{
-                        backgroundColor: selectedCategory === category.name ? category.color : undefined,
-                        borderColor: selectedCategory !== category.name ? category.color : undefined,
-                        color: selectedCategory !== category.name ? category.color : undefined
-                      }}
-                    >
-                      {category.name}
+                      onClick={() => setSelectedCategory("ALL")}
+                      className={`whitespace-nowrap ${selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}>
+                      ALL
                     </Button>
-                  ))}
+                    {categories.filter(cat => cat.active).map((category) => (
+                      <Button
+                        key={category.id}
+                        variant={selectedCategory === category.name ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedCategory(category.name)}
+                        className={`whitespace-nowrap ${selectedCategory === category.name ? "text-white" : ""}`}
+                        style={{
+                          backgroundColor: selectedCategory === category.name ? category.color : undefined,
+                          borderColor: selectedCategory !== category.name ? category.color : undefined,
+                          color: selectedCategory !== category.name ? category.color : undefined
+                        }}
+                      >
+                        {category.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Filter className="w-4 h-4 text-slate-600" />
+                    <label className="text-sm font-medium text-slate-700">Filter by Tags</label>
+                    {selectedTags.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTags([])}
+                        className="text-xs text-slate-500 hover:text-slate-700 p-1 h-auto"
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  <MultiSelect
+                    options={availableTags}
+                    value={selectedTags}
+                    onChange={setSelectedTags}
+                    placeholder="Select tags to filter..."
+                    className="w-full"
+                  />
                 </div>
               </div>
             </CardContent>
@@ -237,7 +284,35 @@ export default function AdminBlogPage() {
             <div className="text-center py-12">
               <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-600 mb-2">No posts found</h3>
-              <p className="text-slate-500">Try adjusting your search or filters</p>
+              <p className="text-slate-500">
+                {searchTerm || selectedCategory !== "ALL" || selectedTags.length > 0
+                  ? "Try adjusting your search or filters"
+                  : "No blog posts available"}
+              </p>
+              {(selectedCategory !== "ALL" || selectedTags.length > 0) && (
+                <div className="mt-4 flex gap-2 justify-center">
+                  {selectedCategory !== "ALL" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedCategory("ALL")}
+                      className="text-xs"
+                    >
+                      Clear Category Filter
+                    </Button>
+                  )}
+                  {selectedTags.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedTags([])}
+                      className="text-xs"
+                    >
+                      Clear Tag Filters
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </motion.div>
