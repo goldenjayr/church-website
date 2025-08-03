@@ -184,7 +184,7 @@ export default function NewBlogPostPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -216,7 +216,7 @@ export default function NewBlogPostPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="author">Author</Label>
+                  <Label htmlFor="author">Author <span className="text-red-500">*</span></Label>
                   <div className="space-y-3">
                     <Select
                       value={formData.memberId}
@@ -375,7 +375,7 @@ export default function NewBlogPostPage() {
               <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
                 <CardTitle className="text-slate-800 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span>Content</span>
+                  <span>Content <span className="text-red-500">*</span></span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
