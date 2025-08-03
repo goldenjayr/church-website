@@ -13,12 +13,12 @@ import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { createPosition } from "@/lib/position-actions"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
 
 const PRESET_COLORS = [
   "#ef4444", // red
-  "#f97316", // orange  
+  "#f97316", // orange
   "#eab308", // yellow
   "#22c55e", // green
   "#06b6d4", // cyan
@@ -34,7 +34,7 @@ export default function NewPositionPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -93,10 +93,8 @@ export default function NewPositionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <AdminPageLayout user={user} onLogout={handleLogout} >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Header */}
           <div className="flex items-center space-x-4 mb-8">
@@ -151,7 +149,7 @@ export default function NewPositionPage() {
                     <Label htmlFor="color">Position Color</Label>
                     <div className="space-y-3">
                       <div className="flex items-center space-x-3">
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-full border-2 border-slate-300"
                           style={{ backgroundColor: formData.color }}
                         />
@@ -205,7 +203,7 @@ export default function NewPositionPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-4 p-4 border rounded-lg bg-white">
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-full flex items-center justify-center"
                     style={{ backgroundColor: formData.color }}
                   >
@@ -243,6 +241,6 @@ export default function NewPositionPage() {
           </form>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

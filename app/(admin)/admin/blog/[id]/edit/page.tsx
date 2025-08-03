@@ -15,7 +15,7 @@ import { ArrowLeft, Save, Eye, X, Trash2 } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 import { getBlogPost, updateBlogPost, deleteBlogPost } from "@/lib/blog-actions"
 import { getBlogCategories } from "@/lib/blog-category-actions"
@@ -42,7 +42,7 @@ export default function EditBlogPostPage() {
   const [deleting, setDeleting] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
-  
+
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -56,7 +56,7 @@ export default function EditBlogPostPage() {
     memberId: "",
     tags: [] as string[],
   })
-  
+
   const [originalData, setOriginalData] = useState({
     title: "",
     content: "",
@@ -70,7 +70,7 @@ export default function EditBlogPostPage() {
     memberId: "",
     tags: [] as string[],
   })
-  
+
   const [newTag, setNewTag] = useState("")
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function EditBlogPostPage() {
       setUser(currentUser)
       setCategories(categoriesData.filter(cat => cat.active))
       setMembers(membersData)
-      
+
       if (currentUser && params.id) {
         const post = await getBlogPost(params.id as string)
         if (post) {
@@ -107,7 +107,7 @@ export default function EditBlogPostPage() {
           router.push("/admin/blog")
         }
       }
-      
+
       setLoading(false)
     }
 
@@ -202,10 +202,8 @@ export default function EditBlogPostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminPageLayout user={user} onLogout={handleLogout} >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
@@ -260,15 +258,13 @@ export default function EditBlogPostPage() {
                 type="submit"
                 form="blog-post-form"
                 disabled={saving || !hasChanges()}
-                className={`transition-all duration-300 ${
-                  hasChanges() 
-                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg" 
+                className={`transition-all duration-300 ${hasChanges()
+                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg"
                     : "bg-gray-400 cursor-not-allowed"
-                }`}
+                  }`}
               >
-                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${
-                  hasChanges() ? "rotate-0" : "rotate-12"
-                }`} />
+                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
+                  }`} />
                 {saving ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
@@ -323,11 +319,11 @@ export default function EditBlogPostPage() {
                 <div>
                   <Label htmlFor="author">Author</Label>
                   <div className="space-y-3">
-                    <Select 
-                      value={formData.memberId} 
-                      onValueChange={(value) => setFormData(prev => ({ 
-                        ...prev, 
-                        memberId: value, 
+                    <Select
+                      value={formData.memberId}
+                      onValueChange={(value) => setFormData(prev => ({
+                        ...prev,
+                        memberId: value,
                         authorName: value === "none" ? prev.authorName : ""
                       }))}
                     >
@@ -342,7 +338,7 @@ export default function EditBlogPostPage() {
                               <div className="flex items-center space-x-2">
                                 <span>{member.firstName} {member.lastName}</span>
                                 {member.position && (
-                                  <span 
+                                  <span
                                     className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
                                     style={{ backgroundColor: member.position.color }}
                                   >
@@ -355,7 +351,7 @@ export default function EditBlogPostPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     {(!formData.memberId || formData.memberId === "none") && (
                       <div>
                         <Label htmlFor="authorName">Or enter custom author name</Label>
@@ -387,8 +383,8 @@ export default function EditBlogPostPage() {
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             <div className="flex items-center space-x-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
+                              <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: category.color }}
                               />
                               <span>{category.name}</span>
@@ -494,6 +490,6 @@ export default function EditBlogPostPage() {
           </form>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

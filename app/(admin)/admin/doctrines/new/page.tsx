@@ -12,7 +12,7 @@ import { ArrowLeft, Save, Eye } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 import { createDoctrine } from "@/lib/doctrine-actions"
 import { toast } from "sonner"
@@ -22,7 +22,7 @@ export default function NewDoctrinePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -80,10 +80,9 @@ export default function NewDoctrinePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
+      <AdminPageLayout user={user} onLogout={handleLogout} >
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
@@ -114,7 +113,7 @@ export default function NewDoctrinePage() {
                 disabled={saving || !formData.title.trim() || !formData.content.trim()}
                 className={`transition-all duration-300 ${
                   formData.title.trim() && formData.content.trim()
-                    ? "bg-blue-600 hover:bg-blue-700 scale-105 shadow-lg" 
+                    ? "bg-blue-600 hover:bg-blue-700 scale-105 shadow-lg"
                     : "bg-gray-400 cursor-not-allowed"
                 }`}
               >
@@ -220,6 +219,6 @@ export default function NewDoctrinePage() {
           </form>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

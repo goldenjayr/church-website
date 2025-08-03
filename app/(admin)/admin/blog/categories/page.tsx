@@ -12,7 +12,7 @@ import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { getBlogCategories, deleteBlogCategory, updateBlogCategoryOrders } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -85,15 +85,15 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-4 flex-1">
               <div className="flex items-center space-x-2">
-                <div 
-                  {...attributes} 
+                <div
+                  {...attributes}
                   {...listeners}
                   className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
                   title="Drag to reorder"
                 >
                   <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </div>
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: category.color || '#3b82f6' }}
                 >
@@ -119,9 +119,9 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
             </div>
 
             <div className="flex items-center space-x-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200"
                 onClick={() => router.push(`/admin/blog/categories/${category.id}/edit`)}
               >
@@ -173,7 +173,7 @@ export default function BlogCategoriesPage() {
   const [categories, setCategories] = useState<any[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -185,12 +185,12 @@ export default function BlogCategoriesPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         const categoriesToSet = await getBlogCategories()
         setCategories(categoriesToSet)
       }
-      
+
       setLoading(false)
     }
 
@@ -233,14 +233,14 @@ export default function BlogCategoriesPage() {
     if (active.id !== over?.id) {
       const oldIndex = categories.findIndex((category) => category.id === active.id)
       const newIndex = categories.findIndex((category) => category.id === over?.id)
-      
+
       const newCategories = arrayMove(categories, oldIndex, newIndex)
       setCategories(newCategories)
-      
+
       // Update the order in the database
       const categoryIds = newCategories.map(category => category.id)
       const result = await updateBlogCategoryOrders(categoryIds)
-      
+
       if (!result.success) {
         toast.error("Failed to update category order")
         // Revert on error
@@ -269,108 +269,109 @@ export default function BlogCategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Blog Categories</h1>
-              <p className="text-slate-600 mt-2">Manage your blog post categories</p>
-            </div>
-            <Button
-              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
-              onClick={() => router.push("/admin/blog/categories/new")}
-            >
-              <div className="flex items-center space-x-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-semibold">New Category</span>
+    <AdminPageLayout user={user} onLogout={handleLogout}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Blog Categories</h1>
+                <p className="text-slate-600 mt-2">Manage your blog post categories</p>
               </div>
-            </Button>
-          </div>
-
-          {/* Search */}
-          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <Input
-                  placeholder="Search categories..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400 transition-all duration-200"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Categories Grid */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={filteredCategories.map(category => category.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="grid gap-6">
-                {filteredCategories.map((category, index) => (
-                  <SortableCategoryItem
-                    key={category.id}
-                    category={category}
-                    index={index}
-                    router={router}
-                    deletingId={deletingId}
-                    handleDelete={handleDelete}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-            <DragOverlay>
-              {activeId ? (
-                <div className="transform rotate-3 opacity-90">
-                  <SortableCategoryItem
-                    category={categories.find(cat => cat.id === activeId)!}
-                    index={0}
-                    router={router}
-                    deletingId={deletingId}
-                    handleDelete={handleDelete}
-                  />
-                </div>
-              ) : null}
-            </DragOverlay>
-          </DndContext>
-
-          {filteredCategories.length === 0 && (
-            <div className="text-center py-12">
-              <Tag className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-600 mb-2">No categories found</h3>
-              <p className="text-slate-500 mb-4">
-                {searchTerm ? "Try adjusting your search" : "Start by creating your first category"}
-              </p>
-              {!searchTerm && (
-                <Button
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
-                  onClick={() => router.push("/admin/blog/categories/new")}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-white/20 rounded-full p-1">
-                      <Plus className="w-4 h-4" />
-                    </div>
-                    <span className="font-semibold">Create First Category</span>
+              <Button
+                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                onClick={() => router.push("/admin/blog/categories/new")}
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="bg-white/20 rounded-full p-1">
+                    <Plus className="w-4 h-4" />
                   </div>
-                </Button>
-              )}
+                  <span className="font-semibold">New Category</span>
+                </div>
+              </Button>
             </div>
-          )}
-        </motion.div>
-      </main>
-    </div>
+
+            {/* Search */}
+            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search categories..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400 transition-all duration-200"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Categories Grid */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={filteredCategories.map(category => category.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid gap-6">
+                  {filteredCategories.map((category, index) => (
+                    <SortableCategoryItem
+                      key={category.id}
+                      category={category}
+                      index={index}
+                      router={router}
+                      deletingId={deletingId}
+                      handleDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+              <DragOverlay>
+                {activeId ? (
+                  <div className="transform rotate-3 opacity-90">
+                    <SortableCategoryItem
+                      category={categories.find(cat => cat.id === activeId)!}
+                      index={0}
+                      router={router}
+                      deletingId={deletingId}
+                      handleDelete={handleDelete}
+                    />
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+
+            {filteredCategories.length === 0 && (
+              <div className="text-center py-12">
+                <Tag className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-slate-600 mb-2">No categories found</h3>
+                <p className="text-slate-500 mb-4">
+                  {searchTerm ? "Try adjusting your search" : "Start by creating your first category"}
+                </p>
+                {!searchTerm && (
+                  <Button
+                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                    onClick={() => router.push("/admin/blog/categories/new")}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div className="bg-white/20 rounded-full p-1">
+                        <Plus className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold">Create First Category</span>
+                    </div>
+                  </Button>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </main>
+      </div>
+    </AdminPageLayout>
+
   )
 }

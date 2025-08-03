@@ -41,24 +41,24 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 function AdminLayoutInner({ children }: AdminLayoutProps) {
   const { isCollapsed } = useSidebar()
   const [isDesktop, setIsDesktop] = useState(false)
-  
+
   useEffect(() => {
     const checkIsDesktop = () => {
       setIsDesktop(window.innerWidth >= 1024)
     }
-    
+
     checkIsDesktop()
     window.addEventListener('resize', checkIsDesktop)
-    
+
     return () => window.removeEventListener('resize', checkIsDesktop)
   }, [])
-  
+
   const marginLeft = isDesktop ? (isCollapsed ? '80px' : '280px') : '0px'
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       {/* Content with dynamic margin based on sidebar state */}
-      <div 
+      <div
         className="transition-all duration-300 ease-in-out"
         style={{ marginLeft }}
       >
@@ -84,12 +84,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
 function AdminPageLayoutInner({ children, user, onLogout }: AdminPageLayoutProps) {
   const { isCollapsed, setIsCollapsed } = useSidebar()
-  
+
   return (
     <>
-      <AdminNavigation 
-        user={user} 
-        onLogout={onLogout} 
+      <AdminNavigation
+        user={user}
+        onLogout={onLogout}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
       />

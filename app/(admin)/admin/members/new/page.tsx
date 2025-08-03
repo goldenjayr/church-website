@@ -16,7 +16,7 @@ import type { User as UserType } from "@prisma/client"
 import { createMember } from "@/lib/member-actions"
 import { getActivePositions } from "@/lib/position-actions"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
 import {
   Select,
@@ -32,7 +32,7 @@ export default function NewMemberPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [positions, setPositions] = useState<any[]>([])
-  
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -108,10 +108,8 @@ export default function NewMemberPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminPageLayout user={user} onLogout={handleLogout} >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Header */}
           <div className="flex items-center space-x-4 mb-8">
@@ -231,8 +229,8 @@ export default function NewMemberPage() {
                         {positions.map((position) => (
                           <SelectItem key={position.id} value={position.id}>
                             <div className="flex items-center space-x-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
+                              <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: position.color }}
                               />
                               <span>{position.name}</span>
@@ -283,13 +281,13 @@ export default function NewMemberPage() {
                   <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
                     <AvatarImage src={formData.imageUrl} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold text-lg">
-                      {formData.firstName && formData.lastName 
+                      {formData.firstName && formData.lastName
                         ? getInitials(formData.firstName, formData.lastName)
                         : "??"
                       }
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <h3 className="text-xl font-bold text-slate-900">
@@ -299,13 +297,13 @@ export default function NewMemberPage() {
                         <Star className="w-5 h-5 text-yellow-500 fill-current" />
                       )}
                     </div>
-                    
+
                     {formData.positionId && formData.positionId !== "none" && (
                       <div className="mb-2">
                         {(() => {
                           const position = positions.find(p => p.id === formData.positionId);
                           return position ? (
-                            <span 
+                            <span
                               className="inline-flex items-center px-2 py-1 rounded text-sm font-medium text-white"
                               style={{ backgroundColor: position.color }}
                             >
@@ -316,11 +314,11 @@ export default function NewMemberPage() {
                         })()}
                       </div>
                     )}
-                    
+
                     {formData.bio && (
                       <p className="text-slate-600 text-sm mb-2">{formData.bio}</p>
                     )}
-                    
+
                     <div className="text-xs text-slate-400 flex items-center space-x-1">
                       <Calendar className="w-3 h-3" />
                       <span>Joined: {new Date(formData.joinDate).toLocaleDateString()}</span>
@@ -350,6 +348,6 @@ export default function NewMemberPage() {
           </form>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

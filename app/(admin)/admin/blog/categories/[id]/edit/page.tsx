@@ -13,7 +13,7 @@ import { ArrowLeft, Save, Trash2, Palette } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { getBlogCategory, updateBlogCategory, deleteBlogCategory } from "@/lib/blog-category-actions"
 import { toast } from "sonner"
 import {
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const CATEGORY_COLORS = [
-  "#3b82f6", "#ef4444", "#10b981", "#f59e0b", 
+  "#3b82f6", "#ef4444", "#10b981", "#f59e0b",
   "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16",
   "#f97316", "#6366f1", "#14b8a6", "#eab308"
 ]
@@ -41,7 +41,7 @@ export default function EditBlogCategoryPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -64,7 +64,7 @@ export default function EditBlogCategoryPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && params.id) {
         const category = await getBlogCategory(params.id as string)
         if (category) {
@@ -83,7 +83,7 @@ export default function EditBlogCategoryPage() {
           router.push("/admin/blog/categories")
         }
       }
-      
+
       setLoading(false)
     }
 
@@ -176,10 +176,8 @@ export default function EditBlogCategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AdminPageLayout user={user} onLogout={handleLogout} >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
@@ -227,15 +225,13 @@ export default function EditBlogCategoryPage() {
                 type="submit"
                 form="category-form"
                 disabled={saving || !hasChanges()}
-                className={`transition-all duration-300 ${
-                  hasChanges() 
-                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg" 
+                className={`transition-all duration-300 ${hasChanges()
+                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg"
                     : "bg-gray-400 cursor-not-allowed"
-                }`}
+                  }`}
               >
-                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${
-                  hasChanges() ? "rotate-0" : "rotate-12"
-                }`} />
+                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
+                  }`} />
                 {saving ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
@@ -331,18 +327,17 @@ export default function EditBlogCategoryPage() {
                       <button
                         key={color}
                         type="button"
-                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-                          formData.color === color 
-                            ? "border-slate-900 scale-110 shadow-lg" 
+                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${formData.color === color
+                            ? "border-slate-900 scale-110 shadow-lg"
                             : "border-slate-200 hover:scale-105"
-                        }`}
+                          }`}
                         style={{ backgroundColor: color }}
                         onClick={() => setFormData(prev => ({ ...prev, color }))}
                       />
                     ))}
                   </div>
                   <div className="flex items-center space-x-2 mt-2">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full border border-slate-200"
                       style={{ backgroundColor: formData.color }}
                     />
@@ -363,6 +358,6 @@ export default function EditBlogCategoryPage() {
           </form>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }
