@@ -11,6 +11,17 @@ import { BlogPostClient } from "./blog-post-client"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
+  member?: {
+    id: string
+    firstName: string
+    lastName: string
+    imageUrl?: string | null
+    position?: {
+      id: string
+      name: string
+      color: string
+    } | null
+  } | null
   category: BlogCategory | null
 }
 

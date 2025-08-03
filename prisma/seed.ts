@@ -41,7 +41,6 @@ async function main() {
       published: true,
       featured: true,
       tags: ['faith', 'daily-walk', 'spiritual-growth'],
-      category: 'DEVOTIONAL',
       contentType: 'HTML',
       authorId: adminUser.id,
     },
@@ -59,12 +58,81 @@ async function main() {
       published: true,
       featured: false,
       tags: ['prayer', 'spiritual-discipline', 'communication'],
-      category: 'DEVOTIONAL',
       contentType: 'HTML',
       authorId: adminUser.id,
     },
   });
   console.log('Created blog post:', blogPost2.title);
+
+  // Create sample positions
+  const pastorPosition = await prisma.position.upsert({
+    where: { name: 'Pastor' },
+    update: {},
+    create: {
+      name: 'Pastor',
+      description: 'Senior pastor and spiritual leader of the church',
+      color: '#8b5cf6',
+      order: 1,
+    },
+  });
+  console.log('Created position:', pastorPosition.name);
+
+  const elderPosition = await prisma.position.upsert({
+    where: { name: 'Elder' },
+    update: {},
+    create: {
+      name: 'Elder',
+      description: 'Church elder providing spiritual guidance and leadership',
+      color: '#3b82f6',
+      order: 2,
+    },
+  });
+  console.log('Created position:', elderPosition.name);
+
+  const musicDirectorPosition = await prisma.position.upsert({
+    where: { name: 'Music Director' },
+    update: {},
+    create: {
+      name: 'Music Director',
+      description: 'Leader of the church worship and music ministry',
+      color: '#22c55e',
+      order: 3,
+    },
+  });
+  console.log('Created position:', musicDirectorPosition.name);
+
+  // Create sample members
+  const pastorMember = await prisma.member.upsert({
+    where: { email: 'pastor@divinejesus.org' },
+    update: {},
+    create: {
+      firstName: 'John',
+      lastName: 'Smith',
+      email: 'pastor@divinejesus.org',
+      phone: '(555) 123-4567',
+      bio: 'Pastor John has been leading our church for over 10 years with a heart for community service and spiritual growth.',
+      positionId: pastorPosition.id,
+      featured: true,
+      joinDate: new Date('2014-01-15'),
+    },
+  });
+  console.log('Created member:', `${pastorMember.firstName} ${pastorMember.lastName}`);
+
+  const elderMember = await prisma.member.upsert({
+    where: { email: 'elder.mary@divinejesus.org' },
+    update: {},
+    create: {
+      firstName: 'Mary',
+      lastName: 'Johnson',
+      email: 'elder.mary@divinejesus.org',
+      phone: '(555) 987-6543',
+      bio: 'Elder Mary brings wisdom and compassion to our church community and leads our prayer ministry.',
+      positionId: elderPosition.id,
+      featured: true,
+      joinDate: new Date('2016-03-20'),
+    },
+  });
+  console.log('Created member:', `${elderMember.firstName} ${elderMember.lastName}`);
 
   // Create sample doctrines
   const existingDoctrine1 = await prisma.doctrine.findFirst({

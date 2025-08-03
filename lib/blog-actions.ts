@@ -16,6 +16,8 @@ export interface CreateBlogPostData {
   tags: string[]
   categoryId?: string
   authorId: string
+  authorName?: string
+  memberId?: string
 }
 
 export interface UpdateBlogPostData extends CreateBlogPostData {
@@ -91,6 +93,11 @@ export async function getBlogPosts() {
     const posts = await prisma.blogPost.findMany({
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
       orderBy: {
@@ -111,6 +118,11 @@ export async function getBlogPost(id: string) {
       where: { id },
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
     })
@@ -128,6 +140,11 @@ export async function getBlogPostBySlug(slug: string) {
       where: { slug },
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
     })

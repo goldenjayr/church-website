@@ -10,6 +10,11 @@ export async function getPublishedBlogPosts() {
       },
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
       orderBy: [
@@ -34,6 +39,11 @@ export async function getBlogPostBySlug(slug: string) {
       },
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
     })
@@ -55,6 +65,11 @@ export async function getRelatedBlogPosts(postId: string, categoryId: string | n
       },
       include: {
         author: true,
+        member: {
+          include: {
+            position: true
+          }
+        },
         category: true,
       },
       orderBy: {

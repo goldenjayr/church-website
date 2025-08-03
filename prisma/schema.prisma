@@ -47,11 +47,14 @@ model BlogPost {
   categoryId      String?     // Changed from enum to relation
   contentType     ContentType @default(HTML)
   authorId        String
+  authorName      String?     // Custom author name, falls back to user.name if not set
+  memberId        String?     // Reference to Member who authored this post
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   // Relations
   author   User @relation(fields: [authorId], references: [id])
+  member   Member? @relation("MemberAuthoredPosts", fields: [memberId], references: [id])
   category BlogCategory? @relation(fields: [categoryId], references: [id])
 }
 
@@ -202,6 +205,43 @@ model Volunteer {
   status      VolunteerStatus @default(PENDING)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Position {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  color       String   @default("#3b82f6") // Default blue color
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members Member[]
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String?  @unique
+  phone       String?
+  bio         String?
+  imageUrl    String?
+  positionId  String?
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false) // For highlighting key members
+  joinDate    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  position     Position? @relation(fields: [positionId], references: [id])
+  authoredPosts BlogPost[] @relation("MemberAuthoredPosts")
+
+  @@index([positionId])
+  @@index([active])
 }
 
 enum Role {

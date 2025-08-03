@@ -22,7 +22,7 @@ import {
 import { getCurrentUser, setCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 
 // Mock stats data
 const stats = [
@@ -165,9 +165,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
+    <AdminPageLayout user={user} onLogout={handleLogout}>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Header */}
@@ -332,6 +330,6 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

@@ -19,6 +19,7 @@ import { AdminNavigation } from "@/components/admin/admin-navigation"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 import { getBlogPost, updateBlogPost, deleteBlogPost } from "@/lib/blog-actions"
 import { getBlogCategories } from "@/lib/blog-category-actions"
+import { getActiveMembers } from "@/lib/member-actions"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ export default function EditBlogPostPage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
+  const [members, setMembers] = useState<any[]>([])
   
   const [formData, setFormData] = useState({
     title: "",
@@ -50,6 +52,8 @@ export default function EditBlogPostPage() {
     published: false,
     featured: false,
     categoryId: "",
+    authorName: "",
+    memberId: "",
     tags: [] as string[],
   })
   
@@ -62,6 +66,8 @@ export default function EditBlogPostPage() {
     published: false,
     featured: false,
     categoryId: "",
+    authorName: "",
+    memberId: "",
     tags: [] as string[],
   })
   
@@ -69,12 +75,14 @@ export default function EditBlogPostPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      const [currentUser, categoriesData] = await Promise.all([
+      const [currentUser, categoriesData, membersData] = await Promise.all([
         getCurrentUser(),
-        getBlogCategories()
+        getBlogCategories(),
+        getActiveMembers()
       ])
       setUser(currentUser)
       setCategories(categoriesData.filter(cat => cat.active))
+      setMembers(membersData)
       
       if (currentUser && params.id) {
         const post = await getBlogPost(params.id as string)
@@ -88,6 +96,8 @@ export default function EditBlogPostPage() {
             published: post.published,
             featured: post.featured,
             categoryId: post.categoryId || "",
+            authorName: post.authorName || "",
+            memberId: post.memberId || "",
             tags: post.tags,
           }
           setFormData(postData)
@@ -307,6 +317,55 @@ export default function EditBlogPostPage() {
                     placeholder="Brief description of the post..."
                     rows={3}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="author">Author</Label>
+                  <div className="space-y-3">
+                    <Select 
+                      value={formData.memberId} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, memberId: value, authorName: "" }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a member as author" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Use account name ({user?.name || 'N/A'})</SelectItem>
+                        {members.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2">
+                                <span>{member.firstName} {member.lastName}</span>
+                                {member.position && (
+                                  <span 
+                                    className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                                    style={{ backgroundColor: member.position.color }}
+                                  >
+                                    {member.position.name}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {!formData.memberId && (
+                      <div>
+                        <Label htmlFor="authorName">Or enter custom author name</Label>
+                        <Input
+                          id="authorName"
+                          value={formData.authorName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, authorName: e.target.value }))}
+                          placeholder="Custom author name..."
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Select a member or enter a custom name. If neither is provided, your account name will be used.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

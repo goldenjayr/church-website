@@ -13,7 +13,7 @@ import type { User } from "@prisma/client"
 import { getBlogPosts } from "@/lib/blog-actions"
 import { getBlogCategories } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
-import { AdminNavigation } from "@/components/admin/admin-navigation"
+import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { MultiSelect, Option } from "@/components/ui/multi-select"
 
 export default function AdminBlogPage() {
@@ -87,9 +87,7 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      <AdminNavigation user={user} onLogout={handleLogout} />
-
+    <AdminPageLayout user={user} onLogout={handleLogout}>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           {/* Header */}
@@ -218,7 +216,7 @@ export default function AdminBlogPage() {
                           <div>
                             <h3 className="text-xl font-bold text-slate-900">{post.title}</h3>
                             <p className="text-sm text-slate-500">
-                              By {post.author?.name || 'Unknown Author'} • {new Date(post.createdAt).toLocaleDateString()}
+                              By {post.authorName || post.author?.name || 'Unknown Author'} • {new Date(post.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -317,6 +315,6 @@ export default function AdminBlogPage() {
           )}
         </motion.div>
       </main>
-    </div>
+    </AdminPageLayout>
   )
 }

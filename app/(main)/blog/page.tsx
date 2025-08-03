@@ -6,14 +6,27 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Calendar, User, Tag, MessageCircle, BookOpen, Filter } from "lucide-react"
+import { Search, Calendar, User, Tag, MessageCircle, BookOpen, Filter, Crown } from "lucide-react"
 import Link from "next/link"
 import { getPublishedBlogPosts, getPublishedBlogCategories } from "@/lib/public-blog-actions"
 import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 import { BlogListSkeleton } from "@/components/blog/blog-skeleton"
+import { getAuthorDisplay } from "@/lib/author-utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
+  member?: {
+    id: string
+    firstName: string
+    lastName: string
+    imageUrl?: string | null
+    position?: {
+      id: string
+      name: string
+      color: string
+    } | null
+  } | null
   category: BlogCategory | null
 }
 
@@ -309,9 +322,35 @@ export default function BlogPage() {
                       <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">{post.excerpt || 'No excerpt available'}</p>
 
                       <div className="flex items-center space-x-4 text-sm text-slate-500 mb-4">
-                        <div className="flex items-center space-x-1">
-                          <User className="w-4 h-4" />
-                          <span>{post.author?.name || 'Unknown Author'}</span>
+                        <div className="flex items-center space-x-2">
+                          {(() => {
+                            const authorInfo = getAuthorDisplay(post);
+                            return (
+                              <>
+                                {authorInfo.avatar ? (
+                                  <Avatar className="w-6 h-6">
+                                    <AvatarImage src={authorInfo.avatar} />
+                                    <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs">
+                                      {authorInfo.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                ) : (
+                                  <User className="w-4 h-4" />
+                                )}
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-slate-700">{authorInfo.name}</span>
+                                  {authorInfo.position && (
+                                    <span 
+                                      className="text-xs font-medium"
+                                      style={{ color: authorInfo.positionColor || '#6b7280' }}
+                                    >
+                                      {authorInfo.position}
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
