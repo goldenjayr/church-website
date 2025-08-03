@@ -242,7 +242,7 @@ export default function AdminBlogPage() {
                           )}
                           {post.featured && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
                           <div className="flex space-x-1">
-                            {post.tags.slice(0, 3).map((tag) => (
+                            {post.tags.slice(0, 3).map((tag: string) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 {tag}
                               </Badge>

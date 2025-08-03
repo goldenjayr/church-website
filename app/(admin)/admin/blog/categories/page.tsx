@@ -33,6 +33,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -65,8 +67,9 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? "none" : transition,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
@@ -85,9 +88,10 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
                 <div 
                   {...attributes} 
                   {...listeners}
-                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-1 rounded transition-colors"
+                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
+                  title="Drag to reorder"
                 >
-                  <GripVertical className="w-4 h-4 text-slate-400" />
+                  <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </div>
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -168,6 +172,7 @@ export default function BlogCategoriesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [categories, setCategories] = useState<any[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
   
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -217,8 +222,13 @@ export default function BlogCategoriesPage() {
     }
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
 
     if (active.id !== over?.id) {
       const oldIndex = categories.findIndex((category) => category.id === active.id)
@@ -302,6 +312,7 @@ export default function BlogCategoriesPage() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
@@ -321,6 +332,19 @@ export default function BlogCategoriesPage() {
                 ))}
               </div>
             </SortableContext>
+            <DragOverlay>
+              {activeId ? (
+                <div className="transform rotate-3 opacity-90">
+                  <SortableCategoryItem
+                    category={categories.find(cat => cat.id === activeId)!}
+                    index={0}
+                    router={router}
+                    deletingId={deletingId}
+                    handleDelete={handleDelete}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
 
           {filteredCategories.length === 0 && (

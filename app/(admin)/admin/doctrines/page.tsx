@@ -33,6 +33,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -65,8 +67,9 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDragging ? "none" : transition,
+    opacity: isDragging ? 0.3 : 1,
+    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
@@ -85,9 +88,10 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
                 <div 
                   {...attributes} 
                   {...listeners}
-                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-1 rounded transition-colors"
+                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
+                  title="Drag to reorder"
                 >
-                  <GripVertical className="w-4 h-4 text-slate-400" />
+                  <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </div>
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-blue-600" />
@@ -168,6 +172,7 @@ export default function AdminDoctrinesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [doctrines, setDoctrines] = useState<any[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
   
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -217,8 +222,13 @@ export default function AdminDoctrinesPage() {
     }
   }
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
 
     if (active.id !== over?.id) {
       const oldIndex = doctrines.findIndex((doctrine) => doctrine.id === active.id)
@@ -304,6 +314,7 @@ export default function AdminDoctrinesPage() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
             <SortableContext
@@ -323,6 +334,19 @@ export default function AdminDoctrinesPage() {
                 ))}
               </div>
             </SortableContext>
+            <DragOverlay>
+              {activeId ? (
+                <div className="transform rotate-3 opacity-90">
+                  <SortableDoctrineItem
+                    doctrine={doctrines.find(doctrine => doctrine.id === activeId)!}
+                    index={0}
+                    router={router}
+                    deletingId={deletingId}
+                    handleDelete={handleDelete}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
 
           {filteredDoctrines.length === 0 && (
