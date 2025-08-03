@@ -27,6 +27,7 @@ export async function createDoctrine(data: CreateDoctrineData) {
     })
 
     revalidatePath("/admin/doctrines")
+    revalidatePath("/doctrines")
     return { success: true, doctrine }
   } catch (error) {
     console.error("Error creating doctrine:", error)
@@ -45,6 +46,7 @@ export async function updateDoctrine(data: UpdateDoctrineData) {
     })
 
     revalidatePath("/admin/doctrines")
+    revalidatePath("/doctrines")
     revalidatePath(`/admin/doctrines/${data.id}`)
     return { success: true, doctrine }
   } catch (error) {
@@ -60,6 +62,7 @@ export async function deleteDoctrine(id: string) {
     })
 
     revalidatePath("/admin/doctrines")
+    revalidatePath("/doctrines")
     return { success: true }
   } catch (error) {
     console.error("Error deleting doctrine:", error)
@@ -107,6 +110,7 @@ export async function updateDoctrineOrders(doctrineIds: string[]) {
 
     await Promise.all(updatePromises)
     revalidatePath("/admin/doctrines")
+    revalidatePath("/doctrines")
     return { success: true }
   } catch (error) {
     console.error("Error updating doctrine orders:", error)
