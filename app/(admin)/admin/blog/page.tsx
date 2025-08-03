@@ -289,8 +289,18 @@ export default function AdminBlogPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => handleDeletePost(post.id)}>
-                          <Trash2 className="w-4 h-4" />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={deletingId === post.id}
+                        >
+                          {deletingId === post.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-600"></div>
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </Button>
                       </div>
                     </div>
