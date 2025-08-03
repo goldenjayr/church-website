@@ -97,6 +97,7 @@ export default function NewBlogPostPage() {
     try {
       const result = await createBlogPost({
         ...formData,
+        memberId: formData.memberId === "none" ? undefined : formData.memberId,
         authorId: user.id,
       })
 
@@ -223,13 +224,17 @@ export default function NewBlogPostPage() {
                   <div className="space-y-3">
                     <Select 
                       value={formData.memberId} 
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, memberId: value, authorName: "" }))}
+                      onValueChange={(value) => setFormData(prev => ({ 
+                        ...prev, 
+                        memberId: value, 
+                        authorName: value === "none" ? prev.authorName : ""
+                      }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a member as author" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Use account name ({user?.name || 'N/A'})</SelectItem>
+                        <SelectItem value="none">Use account name ({user?.name || 'N/A'})</SelectItem>
                         {members.map((member) => (
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center space-x-2">
@@ -250,7 +255,7 @@ export default function NewBlogPostPage() {
                       </SelectContent>
                     </Select>
                     
-                    {!formData.memberId && (
+                    {(!formData.memberId || formData.memberId === "none") && (
                       <div>
                         <Label htmlFor="authorName">Or enter custom author name</Label>
                         <Input
