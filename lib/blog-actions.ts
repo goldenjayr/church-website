@@ -27,7 +27,7 @@ export interface UpdateBlogPostData extends CreateBlogPostData {
 export async function createBlogPost(data: CreateBlogPostData) {
   try {
     const slug = generateSlug(data.title)
-    
+
     const post = await prisma.blogPost.create({
       data: {
         ...data,
@@ -51,7 +51,7 @@ export async function createBlogPost(data: CreateBlogPostData) {
 export async function updateBlogPost(data: UpdateBlogPostData) {
   try {
     const slug = generateSlug(data.title)
-    
+
     const post = await prisma.blogPost.update({
       where: { id: data.id },
       data: {
@@ -61,7 +61,6 @@ export async function updateBlogPost(data: UpdateBlogPostData) {
       },
       include: {
         author: true,
-        category: true,
       },
     })
 

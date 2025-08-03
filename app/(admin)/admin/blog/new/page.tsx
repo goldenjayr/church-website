@@ -156,7 +156,7 @@ export default function NewBlogPostPage() {
               <Button
                 type="submit"
                 form="blog-post-form"
-                disabled={saving || !formData.title.trim() || !formData.content.trim()}
+                disabled={saving || !formData.title.trim() || !formData.content.trim() || (!formData.authorName.trim() && !formData.memberId.trim())}
                 className={`transition-all duration-300 ${formData.title.trim() && formData.content.trim()
                     ? "bg-blue-600 hover:bg-blue-700 scale-105 shadow-lg"
                     : "bg-gray-400 cursor-not-allowed"

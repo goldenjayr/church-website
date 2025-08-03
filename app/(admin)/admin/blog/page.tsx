@@ -15,6 +15,8 @@ import { getBlogCategories } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { MultiSelect, Option } from "@/components/ui/multi-select"
+import { deleteBlogPost } from "@/lib/blog-actions"
+import { toast } from "sonner"
 
 export default function AdminBlogPage() {
   const router = useRouter()
@@ -26,6 +28,7 @@ export default function AdminBlogPage() {
   const [blogPosts, setBlogPosts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [availableTags, setAvailableTags] = useState<Option[]>([])
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,7 +42,7 @@ export default function AdminBlogPage() {
         ])
         setBlogPosts(posts)
         setCategories(categoriesData)
-        
+
         // Extract unique tags from all posts
         const allTags = posts.flatMap((post: any) => post.tags || [])
         const uniqueTags = [...new Set(allTags)].sort()
@@ -69,10 +72,29 @@ export default function AdminBlogPage() {
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "ALL" || post.category?.name === selectedCategory
-    const matchesTags = selectedTags.length === 0 || 
+    const matchesTags = selectedTags.length === 0 ||
       selectedTags.some(selectedTag => post.tags?.includes(selectedTag.value))
     return matchesSearch && matchesCategory && matchesTags
   })
+
+  const handleDeletePost = async (id: string) => {
+    if (!id) return
+    setDeletingId(id)
+    try {
+      const result = await deleteBlogPost(id as string)
+
+      if (result.success) {
+        toast.success("Blog post deleted successfully!")
+        setBlogPosts(prev => prev.filter(post => post.id !== id))
+      } else {
+        toast.error(result.error || "Failed to delete blog post")
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the blog post")
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -134,7 +156,7 @@ export default function AdminBlogPage() {
                     />
                   </div>
                 </div>
-                
+
                 {/* Categories */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -267,7 +289,7 @@ export default function AdminBlogPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700">
+                        <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700" onClick={() => handleDeletePost(post.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
