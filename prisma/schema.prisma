@@ -268,3 +268,17 @@ enum ContentType {
   MARKDOWN
   PLAIN_TEXT
 }
+
+model SiteSettings {
+  id              String   @id @default(cuid()) // Should only have one entry
+  siteName        String?
+  logoUrl         String?
+  contactAddress  String?
+  contactPhone    String?
+  contactEmail    String?
+  facebookUrl     String?
+  twitterUrl      String?
+  youtubeUrl      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
