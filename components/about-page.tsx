@@ -33,7 +33,7 @@ interface IProps {
   leadership: Member[]
 }
 
-export function AboutSection(props: IProps) {
+export function AboutPage(props: IProps) {
   const { leadership } = props
   return (
     <motion.div

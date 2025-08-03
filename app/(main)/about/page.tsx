@@ -1,10 +1,10 @@
 import { getLeadershipTeam } from "@/lib/public-member-actions";
-import { AboutSection } from "@/components/about-section";
+import { AboutPage } from "@/components/about-page";
 
 
-export default async function AboutPage() {
+export default async function Page() {
   const leadership = await getLeadershipTeam();
   return (
-    <AboutSection leadership={leadership} />
+    <AboutPage leadership={leadership} />
   )
 }
