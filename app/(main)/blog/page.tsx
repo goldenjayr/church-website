@@ -77,7 +77,7 @@ export default function BlogPage() {
   const getCategoryDisplayName = (category: string) => {
     const categoryMap: { [key: string]: string } = {
       "All": "All",
-      "DEVOTIONAL": "Devotional", 
+      "DEVOTIONAL": "Devotional",
       "SERMON": "Sermon",
       "ARTICLE": "Article",
       "ANNOUNCEMENT": "Announcement"
@@ -165,7 +165,7 @@ export default function BlogPage() {
                     />
                   </div>
                 </div>
-                
+
                 {/* Categories */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -281,9 +281,9 @@ export default function BlogPage() {
                   viewport={{ once: true }}
                 >
                   <Card
-                    className={`h-full border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden ${post.featured ? "ring-2 ring-blue-200" : ""}`}
+                    className={`h-full flex flex-col border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden ${post.featured ? "ring-2 ring-blue-200" : ""}`}
                   >
-                    <div className="aspect-video bg-gradient-to-br from-blue-100 to-green-100 relative">
+                    <div className="h-48 bg-gradient-to-br from-blue-100 to-green-100 relative">
                       {post.imageUrl ? (
                         <img
                           src={post.imageUrl}
@@ -301,13 +301,13 @@ export default function BlogPage() {
                         </div>
                       )}
                       {post.category && (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                          <Badge 
+                        <div className="absolute top-4 right-4 rounded-lg px-3 py-1">
+                          <Badge
                             variant="secondary"
-                            style={{ 
-                              backgroundColor: `${post.category.color}20`,
+                            style={{
+                              backgroundColor: `rgba(255, 255, 255, 0.7)`,
                               color: post.category.color,
-                              borderColor: post.category.color 
+                              borderColor: post.category.color
                             }}
                           >
                             {post.category.name}
@@ -316,59 +316,62 @@ export default function BlogPage() {
                       )}
                     </div>
 
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{post.title}</h3>
+                    <CardContent className="p-6 flex flex-col flex-grow">
+                      <div className="flex-grow">
+                        <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{post.title}</h3>
+                        <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">{post.excerpt || 'No excerpt available'}</p>
+                      </div>
 
-                      <p className="text-slate-600 leading-relaxed mb-4 line-clamp-3">{post.excerpt || 'No excerpt available'}</p>
-
-                      <div className="flex items-center space-x-4 text-sm text-slate-500 mb-4">
-                        <div className="flex items-center space-x-2">
-                          {(() => {
-                            const authorInfo = getAuthorDisplay(post);
-                            return (
-                              <>
-                                {authorInfo.avatar ? (
-                                  <Avatar className="w-6 h-6">
-                                    <AvatarImage src={authorInfo.avatar} />
-                                    <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs">
-                                      {authorInfo.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                ) : (
-                                  <User className="w-4 h-4" />
-                                )}
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-slate-700">{authorInfo.name}</span>
-                                  {authorInfo.position && (
-                                    <span 
-                                      className="text-xs font-medium"
-                                      style={{ color: authorInfo.positionColor || '#6b7280' }}
-                                    >
-                                      {authorInfo.position}
-                                    </span>
+                      <div className="mt-auto pt-4 border-t border-slate-100">
+                        <div className="flex items-center space-x-4 text-sm text-slate-500 mb-4">
+                          <div className="flex items-center space-x-2">
+                            {(() => {
+                              const authorInfo = getAuthorDisplay(post);
+                              return (
+                                <>
+                                  {authorInfo.avatar ? (
+                                    <Avatar className="w-6 h-6">
+                                      <AvatarImage src={authorInfo.avatar} />
+                                      <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs">
+                                        {authorInfo.name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  ) : (
+                                    <User className="w-4 h-4" />
                                   )}
-                                </div>
-                              </>
-                            );
-                          })()}
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-slate-700">{authorInfo.name}</span>
+                                    {authorInfo.position && (
+                                      <span
+                                        className="text-xs font-medium"
+                                        style={{ color: authorInfo.positionColor || '#6b7280' }}
+                                      >
+                                        {authorInfo.position}
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+
+                        <div className="flex flex-wrap gap-1 mb-4 min-h-[26px]">
+                          {post.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
 
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {post.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
+                        <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                          <Link href={`/blog/${post.slug}`}>Read More</Link>
+                        </Button>
                       </div>
-
-                      <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        <Link href={`/blog/${post.slug}`}>Read More</Link>
-                      </Button>
                     </CardContent>
                   </Card>
                 </motion.div>
