@@ -132,16 +132,26 @@ const contentOverview = [
   },
 ]
 
+import { getDashboardData } from "@/lib/dashboard-actions";
+
 export default function AdminDashboard() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
 
   useEffect(() => {
-    getCurrentUser().then((currentUser) => {
-      setUser(currentUser)
-      setLoading(false)
-    })
-  }, [])
+    const loadData = async () => {
+      const [currentUser, data] = await Promise.all([
+        getCurrentUser(),
+        getDashboardData(),
+      ]);
+      setUser(currentUser);
+      setDashboardData(data);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
 
   const handleLogin = (loggedInUser: User) => {
     setUser(loggedInUser)
@@ -178,29 +188,58 @@ export default function AdminDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                        <p className="text-3xl font-bold text-slate-900 mt-2">{stat.value}</p>
-                        <p className="text-sm text-slate-500 mt-1">{stat.change}</p>
+            {dashboardData &&
+              [
+                {
+                  title: "Total Members",
+                  value: dashboardData.stats.totalMembers,
+                  icon: Users,
+                  color: "text-blue-600",
+                  bgColor: "bg-blue-100",
+                },
+                {
+                  title: "Blog Posts",
+                  value: dashboardData.stats.totalBlogPosts,
+                  icon: FileText,
+                  color: "text-green-600",
+                  bgColor: "bg-green-100",
+                },
+                {
+                  title: "Upcoming Events",
+                  value: dashboardData.stats.upcomingEvents,
+                  icon: Calendar,
+                  color: "text-purple-600",
+                  bgColor: "bg-purple-100",
+                },
+                {
+                  title: "Prayer Requests",
+                  value: dashboardData.stats.prayerRequests,
+                  icon: Heart,
+                  color: "text-red-600",
+                  bgColor: "bg-red-100",
+                },
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-600">{stat.title}</p>
+                          <p className="text-3xl font-bold text-slate-900 mt-2">{stat.value}</p>
+                        </div>
+                        <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center`}>
+                          <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                        </div>
                       </div>
-                      <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center`}>
-                        <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -218,38 +257,64 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {contentOverview.map((item, index) => (
-                      <motion.div
-                        key={item.title}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <item.icon className="w-5 h-5 text-blue-600" />
+                    {dashboardData &&
+                      [
+                        {
+                          title: "Blog Posts",
+                          ...dashboardData.contentOverview.blogPosts,
+                          icon: FileText,
+                          href: "/admin/blog",
+                        },
+                        {
+                          title: "Events",
+                          ...dashboardData.contentOverview.events,
+                          icon: Calendar,
+                          href: "/admin/events",
+                        },
+                        {
+                          title: "Gallery Images",
+                          ...dashboardData.contentOverview.galleryImages,
+                          icon: ImageIcon,
+                          href: "/admin/gallery",
+                        },
+                        {
+                          title: "Doctrines",
+                          ...dashboardData.contentOverview.doctrines,
+                          icon: BookOpen,
+                          href: "/admin/doctrines",
+                        },
+                      ].map((item, index) => (
+                        <motion.div
+                          key={item.title}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.5, delay: index * 0.1 }}
+                          className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <item.icon className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                              <p className="text-sm text-slate-600">
+                                {item.published} published, {item.drafts} drafts
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                            <p className="text-sm text-slate-600">
-                              {item.published} published, {item.drafts} drafts
-                            </p>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">{item.total} total</Badge>
+                            <div className="flex space-x-1">
+                              <Button size="sm" variant="ghost">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{item.count} total</Badge>
-                          <div className="flex space-x-1">
-                            <Button size="sm" variant="ghost">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -263,29 +328,30 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentActivity.map((activity, index) => (
-                      <motion.div
-                        key={activity.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="flex items-start space-x-3 pb-4 border-b border-slate-100 last:border-b-0"
-                      >
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          {activity.type === "blog" && <FileText className="w-4 h-4 text-blue-600" />}
-                          {activity.type === "event" && <Calendar className="w-4 h-4 text-green-600" />}
-                          {activity.type === "prayer" && <Heart className="w-4 h-4 text-red-600" />}
-                          {activity.type === "member" && <Users className="w-4 h-4 text-purple-600" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{activity.title}</p>
-                          <p className="text-sm text-slate-600 truncate">{activity.description}</p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {activity.time} • {activity.user}
-                          </p>
-                        </div>
-                      </motion.div>
-                    ))}
+                    {dashboardData &&
+                      dashboardData.recentActivity.map((activity: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="flex items-start space-x-3 pb-4 border-b border-slate-100 last:border-b-0"
+                        >
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            {activity.type === "blog" && <FileText className="w-4 h-4 text-blue-600" />}
+                            {activity.type === "event" && <Calendar className="w-4 h-4 text-green-600" />}
+                            {activity.type === "prayer" && <Heart className="w-4 h-4 text-red-600" />}
+                            {activity.type === "member" && <Users className="w-4 h-4 text-purple-600" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900">{activity.title}</p>
+                            <p className="text-sm text-slate-600 truncate">{activity.description}</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {new Date(activity.createdAt).toLocaleDateString()} • {activity.user}
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
