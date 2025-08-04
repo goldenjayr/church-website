@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     description: "A welcoming community of faith, hope, and love",
     images: [
       {
-        url: "https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/hero.jpg",
+        url: "https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/landscape_logo.png",
         width: 1200,
         height: 630,
         alt: "Divine Jesus Church",
