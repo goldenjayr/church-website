@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,7 @@ export default function AdminBlogPage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("ALL")
+  const [selectedCategories, setSelectedCategories] = useState<Option[]>([])
   const [selectedTags, setSelectedTags] = useState<Option[]>([])
   const [blogPosts, setBlogPosts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -41,9 +41,8 @@ export default function AdminBlogPage() {
           getBlogCategories()
         ])
         setBlogPosts(posts)
-        setCategories(categoriesData)
+        setCategories(categoriesData.filter((cat: any) => cat.active))
 
-        // Extract unique tags from all posts
         const allTags = posts.flatMap((post: any) => post.tags || [])
         const uniqueTags = [...new Set(allTags)].sort()
         const tagOptions: Option[] = uniqueTags.map(tag => ({
@@ -67,13 +66,23 @@ export default function AdminBlogPage() {
     setUser(null)
   }
 
+  const categoryOptions = useMemo(() =>
+    categories.map(cat => ({
+      value: cat.id,
+      label: cat.name,
+    })), [categories])
+
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "ALL" || post.category?.name === selectedCategory
+    
+    const selectedCategoryValues = selectedCategories.map(c => c.label);
+    const matchesCategory = selectedCategories.length === 0 || selectedCategoryValues.includes(post.category?.name)
+
     const matchesTags = selectedTags.length === 0 ||
-      selectedTags.some(selectedTag => post.tags?.includes(selectedTag.value))
+      selectedTags.every(selectedTag => post.tags?.includes(selectedTag.value))
+      
     return matchesSearch && matchesCategory && matchesTags
   })
 
@@ -144,8 +153,8 @@ export default function AdminBlogPage() {
           {/* Filters */}
           <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="flex flex-col gap-4">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
@@ -162,32 +171,24 @@ export default function AdminBlogPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <Tag className="w-4 h-4 text-slate-600" />
                     <label className="text-sm font-medium text-slate-700">Categories</label>
-                  </div>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    <Button
-                      variant={selectedCategory === "ALL" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedCategory("ALL")}
-                      className={`whitespace-nowrap ${selectedCategory === "ALL" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}>
-                      ALL
-                    </Button>
-                    {categories.filter(cat => cat.active).map((category) => (
+                    {selectedCategories.length > 0 && (
                       <Button
-                        key={category.id}
-                        variant={selectedCategory === category.name ? "default" : "outline"}
+                        variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedCategory(category.name)}
-                        className={`whitespace-nowrap ${selectedCategory === category.name ? "text-white" : ""}`}
-                        style={{
-                          backgroundColor: selectedCategory === category.name ? category.color : undefined,
-                          borderColor: selectedCategory !== category.name ? category.color : undefined,
-                          color: selectedCategory !== category.name ? category.color : undefined
-                        }}
+                        onClick={() => setSelectedCategories([])}
+                        className="text-xs text-slate-500 hover:text-slate-700 p-1 h-auto"
                       >
-                        {category.name}
+                        Clear
                       </Button>
-                    ))}
+                    )}
                   </div>
+                  <MultiSelect
+                    options={categoryOptions}
+                    value={selectedCategories}
+                    onChange={setSelectedCategories}
+                    placeholder="Select categories..."
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Tags */}
@@ -315,20 +316,20 @@ export default function AdminBlogPage() {
               <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-600 mb-2">No posts found</h3>
               <p className="text-slate-500">
-                {searchTerm || selectedCategory !== "ALL" || selectedTags.length > 0
+                {searchTerm || selectedCategories.length > 0 || selectedTags.length > 0
                   ? "Try adjusting your search or filters"
                   : "No blog posts available"}
               </p>
-              {(selectedCategory !== "ALL" || selectedTags.length > 0) && (
+              {(selectedCategories.length > 0 || selectedTags.length > 0) && (
                 <div className="mt-4 flex gap-2 justify-center">
-                  {selectedCategory !== "ALL" && (
+                  {selectedCategories.length > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedCategory("ALL")}
+                      onClick={() => setSelectedCategories([])}
                       className="text-xs"
                     >
-                      Clear Category Filter
+                      Clear Category Filters
                     </Button>
                   )}
                   {selectedTags.length > 0 && (

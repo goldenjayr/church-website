@@ -1,10 +1,10 @@
 import { Command as CommandPrimitive } from "cmdk";
 import { X } from "lucide-react";
+import React, { forwardRef, useCallback, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { forwardRef, KeyboardEventHandler, useCallback, useRef, useState } from "react";
 
 export interface Option {
     value: string;
@@ -19,7 +19,7 @@ export interface Option {
 interface MultiSelectProps {
     options: Option[];
     value: Option[];
-    onChange: (value: Option[]) => void;
+    onChange: React.Dispatch<React.SetStateAction<Option[]>>;
     onSearch?: (value: string) => Promise<Option[]>;
     placeholder?: string;
     maxSelected?: number;
@@ -29,21 +29,18 @@ interface MultiSelectProps {
     className?: string;
 }
 
-export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>((
-    {
-        options,
-        value,
-        onChange,
-        onSearch,
-        placeholder = "Select options",
-        maxSelected,
-        maxSelectedMessage = "You have reached the maximum number of selections",
-        onMaxSelected,
-        disabled,
-        className,
-    },
-    ref
-) => {
+export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>(({
+    options,
+    value,
+    onChange,
+    onSearch,
+    placeholder = "Select options",
+    maxSelected,
+    maxSelectedMessage = "You have reached the maximum number of selections",
+    onMaxSelected,
+    disabled,
+    className,
+}, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -51,20 +48,26 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>((
 
     const handleUnselect = useCallback(
         (option: Option) => {
-            onChange(value.filter((s) => s.value !== option.value));
+            onChange((prev) => prev.filter((s) => s.value !== option.value));
         },
-        [onChange, value]
+        [onChange]
     );
 
     const handleSelect = useCallback(
         (option: Option) => {
-            if (maxSelected && value.length >= maxSelected) {
-                onMaxSelected?.(maxSelected);
-                return;
-            }
-            onChange([...value, option]);
+            onChange((prev) => {
+                if (maxSelected && prev.length >= maxSelected) {
+                    onMaxSelected?.(maxSelected);
+                    return prev;
+                }
+                // check if option is already selected
+                if (prev.some((s) => s.value === option.value)) {
+                    return prev;
+                }
+                return [...prev, option];
+            });
         },
-        [maxSelected, onChange, onMaxSelected, value]
+        [maxSelected, onChange, onMaxSelected]
     );
 
     const handleKeyDown = useCallback(
@@ -87,13 +90,18 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>((
         [handleUnselect, value]
     );
 
-    const handleSearch = async (value: string) => {
-        if (!onSearch) return;
+    const handleSearch = async (search: string) => {
+        if (!onSearch) {
+            setSelectables(options.filter(option => option.label.toLowerCase().includes(search.toLowerCase())));
+            return;
+        };
         setIsLoading(true);
-        const res = await onSearch(value);
+        const res = await onSearch(search);
         setSelectables(res);
         setIsLoading(false);
     };
+
+    const selectedValues = new Set(value.map((v) => v.value));
 
     return (
         <Command onKeyDown={handleKeyDown} className="overflow-visible bg-transparent">
@@ -149,23 +157,32 @@ export const MultiSelect = forwardRef<HTMLButtonElement, MultiSelectProps>((
                                     <span className="animate-pulse">Loading...</span>
                                 </CommandItem>
                             ) : (
-                                selectables.map((option) => (
-                                    <CommandItem
-                                        key={option.value}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                        }}
-                                        onSelect={() => handleSelect(option)}
-                                        className={cn(
-                                            "cursor-pointer",
-                                            value.find((s) => s.value === option.value) && "font-bold"
-                                        )}
-                                        disabled={option.disable}
-                                    >
-                                        {option.label}
-                                    </CommandItem>
-                                ))
+                                selectables.map((option) => {
+                                    const isSelected = selectedValues.has(option.value);
+                                    return (
+                                        <CommandItem
+                                            key={option.value}
+                                            onMouseDown={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
+                                            onSelect={() => {
+                                                if (isSelected) {
+                                                    handleUnselect(option);
+                                                } else {
+                                                    handleSelect(option);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "cursor-pointer",
+                                                isSelected && "font-bold"
+                                            )}
+                                            disabled={option.disable}
+                                        >
+                                            {option.label}
+                                        </CommandItem>
+                                    )
+                                })
                             )}
                         </CommandGroup>
                     </div>
