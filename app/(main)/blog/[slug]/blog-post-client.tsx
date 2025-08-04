@@ -36,6 +36,8 @@ interface BlogPostClientProps {
   relatedPosts: BlogPostWithAuthor[]
 }
 
+import "@/styles/blog-content.css"
+
 export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
   const [isCopied, setIsCopied] = useState(false)
 
@@ -191,24 +193,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             <Card className="border-none shadow-lg mb-8">
               <CardContent className="p-4 sm:p-6 md:p-8">
                 <div
-                  className="blog-content prose sm:prose-lg max-w-none
-                    prose-headings:text-slate-800 prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8
-                    prose-h1:text-4xl prose-h1:leading-tight prose-h1:border-b prose-h1:border-slate-200 prose-h1:pb-4
-                    prose-h2:text-3xl prose-h2:leading-tight prose-h2:text-blue-700
-                    prose-h3:text-2xl prose-h3:leading-tight prose-h3:text-slate-700
-                    prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-4
-                    prose-strong:text-slate-900 prose-strong:font-semibold
-                    prose-em:text-slate-700 prose-em:italic
-                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50
-                    prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-blockquote:my-6 prose-blockquote:italic
-                    prose-blockquote:text-blue-800 prose-blockquote:font-medium
-                    prose-ul:text-slate-700 prose-ul:mb-4 prose-ul:list-disc prose-ul:pl-6
-                    prose-ol:text-slate-700 prose-ol:mb-4 prose-ol:list-decimal prose-ol:pl-6
-                    prose-li:mb-2 prose-li:leading-relaxed
-                    prose-a:text-blue-600 prose-a:hover:text-blue-800 prose-a:underline
-                    prose-code:bg-slate-100 prose-code:text-slate-800 prose-code:px-2 prose-code:py-1 prose-code:rounded
-                    prose-hr:border-slate-300 prose-hr:my-8
-                  "
+                  className="blog-content prose sm:prose-lg max-w-none"
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
               </CardContent>

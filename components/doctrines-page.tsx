@@ -22,6 +22,8 @@ interface IProps {
   featuredBlogs: any
 }
 
+import "@/styles/blog-content.css"
+
 export function DoctrinesPage(props: IProps) {
   const { doctrineCategories, featuredBlogs } = props
   const [expandedItems, setExpandedItems] = useState<string[]>([])
@@ -130,7 +132,7 @@ export function DoctrinesPage(props: IProps) {
 
                               {/* Main Content */}
                               <div
-                                className="prose prose-lg max-w-none prose-headings:text-slate-800 prose-p:text-slate-700 prose-p:leading-relaxed prose-strong:text-slate-800 prose-ul:text-slate-700 prose-ol:text-slate-700 mb-6"
+                                className="blog-content prose prose-lg max-w-none"
                                 dangerouslySetInnerHTML={{ __html: doctrine.content }}
                               />
 
