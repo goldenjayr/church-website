@@ -1,8 +1,4 @@
-import { motion } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Tag, ArrowLeft, Share2, Heart, MessageCircle, Clock } from "lucide-react"
 import Link from "next/link"
 import { getBlogPostBySlug, getRelatedBlogPosts } from "@/lib/public-blog-actions"
 import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
@@ -33,7 +29,7 @@ interface BlogPostPageProps {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const post = await getBlogPostBySlug(params.slug)
-  
+
   if (!post) {
     return {
       title: "Post Not Found | Divine Jesus Church",
@@ -67,7 +63,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const post = await getBlogPostBySlug(params.slug)
-  
+
   if (!post) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
@@ -86,9 +82,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const relatedPosts = await getRelatedBlogPosts(post.id, post.categoryId, 3)
 
   return (
-    <BlogPostClient 
-      post={post as BlogPostWithAuthor} 
-      relatedPosts={relatedPosts as BlogPostWithAuthor[]} 
+    <BlogPostClient
+      post={post as BlogPostWithAuthor}
+      relatedPosts={relatedPosts as BlogPostWithAuthor[]}
     />
   )
 }
