@@ -48,11 +48,11 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50"
+      className="min-h-screen bg-white"
     >
       {/* Header */}
-      <section className="py-12 bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4">
+      <section className="py-8 sm:py-12 bg-white border-b">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Button asChild variant="ghost" className="mb-6">
               <Link href="/blog">
@@ -77,9 +77,9 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
               {post.featured && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-6 leading-tight">{post.title}</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-800 mb-6 leading-tight">{post.title}</h1>
 
-            <div className="flex flex-wrap items-center gap-6 text-slate-600 mb-6">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-slate-600 mb-6">
               <div className="flex items-center space-x-3">
                 {(() => {
                   const authorInfo = getAuthorDisplay(post);
@@ -135,17 +135,17 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
       </section>
 
       {/* Content */}
-      <section className="py-12">
-        <div className="max-w-4xl mx-auto px-4">
+      <section className="py-8 sm:py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <Card className="border-none shadow-lg mb-8">
-              <CardContent className="p-8">
+              <CardContent className="p-4 sm:p-6 md:p-8">
                 <div
-                  className="blog-content prose prose-lg max-w-none 
+                  className="blog-content prose sm:prose-lg max-w-none 
                     prose-headings:text-slate-800 prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8
                     prose-h1:text-4xl prose-h1:leading-tight prose-h1:border-b prose-h1:border-slate-200 prose-h1:pb-4
                     prose-h2:text-3xl prose-h2:leading-tight prose-h2:text-blue-700
@@ -188,8 +188,8 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
 
       {/* Related Posts */}
       {relatedPosts.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
+        <section className="py-12 sm:py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -197,7 +197,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl font-bold text-slate-800 mb-8 text-center">Related Articles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 {relatedPosts.map((relatedPost, index) => (
                   <motion.div
                     key={relatedPost.id}
