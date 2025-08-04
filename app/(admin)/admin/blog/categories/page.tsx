@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, GripVertical, Tag } from "lucide-react"
+import { Plus, Search, Edit, Trash2, GripVertical, Tag, ArrowLeft } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { getBlogCategories, deleteBlogCategory, updateBlogCategoryOrders } from "@/lib/blog-category-actions"
@@ -279,17 +279,27 @@ export default function BlogCategoriesPage() {
                 <h1 className="text-3xl font-bold text-slate-900">Blog Categories</h1>
                 <p className="text-slate-600 mt-2">Manage your blog post categories</p>
               </div>
-              <Button
-                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
-                onClick={() => router.push("/admin/blog/categories/new")}
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="bg-white/20 rounded-full p-1">
-                    <Plus className="w-4 h-4" />
+              <div className="flex items-center space-x-3">
+                <Button
+                  variant="outline"
+                  className="border-slate-200 text-slate-700 hover:bg-slate-50 transition-all duration-200"
+                  onClick={() => router.push("/admin/blog")}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Blog
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                  onClick={() => router.push("/admin/blog/categories/new")}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="bg-white/20 rounded-full p-1">
+                      <Plus className="w-4 h-4" />
+                    </div>
+                    <span className="font-semibold">New Category</span>
                   </div>
-                  <span className="font-semibold">New Category</span>
-                </div>
-              </Button>
+                </Button>
+              </div>
             </div>
 
             {/* Search */}

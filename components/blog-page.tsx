@@ -1,19 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Calendar, User, Tag, MessageCircle, BookOpen, Filter, Crown } from "lucide-react"
+import { Search, Calendar, User, Tag, MessageCircle, BookOpen, Filter } from "lucide-react"
 import Link from "next/link"
 import type { BlogCategory } from "@prisma/client"
 import { getAuthorDisplay } from "@/lib/author-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BlogPostWithAuthor } from '@/lib/types'
-
-
+import { MultiSelect, Option } from "@/components/ui/multi-select"
 
 interface IProps {
   blogPosts: BlogPostWithAuthor[]
@@ -23,26 +22,31 @@ interface IProps {
 export function BlogPage(props: IProps) {
   const { blogPosts, categories } = props
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<Option[]>([])
+  const [selectedTags, setSelectedTags] = useState<Option[]>([])
 
-  const categoryOptions = ["All", ...categories.map(cat => cat.name)]
-  const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
+  const categoryOptions = useMemo(() => 
+    categories.map(cat => ({ value: cat.id, label: cat.name })), [categories]
+  )
+
+  const tagOptions = useMemo(() => {
+    const allTags = Array.from(new Set(blogPosts.flatMap((post) => post.tags)))
+    return allTags.map(tag => ({ value: tag, label: tag }))
+  }, [blogPosts])
 
   const filteredPosts = blogPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || post.category?.name === selectedCategory
-    const matchesTags = selectedTags.length === 0 || selectedTags.some((tag) => post.tags.includes(tag))
+    
+    const selectedCategoryValues = selectedCategories.map(c => c.label)
+    const matchesCategory = selectedCategories.length === 0 || selectedCategoryValues.includes(post.category?.name || "")
+
+    const selectedTagValues = selectedTags.map(t => t.value)
+    const matchesTags = selectedTags.length === 0 || selectedTagValues.every((tag) => post.tags.includes(tag))
 
     return matchesSearch && matchesCategory && matchesTags
   })
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
-  }
-
 
   return (
     <motion.div
@@ -71,9 +75,8 @@ export function BlogPage(props: IProps) {
         <div className="max-w-6xl mx-auto px-4">
           <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
             <CardContent className="p-6">
-              <div className="flex flex-col gap-4">
-                {/* Search Bar */}
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                     <Input
@@ -90,62 +93,50 @@ export function BlogPage(props: IProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <Tag className="w-4 h-4 text-slate-600" />
                     <label className="text-sm font-medium text-slate-700">Categories</label>
+                    {selectedCategories.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedCategories([])}
+                        className="text-xs text-slate-500 hover:text-slate-700 p-1 h-auto"
+                      >
+                        Clear
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {categoryOptions.map((category) => {
-                      const categoryData = categories.find(cat => cat.name === category);
-                      return (
-                        <Button
-                          key={category}
-                          variant={selectedCategory === category ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setSelectedCategory(category)}
-                          className={`whitespace-nowrap ${selectedCategory === category ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}`}
-                          style={{
-                            backgroundColor: selectedCategory === category && categoryData ? categoryData.color : selectedCategory === category ? undefined : undefined,
-                            borderColor: selectedCategory !== category && categoryData ? categoryData.color : undefined,
-                            color: selectedCategory !== category && categoryData ? categoryData.color : undefined
-                          }}
-                        >
-                          {category}
-                        </Button>
-                      )
-                    })}
-                  </div>
+                  <MultiSelect
+                    options={categoryOptions}
+                    value={selectedCategories}
+                    onChange={setSelectedCategories}
+                    placeholder="Select categories..."
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Tags */}
-                {allTags.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Filter className="w-4 h-4 text-slate-600" />
-                      <label className="text-sm font-medium text-slate-700">Filter by Tags</label>
-                      {selectedTags.length > 0 && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedTags([])}
-                          className="text-xs text-slate-500 hover:text-slate-700 p-1 h-auto"
-                        >
-                          Clear
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {allTags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant={selectedTags.includes(tag) ? "default" : "outline"}
-                          className="cursor-pointer hover:bg-blue-100 transition-colors"
-                          onClick={() => toggleTag(tag)}
-                        >
-                          <Tag className="w-3 h-3 mr-1" />
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Filter className="w-4 h-4 text-slate-600" />
+                    <label className="text-sm font-medium text-slate-700">Filter by Tags</label>
+                    {selectedTags.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedTags([])}
+                        className="text-xs text-slate-500 hover:text-slate-700 p-1 h-auto"
+                      >
+                        Clear
+                      </Button>
+                    )}
                   </div>
-                )}
+                  <MultiSelect
+                    options={tagOptions}
+                    value={selectedTags}
+                    onChange={setSelectedTags}
+                    placeholder="Select tags..."
+                    className="w-full"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -160,20 +151,20 @@ export function BlogPage(props: IProps) {
               <BookOpen className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-600 mb-2">No articles found</h3>
               <p className="text-slate-500">
-                {searchTerm || selectedCategory !== "All" || selectedTags.length > 0
+                {searchTerm || selectedCategories.length > 0 || selectedTags.length > 0
                   ? "Try adjusting your search or filters"
                   : "No blog posts available"}
               </p>
-              {(selectedCategory !== "All" || selectedTags.length > 0) && (
+              {(selectedCategories.length > 0 || selectedTags.length > 0) && (
                 <div className="mt-4 flex gap-2 justify-center">
-                  {selectedCategory !== "All" && (
+                  {selectedCategories.length > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setSelectedCategory("All")}
+                      onClick={() => setSelectedCategories([])}
                       className="text-xs"
                     >
-                      Clear Category Filter
+                      Clear Category Filters
                     </Button>
                   )}
                   {selectedTags.length > 0 && (
