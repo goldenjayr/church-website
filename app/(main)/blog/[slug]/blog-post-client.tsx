@@ -4,11 +4,16 @@ import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Tag, ArrowLeft, Share2, Heart, MessageCircle, Clock } from "lucide-react"
+import { Calendar, User, Tag, ArrowLeft, Share2, Heart, Clock, Copy, Check } from "lucide-react"
 import Link from "next/link"
 import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 import { getAuthorDisplay } from "@/lib/author-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { FacebookShareButton, TwitterShareButton, FacebookMessengerShareButton } from "react-share"
+import { FacebookIcon, TwitterIcon, FacebookMessengerIcon } from "react-share"
+import { useState } from "react"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
@@ -32,15 +37,25 @@ interface BlogPostClientProps {
 }
 
 export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
-  const getCategoryDisplayName = (category: BlogCategory | null) => {
-    return category?.name || 'Uncategorized'
-  }
+  const [isCopied, setIsCopied] = useState(false)
 
   const estimateReadingTime = (content: string) => {
     const wordsPerMinute = 200
-    const textContent = content.replace(/<[^>]*>/g, '') // Remove HTML tags
+    const textContent = content.replace(/<[^>]*>/g, '')
     const wordCount = textContent.split(/\s+/).length
     return Math.ceil(wordCount / wordsPerMinute)
+  }
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success("Link copied to clipboard!")
+      setIsCopied(true)
+      setTimeout(() => setIsCopied(false), 2000) // Reset icon after 2 seconds
+    }).catch(() => {
+      toast.error("Failed to copy link.")
+    })
   }
 
   return (
@@ -63,9 +78,9 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
 
             <div className="flex items-center space-x-3 mb-4">
               {post.category && (
-                <Badge 
+                <Badge
                   variant="outline"
-                  style={{ 
+                  style={{
                     borderColor: post.category.color,
                     color: post.category.color,
                     backgroundColor: `${post.category.color}10`
@@ -98,7 +113,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                       <div className="flex flex-col">
                         <span className="font-medium text-slate-700">{authorInfo.name}</span>
                         {authorInfo.position && (
-                          <span 
+                          <span
                             className="text-sm font-medium"
                             style={{ color: authorInfo.positionColor || '#6b7280' }}
                           >
@@ -121,10 +136,41 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
+              <Popover onOpenChange={(open) => !open && setIsCopied(false)}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-60">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-center text-sm text-slate-700 mb-2">Share Post</h4>
+                    <FacebookShareButton url={shareUrl} quote={post.title} className="w-full">
+                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
+                        <FacebookIcon size={24} round />
+                        <span className="text-sm">Share on Facebook</span>
+                      </div>
+                    </FacebookShareButton>
+                    <TwitterShareButton url={shareUrl} title={post.title} className="w-full">
+                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
+                        <TwitterIcon size={24} round />
+                        <span className="text-sm">Share on X</span>
+                      </div>
+                    </TwitterShareButton>
+                    <FacebookMessengerShareButton url={shareUrl} appId="your-facebook-app-id" className="w-full"> {/* Replace with your FB App ID */}
+                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
+                        <FacebookMessengerIcon size={24} round />
+                        <span className="text-sm">Share on Messenger</span>
+                      </div>
+                    </FacebookMessengerShareButton>
+                    <Button variant="ghost" onClick={copyToClipboard} className="w-full justify-start p-2">
+                      {isCopied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                      <span className="text-sm">{isCopied ? 'Copied!' : 'Copy Link'}</span>
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button variant="outline" size="sm">
                 <Heart className="w-4 h-4 mr-2" />
                 Like
@@ -145,7 +191,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             <Card className="border-none shadow-lg mb-8">
               <CardContent className="p-4 sm:p-6 md:p-8">
                 <div
-                  className="blog-content prose sm:prose-lg max-w-none 
+                  className="blog-content prose sm:prose-lg max-w-none
                     prose-headings:text-slate-800 prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8
                     prose-h1:text-4xl prose-h1:leading-tight prose-h1:border-b prose-h1:border-slate-200 prose-h1:pb-4
                     prose-h2:text-3xl prose-h2:leading-tight prose-h2:text-blue-700
@@ -153,7 +199,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                     prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-4
                     prose-strong:text-slate-900 prose-strong:font-semibold
                     prose-em:text-slate-700 prose-em:italic
-                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 
+                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50
                     prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-blockquote:my-6 prose-blockquote:italic
                     prose-blockquote:text-blue-800 prose-blockquote:font-medium
                     prose-ul:text-slate-700 prose-ul:mb-4 prose-ul:list-disc prose-ul:pl-6
@@ -209,10 +255,10 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                     <Card className="h-full border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <CardContent className="p-6">
                         {relatedPost.category && (
-                          <Badge 
-                            variant="outline" 
+                          <Badge
+                            variant="outline"
                             className="mb-3"
-                            style={{ 
+                            style={{
                               borderColor: relatedPost.category.color,
                               color: relatedPost.category.color,
                               backgroundColor: `${relatedPost.category.color}10`
@@ -242,7 +288,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                                   <div>
                                     <span className="font-medium">{authorInfo.name}</span>
                                     {authorInfo.position && (
-                                      <div 
+                                      <div
                                         className="text-xs font-medium"
                                         style={{ color: authorInfo.positionColor || '#6b7280' }}
                                       >
