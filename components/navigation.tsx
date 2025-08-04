@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from 'next/image'
 import { Button } from "@/components/ui/button"
 import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin } from "lucide-react"
 
@@ -24,9 +25,9 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
+            {/* <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
+            </div> */}
+              <Image src="https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/official-logo.png" alt="Logo" width={48} height={48} />
             <span className="font-bold text-xl text-slate-800">Divine Jesus Church</span>
           </Link>
 
