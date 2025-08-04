@@ -435,6 +435,16 @@ export function RichTextEditor({ content, onChange, placeholder = "Start writing
                     />
                     <span className="text-xs text-slate-600">Custom color</span>
                   </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      editor.chain().focus().unsetHighlight().run()
+                      setHighlightColorOpen(false)
+                    }}
+                    className="w-full mt-4"
+                  >
+                    Remove Highlight
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
