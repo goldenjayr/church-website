@@ -1,110 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, MapPin, Users, Filter, ChevronDown } from "lucide-react"
-
-// Mock events data
-const events = [
-  {
-    id: "1",
-    title: "Youth Bible Study",
-    description:
-      "Join us for an interactive Bible study focused on living out faith in daily life. We'll explore practical applications of Scripture and enjoy fellowship together.",
-    date: "2024-01-15",
-    time: "7:00 PM",
-    location: "Youth Room",
-    category: "Youth",
-    attendees: 25,
-    maxAttendees: 30,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: false,
-  },
-  {
-    id: "2",
-    title: "Community Outreach",
-    description:
-      "Serve our community by providing meals and care packages to those in need. This is a great opportunity to show God's love in action.",
-    date: "2024-01-20",
-    time: "9:00 AM",
-    location: "Downtown Park",
-    category: "Outreach",
-    attendees: 40,
-    maxAttendees: 50,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: true,
-  },
-  {
-    id: "3",
-    title: "Family Movie Night",
-    description:
-      "Bring the whole family for a fun evening with popcorn, games, and a great movie. A perfect time for fellowship and relaxation.",
-    date: "2024-01-25",
-    time: "6:30 PM",
-    location: "Fellowship Hall",
-    category: "Family",
-    attendees: 60,
-    maxAttendees: 80,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: false,
-  },
-  {
-    id: "4",
-    title: "Women's Prayer Breakfast",
-    description:
-      "Ladies, join us for a time of prayer, encouragement, and delicious breakfast. Come ready to be blessed and be a blessing.",
-    date: "2024-01-28",
-    time: "8:00 AM",
-    location: "Church Kitchen",
-    category: "Women",
-    attendees: 15,
-    maxAttendees: 25,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: false,
-  },
-  {
-    id: "5",
-    title: "Men's Fellowship Breakfast",
-    description: "Men of all ages are invited to join us for breakfast, fellowship, and a short devotional message.",
-    date: "2024-02-03",
-    time: "7:30 AM",
-    location: "Fellowship Hall",
-    category: "Men",
-    attendees: 20,
-    maxAttendees: 30,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: false,
-  },
-  {
-    id: "6",
-    title: "Church Picnic",
-    description:
-      "Our annual church picnic with games, food, and fun for the whole family. Don't miss this special time of community celebration.",
-    date: "2024-02-10",
-    time: "11:00 AM",
-    location: "City Park",
-    category: "Family",
-    attendees: 120,
-    maxAttendees: 150,
-    image: "/placeholder.svg?height=200&width=300",
-    featured: true,
-  },
-]
-
-const categories = ["All", "Youth", "Family", "Outreach", "Women", "Men", "Worship"]
+import { getPublicEvents } from "@/lib/public-event-actions"
+import Link from "next/link"
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [showFilters, setShowFilters] = useState(false)
 
-  const filteredEvents =
-    selectedCategory === "All" ? events : events.filter((event) => event.category === selectedCategory)
+  useEffect(() => {
+    const loadEvents = async () => {
+      const eventsData = await getPublicEvents()
+      setEvents(eventsData)
+      setLoading(false)
+    }
 
-  const featuredEvents = events.filter((event) => event.featured)
+    loadEvents()
+  }, [])
+
+  const categories = ["All", ...new Set(events.map(event => event.location))]
+
+  const filteredEvents =
+    selectedCategory === "All" ? events : events.filter((event) => event.location === selectedCategory)
+
   const upcomingEvents = events.filter((event) => new Date(event.date) >= new Date())
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -128,8 +62,8 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* Featured Events */}
-      {featuredEvents.length > 0 && (
+      {/* Upcoming Events */}
+      {upcomingEvents.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-6xl mx-auto px-4">
             <motion.div
@@ -139,12 +73,12 @@ export default function EventsPage() {
               viewport={{ once: true }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold text-slate-800 mb-4">Featured Events</h2>
+              <h2 className="text-3xl font-bold text-slate-800 mb-4">Upcoming Events</h2>
               <p className="text-lg text-slate-600">Don't miss these special upcoming events</p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {featuredEvents.map((event, index) => (
+              {upcomingEvents.slice(0, 2).map((event, index) => (
                 <motion.div
                   key={event.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -159,12 +93,6 @@ export default function EventsPage() {
                         alt={event.title}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Featured
-                      </div>
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                        <Badge variant="secondary">{event.category}</Badge>
-                      </div>
                     </div>
 
                     <CardContent className="p-6">
@@ -183,17 +111,19 @@ export default function EventsPage() {
                           <MapPin className="w-4 h-4" />
                           <span>{event.location}</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Users className="w-4 h-4" />
-                          <span>
-                            {event.attendees}/{event.maxAttendees} attending
-                          </span>
-                        </div>
+                        {event.maxAttendees && (
+                          <div className="flex items-center space-x-2">
+                            <Users className="w-4 h-4" />
+                            <span>Up to {event.maxAttendees} attendees</span>
+                          </div>
+                        )}
                       </div>
 
                       <p className="text-slate-600 leading-relaxed mb-4">{event.description}</p>
 
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">RSVP Now</Button>
+                      <Link href={`/events/${event.id}`} passHref>
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Learn More</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -258,14 +188,6 @@ export default function EventsPage() {
                         alt={event.title}
                         className="w-full h-full object-cover"
                       />
-                      {event.featured && (
-                        <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          Featured
-                        </div>
-                      )}
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1">
-                        <Badge variant="secondary">{event.category}</Badge>
-                      </div>
                     </div>
 
                     <CardContent className="p-6">
@@ -284,17 +206,19 @@ export default function EventsPage() {
                           <MapPin className="w-4 h-4" />
                           <span>{event.location}</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Users className="w-4 h-4" />
-                          <span>
-                            {event.attendees}/{event.maxAttendees} attending
-                          </span>
-                        </div>
+                        {event.maxAttendees && (
+                          <div className="flex items-center space-x-2">
+                            <Users className="w-4 h-4" />
+                            <span>Up to {event.maxAttendees} attendees</span>
+                          </div>
+                        )}
                       </div>
 
                       <p className="text-slate-600 leading-relaxed mb-4 text-sm line-clamp-3">{event.description}</p>
 
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Learn More</Button>
+                      <Link href={`/events/${event.id}`} passHref>
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Learn More</Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </motion.div>
