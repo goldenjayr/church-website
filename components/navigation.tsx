@@ -13,7 +13,7 @@ const navItems = [
   { name: "Doctrines", href: "/doctrines", icon: BookOpen },
   { name: "Blog", href: "/blog", icon: BookOpen },
   { name: "Events", href: "/events", icon: Calendar },
-  { name: "Gallery", href: "/gallery", icon: Users },
+  // { name: "Gallery", href: "/gallery", icon: Users },
   { name: "Contact", href: "/contact", icon: MapPin },
 ]
 
