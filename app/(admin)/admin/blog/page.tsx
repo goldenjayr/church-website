@@ -15,6 +15,17 @@ import { getBlogCategories } from "@/lib/blog-category-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { MultiSelect, Option } from "@/components/ui/multi-select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { deleteBlogPost } from "@/lib/blog-actions"
 import { toast } from "sonner"
 
@@ -290,19 +301,36 @@ export default function AdminBlogPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeletePost(post.id)}
-                          disabled={deletingId === post.id}
-                        >
-                          {deletingId === post.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-600"></div>
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              disabled={deletingId === post.id}
+                            >
+                              {deletingId === post.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-red-600"></div>
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete this blog post.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeletePost(post.id)} className="bg-red-600 hover:bg-red-700">
+                                {deletingId === post.id ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </CardContent>

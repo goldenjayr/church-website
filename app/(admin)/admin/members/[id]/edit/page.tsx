@@ -181,7 +181,7 @@ export default function EditMemberPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="firstName"
                       value={formData.firstName}
@@ -192,7 +192,7 @@ export default function EditMemberPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="lastName"
                       value={formData.lastName}
@@ -283,7 +283,7 @@ export default function EditMemberPage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="joinDate">Join Date</Label>
+                    <Label htmlFor="joinDate">Join Date <span className="text-red-500">*</span></Label>
                     <Input
                       id="joinDate"
                       type="date"

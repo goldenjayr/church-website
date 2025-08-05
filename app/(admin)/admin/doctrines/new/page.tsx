@@ -140,7 +140,7 @@ export default function NewDoctrinePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Title <span className="text-red-500">*</span></Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -157,7 +157,7 @@ export default function NewDoctrinePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
                     <Input
                       id="category"
                       value={formData.category}
@@ -205,7 +205,7 @@ export default function NewDoctrinePage() {
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg">
                 <CardTitle className="text-slate-800 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span>Content</span>
+                  <span>Content <span className="text-red-500">*</span></span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
