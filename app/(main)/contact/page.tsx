@@ -1,13 +1,25 @@
 "use client"
 
+import { useState, useEffect } from 'react'
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Youtube } from "lucide-react"
+import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Youtube } from "lucide-react"
+import { getSiteSettings } from '@/lib/settings-actions'
 
 export default function ContactPage() {
+  const [settings, setSettings] = useState<any>({})
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const siteSettings = await getSiteSettings()
+      setSettings(siteSettings)
+    }
+    fetchSettings()
+  }, [])
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -44,79 +56,77 @@ export default function ContactPage() {
               <h2 className="text-3xl font-bold text-slate-800 mb-8">Get In Touch</h2>
 
               <div className="space-y-6 mb-8">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <MapPin className="w-6 h-6 text-white" />
+                {settings.contactAddress && (
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800 mb-1">Address</h3>
+                      <p className="text-slate-600">{settings.contactAddress}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Address</h3>
-                    <p className="text-slate-600">
-                      123 Faith Street
-                      <br />
-                      Hope City, HC 12345
-                    </p>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-white" />
+                {settings.contactPhone && (
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800 mb-1">Phone</h3>
+                      <p className="text-slate-600">{settings.contactPhone}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Phone</h3>
-                    <p className="text-slate-600">(555) 123-4567</p>
-                  </div>
-                </div>
+                )}
 
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-white" />
+                {settings.contactEmail && (
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800 mb-1">Email</h3>
+                      <p className="text-slate-600">{settings.contactEmail}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Email</h3>
-                    <p className="text-slate-600">info@gracecommunity.org</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-800 mb-1">Office Hours</h3>
-                    <p className="text-slate-600">
-                      Monday - Friday: 9:00 AM - 5:00 PM
-                      <br />
-                      Saturday: 8:00 AM - 12:00 PM
-                      <br />
-                      Sunday: Closed
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Social Media */}
               <div>
                 <h3 className="font-semibold text-slate-800 mb-4">Follow Us</h3>
                 <div className="flex space-x-4">
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
-                  >
-                    <Facebook className="w-5 h-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white hover:bg-pink-700 transition-colors"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                  <a
-                    href="#"
-                    className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors"
-                  >
-                    <Youtube className="w-5 h-5" />
-                  </a>
+                  {settings.facebookUrl && (
+                    <a
+                      href={settings.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <Facebook className="w-5 h-5" />
+                    </a>
+                  )}
+                  {settings.twitterUrl && (
+                    <a
+                      href={settings.twitterUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center text-white hover:bg-sky-600 transition-colors"
+                    >
+                      <Twitter className="w-5 h-5" />
+                    </a>
+                  )}
+                  {settings.youtubeUrl && (
+                    <a
+                      href={settings.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors"
+                    >
+                      <Youtube className="w-5 h-5" />
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -210,7 +220,7 @@ export default function ContactPage() {
             <div className="text-center text-slate-600">
               <MapPin className="w-16 h-16 mx-auto mb-4" />
               <p className="text-lg">Interactive Map Coming Soon</p>
-              <p className="text-sm">123 Faith Street, Hope City, HC 12345</p>
+              <p className="text-sm">{settings.contactAddress || "123 Faith Street, Hope City, HC 12345"}</p>
             </div>
           </motion.div>
         </div>
