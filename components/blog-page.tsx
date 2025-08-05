@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,7 +25,7 @@ export function BlogPage(props: IProps) {
   const [selectedCategories, setSelectedCategories] = useState<Option[]>([])
   const [selectedTags, setSelectedTags] = useState<Option[]>([])
 
-  const categoryOptions = useMemo(() => 
+  const categoryOptions = useMemo(() =>
     categories.map(cat => ({ value: cat.id, label: cat.name })), [categories]
   )
 
@@ -38,7 +38,7 @@ export function BlogPage(props: IProps) {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const selectedCategoryValues = selectedCategories.map(c => c.label)
     const matchesCategory = selectedCategories.length === 0 || selectedCategoryValues.includes(post.category?.name || "")
 

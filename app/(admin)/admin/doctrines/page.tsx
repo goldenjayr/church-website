@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -85,8 +85,8 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-4 flex-1">
               <div className="flex items-center space-x-2">
-                <div 
-                  {...attributes} 
+                <div
+                  {...attributes}
                   {...listeners}
                   className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
                   title="Drag to reorder"
@@ -99,8 +99,8 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-slate-900 mb-2">{doctrine.title}</h3>
-                <p className="text-slate-600 mb-4 line-clamp-3" 
-                   dangerouslySetInnerHTML={{ __html: doctrine.content.substring(0, 200) + "..." }} 
+                <p className="text-slate-600 mb-4 line-clamp-3"
+                   dangerouslySetInnerHTML={{ __html: doctrine.content.substring(0, 200) + "..." }}
                 />
                 <div className="flex items-center space-x-3">
                   <Badge variant={doctrine.published ? "default" : "secondary"}>
@@ -116,17 +116,17 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
             </div>
 
             <div className="flex items-center space-x-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
                 onClick={() => window.open(`/doctrines`, '_blank')}
               >
                 <Eye className="w-4 h-4" />
               </Button>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200"
                 onClick={() => router.push(`/admin/doctrines/${doctrine.id}/edit`)}
               >
@@ -173,7 +173,7 @@ export default function AdminDoctrinesPage() {
   const [doctrines, setDoctrines] = useState<any[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -185,12 +185,12 @@ export default function AdminDoctrinesPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         const doctrinesToSet = await getDoctrines()
         setDoctrines(doctrinesToSet)
       }
-      
+
       setLoading(false)
     }
 
@@ -233,14 +233,14 @@ export default function AdminDoctrinesPage() {
     if (active.id !== over?.id) {
       const oldIndex = doctrines.findIndex((doctrine) => doctrine.id === active.id)
       const newIndex = doctrines.findIndex((doctrine) => doctrine.id === over?.id)
-      
+
       const newDoctrines = arrayMove(doctrines, oldIndex, newIndex)
       setDoctrines(newDoctrines)
-      
+
       // Update the order in the database
       const doctrineIds = newDoctrines.map(doctrine => doctrine.id)
       const result = await updateDoctrineOrders(doctrineIds)
-      
+
       if (!result.success) {
         toast.error("Failed to update doctrine order")
         // Revert on error

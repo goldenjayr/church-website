@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,15 +13,15 @@ import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
 import { getSiteSettings, updateSiteSettings } from "@/lib/settings-actions"
-import { 
-  Building, 
-  Globe, 
-  AtSign, 
-  Phone, 
-  MapPin, 
-  Facebook, 
-  Twitter, 
-  Youtube, 
+import {
+  Building,
+  Globe,
+  AtSign,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Youtube,
   Save,
   Image as ImageIcon,
   Palette,
@@ -84,7 +84,7 @@ export default function SettingsPage() {
       setSaving(false)
     }
   }
-  
+
   const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings)
 
   const renderCategoryForm = () => {

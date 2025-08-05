@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -85,15 +85,15 @@ function SortablePositionItem({ position, index, router, deletingId, handleDelet
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-4 flex-1">
               <div className="flex items-center space-x-2">
-                <div 
-                  {...attributes} 
+                <div
+                  {...attributes}
                   {...listeners}
                   className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
                   title="Drag to reorder"
                 >
                   <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </div>
-                <div 
+                <div
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: position.color || '#3b82f6' }}
                 >
@@ -122,9 +122,9 @@ function SortablePositionItem({ position, index, router, deletingId, handleDelet
             </div>
 
             <div className="flex items-center space-x-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200"
                 onClick={() => router.push(`/admin/positions/${position.id}/edit`)}
               >
@@ -176,7 +176,7 @@ export default function PositionsPage() {
   const [positions, setPositions] = useState<any[]>([])
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -188,12 +188,12 @@ export default function PositionsPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         const positionsData = await getPositions()
         setPositions(positionsData)
       }
-      
+
       setLoading(false)
     }
 
@@ -236,14 +236,14 @@ export default function PositionsPage() {
     if (active.id !== over?.id) {
       const oldIndex = positions.findIndex((position) => position.id === active.id)
       const newIndex = positions.findIndex((position) => position.id === over?.id)
-      
+
       const newPositions = arrayMove(positions, oldIndex, newIndex)
       setPositions(newPositions)
-      
+
       // Update the order in the database
       const positionIds = newPositions.map(position => position.id)
       const result = await updatePositionOrders(positionIds)
-      
+
       if (!result.success) {
         toast.error("Failed to update position order")
         // Revert on error

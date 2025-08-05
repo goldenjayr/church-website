@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -87,13 +87,13 @@ export default function AdminBlogPage() {
     const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (post.excerpt || '').toLowerCase().includes(searchTerm.toLowerCase())
-    
+
     const selectedCategoryValues = selectedCategories.map(c => c.label);
     const matchesCategory = selectedCategories.length === 0 || selectedCategoryValues.includes(post.category?.name)
 
     const matchesTags = selectedTags.length === 0 ||
       selectedTags.every(selectedTag => post.tags?.includes(selectedTag.value))
-      
+
     return matchesSearch && matchesCategory && matchesTags
   })
 

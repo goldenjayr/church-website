@@ -1,20 +1,10 @@
-'use client'
-
-import { useState, useEffect } from 'react'
 import Link from "next/link"
 import { Heart, MapPin, Phone, Mail, Facebook, Twitter, Youtube } from "lucide-react"
 import { getSiteSettings } from '@/lib/settings-actions'
 
-export function Footer() {
-  const [settings, setSettings] = useState<any>({})
+export async function Footer() {
+  const settings = await getSiteSettings()
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      const siteSettings = await getSiteSettings()
-      setSettings(siteSettings)
-    }
-    fetchSettings()
-  }, [])
 
   return (
     <footer className="bg-slate-900 text-white">

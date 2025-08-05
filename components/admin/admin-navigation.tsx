@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from "motion/react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -49,7 +49,7 @@ const navItems = [
 export function AdminNavigation({ user, onLogout, isCollapsed, setIsCollapsed }: AdminNavigationProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const pathname = usePathname()
-  
+
   // Debug log to check if setIsCollapsed is being passed correctly
   console.log('AdminNavigation props:', { isCollapsed, setIsCollapsed: typeof setIsCollapsed })
 

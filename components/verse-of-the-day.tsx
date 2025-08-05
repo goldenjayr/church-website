@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen } from "lucide-react"
 import { IVerse } from "@/lib/types"

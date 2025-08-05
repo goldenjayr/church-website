@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,12 +48,12 @@ export default function MembersPage() {
     const loadData = async () => {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         const membersData = await getMembers()
         setMembers(membersData)
       }
-      
+
       setLoading(false)
     }
 
@@ -89,7 +89,7 @@ export default function MembersPage() {
     try {
       const result = await toggleMemberStatus(id)
       if (result.success) {
-        setMembers(prev => prev.map(member => 
+        setMembers(prev => prev.map(member =>
           member.id === id ? result.member : member
         ))
         toast.success("Member status updated!")
@@ -119,18 +119,18 @@ export default function MembersPage() {
   }
 
   const filteredMembers = members.filter((member) => {
-    const matchesSearch = 
+    const matchesSearch =
       member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.position?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === "all" || 
+
+    const matchesStatus = statusFilter === "all" ||
       (statusFilter === "active" && member.active) ||
       (statusFilter === "inactive" && !member.active) ||
       (statusFilter === "featured" && member.featured)
-    
-    const matchesPosition = positionFilter === "all" || 
+
+    const matchesPosition = positionFilter === "all" ||
       (positionFilter === "none" && !member.position) ||
       member.position?.id === positionFilter
 
@@ -218,8 +218,8 @@ export default function MembersPage() {
                         {getUniquePositions().map((position) => (
                           <SelectItem key={position.id} value={position.id}>
                             <div className="flex items-center space-x-2">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
+                              <div
+                                className="w-3 h-3 rounded-full"
                                 style={{ backgroundColor: position.color }}
                               />
                               <span>{position.name}</span>
@@ -317,7 +317,7 @@ export default function MembersPage() {
                           <Star className="w-5 h-5 text-yellow-500 fill-current" />
                         </div>
                       )}
-                      
+
                       <div className="flex items-start space-x-4">
                         <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
                           <AvatarImage src={member.imageUrl} />
@@ -325,14 +325,14 @@ export default function MembersPage() {
                             {getInitials(member.firstName, member.lastName)}
                           </AvatarFallback>
                         </Avatar>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="text-xl font-bold text-slate-900 truncate">
                             {member.firstName} {member.lastName}
                           </h3>
-                          
+
                           {member.position && (
-                            <Badge 
+                            <Badge
                               className="mt-1 text-white border-0"
                               style={{ backgroundColor: member.position.color }}
                             >
@@ -340,7 +340,7 @@ export default function MembersPage() {
                               {member.position.name}
                             </Badge>
                           )}
-                          
+
                           <div className="flex items-center space-x-2 mt-2">
                             <Badge variant={member.active ? "default" : "secondary"}>
                               {member.active ? "Active" : "Inactive"}
@@ -397,9 +397,9 @@ export default function MembersPage() {
                         </Button>
 
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             onClick={() => router.push(`/admin/members/${member.id}/edit`)}
                           >
@@ -449,8 +449,8 @@ export default function MembersPage() {
               <Users className="w-16 h-16 text-slate-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-slate-600 mb-2">No members found</h3>
               <p className="text-slate-500 mb-4">
-                {searchTerm || statusFilter !== "all" || positionFilter !== "all" 
-                  ? "Try adjusting your search or filters" 
+                {searchTerm || statusFilter !== "all" || positionFilter !== "all"
+                  ? "Try adjusting your search or filters"
                   : "Start by adding your first member"}
               </p>
               {!searchTerm && statusFilter === "all" && positionFilter === "all" && (
