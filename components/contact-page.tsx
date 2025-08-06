@@ -236,7 +236,7 @@ export function ContactPage(props: IProps) {
                 <CardContent className="p-6 text-center">
                   <Clock className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-slate-800 mb-2">Sabbath Worship</h3>
-                  <p className="text-slate-600">Saturdays at 10:00 AM</p>
+                  <p className="text-slate-600">Saturdays at 8:00 AM</p>
                 </CardContent>
               </Card>
 
@@ -252,7 +252,7 @@ export function ContactPage(props: IProps) {
                 <CardContent className="p-6 text-center">
                   <Clock className="w-12 h-12 text-purple-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-slate-800 mb-2">Bible Study</h3>
-                  <p className="text-slate-600">Fridays at 7:30 PM</p>
+                  <p className="text-slate-600">Sundays at 9:00 PM</p>
                 </CardContent>
               </Card>
             </div>
