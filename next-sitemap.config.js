@@ -2,5 +2,13 @@
 module.exports = {
   siteUrl: 'https://www.divinejesus.org',
   generateRobotsTxt: true, // (optional)
-  // ...other options
+  exclude: ['/admin/*', '/admin'],
+  robotsTxtOptions: {
+    policies: [
+      {
+        userAgent: '*',
+        disallow: ['/admin'],
+      },
+    ],
+  }
 }
