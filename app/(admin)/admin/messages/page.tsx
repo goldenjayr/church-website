@@ -105,8 +105,8 @@ export default function MessagesPage() {
   const [isSendingReply, setIsSendingReply] = useState(false)
   const [siteSettings, setSiteSettings] = useState<any>(null)
   const [emailTemplates] = useState([
-    { 
-      id: 'greeting', 
+    {
+      id: 'greeting',
       name: 'Friendly Greeting',
       content: `Thank you for reaching out to Divine Jesus Church! We appreciate you taking the time to contact us.
 
@@ -168,7 +168,7 @@ Blessings!`
       ])
       setUser(currentUser)
       setSiteSettings(settings)
-      
+
       if (currentUser && currentUser.role === "ADMIN") {
         await refreshMessages()
       }
@@ -232,7 +232,7 @@ Blessings!`
   const handleSelectMessage = async (message: ContactMessage) => {
     setSelectedMessage(message)
     setAdminNotes(message.notes || "")
-    
+
     // Mark as read if unread
     if (message.status === "UNREAD") {
       const result = await updateMessageStatus(message.id, "READ")
@@ -280,7 +280,7 @@ Blessings!`
 
   const handleBulkDelete = async () => {
     if (selectedMessages.length === 0) return
-    
+
     const result = await deleteMessages(selectedMessages)
     if (result.success) {
       await refreshMessages()
@@ -308,7 +308,7 @@ Blessings!`
 
   const handleSaveNotes = async () => {
     if (!selectedMessage) return
-    
+
     const result = await updateMessageNotes(selectedMessage.id, adminNotes)
     if (result.success) {
       await refreshMessages()
@@ -344,7 +344,7 @@ Blessings!`
       REPLIED: { label: "Replied", className: "bg-green-100 text-green-700" },
       PENDING: { label: "Pending", className: "bg-yellow-100 text-yellow-700" },
     }
-    
+
     const config = statusConfig[status]
     return <Badge className={config.className}>{config.label}</Badge>
   }
@@ -865,14 +865,29 @@ Blessings!`
         }}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader className="pb-4 border-b">
-              <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                  <Reply className="w-5 h-5 text-white" />
+              <DialogTitle className="text-xl font-semibold flex items-center gap-3">
+                {siteSettings?.logoUrl ? (
+                  <img
+                    src={siteSettings.logoUrl}
+                    alt={siteSettings?.siteName || 'Church Logo'}
+                    className="w-10 h-10 object-contain rounded"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                    <Reply className="w-5 h-5 text-white" />
+                  </div>
+                )}
+                <div>
+                  <div>Compose Reply</div>
+                  {siteSettings?.siteName && (
+                    <p className="text-xs font-normal text-slate-500 mt-0.5">
+                      From {siteSettings.siteName}
+                    </p>
+                  )}
                 </div>
-                Compose Reply
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="flex-1 overflow-y-auto">
               <div className="grid lg:grid-cols-5 gap-6 p-6">
                 {/* Left side - Email Compose */}
@@ -900,7 +915,7 @@ Blessings!`
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="p-4 bg-slate-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-1">
                         <FileText className="w-4 h-4 text-slate-500" />
@@ -958,11 +973,26 @@ Blessings!`
 
                   {/* Signature */}
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-700 mb-1">Your signature will be added automatically:</p>
-                    <p className="text-sm text-blue-900 italic">
-                      Blessings,<br />
-                      {user?.name || 'Divine Jesus Church Team'}
-                    </p>
+                    <p className="text-xs text-blue-700 mb-2">Your signature will be added automatically:</p>
+                    <div className="flex items-start gap-3">
+                      {siteSettings?.logoUrl && (
+                        <img
+                          src={siteSettings.logoUrl}
+                          alt={siteSettings?.siteName || 'Church Logo'}
+                          className="w-8 h-8 object-contain rounded"
+                        />
+                      )}
+                      <div className="text-sm text-blue-900 italic">
+                        <p>Blessings,</p>
+                        <p className="font-medium">{user?.name || siteSettings?.siteName || 'Divine Jesus Church Team'}</p>
+                        {siteSettings?.contactEmail && (
+                          <p className="text-xs mt-1">{siteSettings.contactEmail}</p>
+                        )}
+                        {siteSettings?.contactPhone && (
+                          <p className="text-xs">{siteSettings.contactPhone}</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1047,7 +1077,7 @@ Blessings!`
                           const phone = siteSettings?.contactPhone || 'Not available'
                           const email = siteSettings?.contactEmail || process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'info@divinejesus.org'
                           const address = siteSettings?.contactAddress || 'Visit our website for directions'
-                          
+
                           const contactInfo = `\n\nFor more information, you can reach us at:\nPhone: ${phone}\nEmail: ${email}\nAddress: ${address}`
                           if (!replyMessage.includes('reach us at')) {
                             setReplyMessage(replyMessage + contactInfo)
@@ -1070,8 +1100,8 @@ Blessings!`
                   <span>Email will be sent via Resend</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setShowReplyDialog(false)
                       setReplyMessage('')
@@ -1091,16 +1121,16 @@ Blessings!`
                         })
                         return
                       }
-                      
+
                       setIsSendingReply(true)
-                      
+
                       try {
                         const result = await sendMessageReply(
                           selectedMessage.id,
                           replyMessage,
                           user?.name || undefined
                         )
-                        
+
                         if (result.success) {
                           toast({
                             title: "Reply Sent Successfully! ✉️",

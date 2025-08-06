@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
@@ -27,10 +28,14 @@ import {
   Palette,
   Type,
   Link as LinkIcon,
-  Info
+  Info,
+  Bell,
+  Mail,
+  Plus,
+  X
 } from "lucide-react"
 
-type SettingsCategory = "general" | "contact" | "social" | "appearance" | "metadata"
+type SettingsCategory = "general" | "contact" | "social" | "appearance" | "metadata" | "notifications"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -40,6 +45,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<any>({})
   const [originalSettings, setOriginalSettings] = useState<any>({})
   const [activeCategory, setActiveCategory] = useState<SettingsCategory>("general")
+  const [newAdminEmail, setNewAdminEmail] = useState("")
 
   useEffect(() => {
     const loadData = async () => {
@@ -158,6 +164,91 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         )
+      case "notifications":
+        return (
+          <Card className="border-none shadow-xl bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Bell className="w-5 h-5 text-yellow-600" /> Admin Notifications</CardTitle>
+              <CardDescription>Email addresses that will receive notifications for new messages</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="adminEmails" className="flex items-center gap-2 mb-3">
+                  <Mail className="w-4 h-4" />
+                  Admin Email Addresses
+                </Label>
+                <div className="space-y-3">
+                  {settings.adminEmails && settings.adminEmails.length > 0 ? (
+                    <div className="space-y-2">
+                      {settings.adminEmails.map((email: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Badge variant="secondary" className="flex-1 justify-between py-2 px-3">
+                            <span className="text-sm">{email}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newEmails = settings.adminEmails.filter((_: string, i: number) => i !== index)
+                                setSettings({ ...settings, adminEmails: newEmails })
+                              }}
+                              className="ml-2 hover:text-red-600 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 italic">No admin emails configured</p>
+                  )}
+                  
+                  <div className="flex gap-2 mt-4">
+                    <Input
+                      type="email"
+                      placeholder="Add admin email address"
+                      value={newAdminEmail}
+                      onChange={(e) => setNewAdminEmail(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && newAdminEmail.trim()) {
+                          e.preventDefault()
+                          if (!settings.adminEmails?.includes(newAdminEmail.trim())) {
+                            setSettings({
+                              ...settings,
+                              adminEmails: [...(settings.adminEmails || []), newAdminEmail.trim()]
+                            })
+                            setNewAdminEmail('')
+                          }
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        if (newAdminEmail.trim() && !settings.adminEmails?.includes(newAdminEmail.trim())) {
+                          setSettings({
+                            ...settings,
+                            adminEmails: [...(settings.adminEmails || []), newAdminEmail.trim()]
+                          })
+                          setNewAdminEmail('')
+                        }
+                      }}
+                      disabled={!newAdminEmail.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-3">
+                    All listed emails will receive notifications when new messages are submitted through the contact form.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
       default:
         return null
     }
@@ -179,6 +270,7 @@ export default function SettingsPage() {
     { id: "general", label: "General", icon: Building },
     { id: "contact", label: "Contact", icon: Phone },
     { id: "social", label: "Social Media", icon: LinkIcon },
+    { id: "notifications", label: "Notifications", icon: Bell },
   ]
 
   return (

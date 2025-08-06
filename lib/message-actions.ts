@@ -233,9 +233,12 @@ export async function getMessageStats() {
 // Send reply email to a message
 export async function sendMessageReply(messageId: string, replyText: string, senderName?: string) {
   try {
-    const message = await prisma.contactMessage.findUnique({
-      where: { id: messageId },
-    })
+    const [message, siteSettings] = await Promise.all([
+      prisma.contactMessage.findUnique({
+        where: { id: messageId },
+      }),
+      prisma.siteSettings.findFirst(),
+    ])
     
     if (!message) {
       throw new Error('Message not found')
@@ -254,6 +257,13 @@ export async function sendMessageReply(messageId: string, replyText: string, sen
         createdAt: message.createdAt,
       },
       senderName,
+      siteSettings: siteSettings ? {
+        siteName: siteSettings.siteName || undefined,
+        logoUrl: siteSettings.logoUrl || undefined,
+        contactEmail: siteSettings.contactEmail || undefined,
+        contactPhone: siteSettings.contactPhone || undefined,
+        contactAddress: siteSettings.contactAddress || undefined,
+      } : undefined,
     })
     
     if (emailResult.success) {

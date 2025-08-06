@@ -25,6 +25,13 @@ export interface SendReplyEmailParams {
   };
   senderName?: string;
   senderEmail?: string;
+  siteSettings?: {
+    siteName?: string;
+    logoUrl?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    contactAddress?: string;
+  };
 }
 
 /**
@@ -65,6 +72,7 @@ export async function sendReplyEmail({
   originalMessage,
   senderName = 'Divine Jesus Church Team',
   senderEmail = process.env.EMAIL_REPLY_TO || 'info@divinejesus.org',
+  siteSettings,
 }: SendReplyEmailParams) {
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
@@ -104,26 +112,38 @@ export async function sendReplyEmail({
             margin-bottom: 30px;
           }
           .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            display: inline-block;
+            vertical-align: middle;
           }
           .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
+            vertical-align: middle;
+            margin-right: 15px;
+          }
+          .logo-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: 8px;
+            vertical-align: middle;
+            margin-right: 15px;
+            display: inline-block;
           }
           h1 {
             color: #1e293b;
             font-size: 24px;
             margin: 0;
+            line-height: 50px;
+            display: inline-block;
+            vertical-align: middle;
           }
           .greeting {
             font-size: 18px;
@@ -185,8 +205,10 @@ export async function sendReplyEmail({
         <div class="email-container">
           <div class="header">
             <div class="logo">
-              <div class="logo-icon">✝</div>
-              <h1>Divine Jesus Church</h1>
+              ${siteSettings?.logoUrl 
+                ? `<img src="${siteSettings.logoUrl}" alt="${siteSettings.siteName || 'Church Logo'}" class="logo-img" />` 
+                : '<span class="logo-icon">✝</span>'
+              }<h1>${siteSettings?.siteName || 'Divine Jesus Church'}</h1>
             </div>
           </div>
           
@@ -199,7 +221,8 @@ export async function sendReplyEmail({
           </div>
           
           <div class="signature">
-            <p>Blessings,<br>${senderName}</p>
+            <p>Blessings,<br>
+            <strong>${senderName || siteSettings?.siteName || 'Divine Jesus Church Team'}</strong></p>
           </div>
           
           <div class="original-message">
@@ -211,8 +234,14 @@ export async function sendReplyEmail({
           
           <div class="footer">
             <div class="contact-info">
-              <p><strong>Divine Jesus Church</strong></p>
-              <p>📧 Email: <a href="mailto:${senderEmail}">${senderEmail}</a></p>
+              ${siteSettings?.logoUrl 
+                ? `<img src="${siteSettings.logoUrl}" alt="${siteSettings.siteName || 'Church Logo'}" style="width: 40px; height: 40px; object-fit: contain; margin-bottom: 10px;" />` 
+                : ''
+              }
+              <p><strong>${siteSettings?.siteName || 'Divine Jesus Church'}</strong></p>
+              ${siteSettings?.contactEmail ? `<p>📧 Email: <a href="mailto:${siteSettings.contactEmail}">${siteSettings.contactEmail}</a></p>` : `<p>📧 Email: <a href="mailto:${senderEmail}">${senderEmail}</a></p>`}
+              ${siteSettings?.contactPhone ? `<p>📞 Phone: ${siteSettings.contactPhone}</p>` : ''}
+              ${siteSettings?.contactAddress ? `<p>📍 Address: ${siteSettings.contactAddress}</p>` : ''}
               <p>🌐 Website: <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://divinejesus.org'}">${process.env.NEXT_PUBLIC_SITE_URL || 'divinejesus.org'}</a></p>
             </div>
             <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
@@ -256,6 +285,44 @@ Website: ${process.env.NEXT_PUBLIC_SITE_URL || 'divinejesus.org'}
 }
 
 /**
+ * Get admin emails from various sources
+ */
+export async function getAdminEmails(): Promise<string[]> {
+  const emails: string[] = [];
+  
+  try {
+    // First, try to get from database settings
+    const { prisma } = await import('@/lib/prisma-client');
+    const settings = await prisma.siteSettings.findFirst();
+    
+    if (settings?.adminEmails && settings.adminEmails.length > 0) {
+      emails.push(...settings.adminEmails);
+    }
+  } catch (error) {
+    console.error('Failed to fetch admin emails from database:', error);
+  }
+  
+  // If no emails from database, check environment variables
+  if (emails.length === 0) {
+    const envEmails = process.env.ADMIN_NOTIFICATION_EMAIL;
+    if (envEmails) {
+      // Support comma-separated emails in env variable
+      const parsedEmails = envEmails.split(',').map(email => email.trim()).filter(Boolean);
+      emails.push(...parsedEmails);
+    }
+  }
+  
+  // Fallback to default if still no emails
+  if (emails.length === 0) {
+    const fallbackEmail = process.env.EMAIL_REPLY_TO || 'admin@divinejesus.org';
+    emails.push(fallbackEmail);
+  }
+  
+  // Remove duplicates
+  return [...new Set(emails)];
+}
+
+/**
  * Send a notification email when a new contact form is submitted
  */
 export async function sendNewMessageNotification(message: {
@@ -267,7 +334,7 @@ export async function sendNewMessageNotification(message: {
   message: string;
   createdAt: Date;
 }) {
-  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.EMAIL_REPLY_TO || 'admin@divinejesus.org';
+  const adminEmails = await getAdminEmails();
   
   const html = `
     <!DOCTYPE html>
@@ -382,10 +449,31 @@ export async function sendNewMessageNotification(message: {
     </html>
   `;
 
-  return sendEmail({
-    to: adminEmail,
-    subject: `New Contact Form: ${message.subject}`,
-    html,
-    from: process.env.EMAIL_FROM || 'Divine Jesus Church <notifications@divinejesus.org>',
-  });
+  // Send to all admin emails
+  const emailPromises = adminEmails.map(adminEmail => 
+    sendEmail({
+      to: adminEmail,
+      subject: `New Contact Form: ${message.subject}`,
+      html,
+      from: process.env.EMAIL_FROM || 'Divine Jesus Church <notifications@divinejesus.org>',
+    })
+  );
+  
+  // Send all emails in parallel
+  const results = await Promise.allSettled(emailPromises);
+  
+  // Check if at least one email was sent successfully
+  const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  const failureCount = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+  
+  if (successCount > 0) {
+    console.log(`Notification sent to ${successCount} admin(s)`);
+    if (failureCount > 0) {
+      console.warn(`Failed to send to ${failureCount} admin(s)`);
+    }
+    return { success: true, data: { sent: successCount, failed: failureCount } };
+  } else {
+    console.error('Failed to send notification to any admin');
+    return { success: false, error: 'Failed to send notification emails' };
+  }
 }

@@ -305,6 +305,7 @@ model SiteSettings {
   contactAddress  String?
   contactPhone    String?
   contactEmail    String?
+  adminEmails     String[] @default([]) // Array of admin emails for notifications
   facebookUrl     String?
   twitterUrl      String?
   youtubeUrl      String?

@@ -50,9 +50,6 @@ export function AdminNavigation({ user, onLogout, isCollapsed, setIsCollapsed }:
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const pathname = usePathname()
 
-  // Debug log to check if setIsCollapsed is being passed correctly
-  console.log('AdminNavigation props:', { isCollapsed, setIsCollapsed: typeof setIsCollapsed })
-
   const getInitials = (name: string) => {
     return name
       .split(' ')
