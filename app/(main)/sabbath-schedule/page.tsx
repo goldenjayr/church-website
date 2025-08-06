@@ -126,7 +126,7 @@ export default function SabbathSchedulePage() {
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6">Sabbath Schedule</h1>
             <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-              Join us every Saturday at 10:00 AM for worship, fellowship, and spiritual growth
+              Join us every Saturday at 8:00 AM for worship, fellowship, and spiritual growth
             </p>
           </motion.div>
         </div>
@@ -152,7 +152,7 @@ export default function SabbathSchedulePage() {
                 month: "long",
                 day: "numeric",
               })}{" "}
-              at 10:00 AM
+              at 8:00 AM
             </p>
             <CountdownTimer targetDate={nextSabbath} />
 
@@ -261,12 +261,12 @@ export default function SabbathSchedulePage() {
               <div className="text-center">
                 <Clock className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">Service Time</h3>
-                <p className="text-slate-600">Saturdays at 10:00 AM</p>
+                <p className="text-slate-600">Saturdays at 8:00 AM</p>
               </div>
               <div className="text-center">
                 <Calendar className="w-12 h-12 text-green-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">Duration</h3>
-                <p className="text-slate-600">Approximately 2 hours</p>
+                <p className="text-slate-600">Approximately 4 hours</p>
               </div>
               <div className="text-center">
                 <User className="w-12 h-12 text-purple-600 mx-auto mb-4" />
