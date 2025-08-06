@@ -9,9 +9,11 @@ export async function getDashboardData() {
       totalBlogPosts, 
       upcomingEventsCount,
       activePrayerRequestsCount,
+      unreadMessages,
       recentBlogPosts,
       recentEvents,
       recentMembers,
+      recentMessages,
       blogPostStats,
       eventStats,
       galleryStats,
@@ -21,6 +23,7 @@ export async function getDashboardData() {
       prisma.blogPost.count(),
       prisma.event.count({ where: { date: { gte: new Date() } } }),
       prisma.prayerRequest.count({ where: { status: 'ACTIVE' } }),
+      prisma.contactMessage.count({ where: { status: 'UNREAD' } }),
       prisma.blogPost.findMany({ 
         orderBy: { createdAt: 'desc' }, 
         take: 2, 
@@ -34,6 +37,10 @@ export async function getDashboardData() {
         orderBy: { createdAt: 'desc' }, 
         take: 2 
       }),
+      prisma.contactMessage.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 2
+      }),
       prisma.blogPost.groupBy({ by: ['published'], _count: { _all: true } }),
       prisma.event.groupBy({ by: ['published'], _count: { _all: true } }),
       prisma.gallery.groupBy({ by: ['published'], _count: { _all: true } }),
@@ -44,6 +51,7 @@ export async function getDashboardData() {
       ...recentBlogPosts.map(p => ({ type: 'blog', title: p.title, description: `By ${p.authorName || p.author.name}`, createdAt: p.createdAt, user: p.authorName || p.author.name })),
       ...recentEvents.map(e => ({ type: 'event', title: e.title, description: e.location, createdAt: e.createdAt, user: e.author.name })),
       ...recentMembers.map(m => ({ type: 'member', title: `${m.firstName} ${m.lastName}`, description: m.position?.name || 'New Member', createdAt: m.createdAt, user: 'System' })),
+      ...recentMessages.map(msg => ({ type: 'message', title: `Message from ${msg.firstName} ${msg.lastName}`, description: msg.subject, createdAt: msg.createdAt, user: msg.email })),
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
 
     const parseStats = (stats: any[]) => ({ 
@@ -58,6 +66,7 @@ export async function getDashboardData() {
         totalBlogPosts,
         upcomingEvents: upcomingEventsCount,
         prayerRequests: activePrayerRequestsCount,
+        unreadMessages,
       },
       recentActivity,
       contentOverview: {

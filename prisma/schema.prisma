@@ -269,6 +269,35 @@ enum ContentType {
   PLAIN_TEXT
 }
 
+model ContactMessage {
+  id         String        @id @default(cuid())
+  firstName  String
+  lastName   String
+  email      String
+  phone      String?
+  subject    String
+  message    String
+  status     MessageStatus @default(UNREAD)
+  starred    Boolean       @default(false)
+  archived   Boolean       @default(false)
+  notes      String?       // Admin notes about the message
+  repliedAt  DateTime?     // When the message was replied to
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status])
+  @@index([starred])
+  @@index([archived])
+  @@index([createdAt])
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  REPLIED
+  PENDING
+}
+
 model SiteSettings {
   id              String   @id @default(cuid()) // Should only have one entry
   siteName        String?

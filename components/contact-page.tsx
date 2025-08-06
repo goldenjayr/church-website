@@ -1,20 +1,95 @@
 'use client'
-'use client'
+
+import { useState } from 'react'
 import { SiteSettings } from '@prisma/client'
 import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Youtube } from "lucide-react"
+import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Youtube, Send, CheckCircle } from "lucide-react"
 import GoogleMapComponent from "./google-map"
 import { TikTokIcon } from './tiktok-icon'
+import { createMessage } from '@/lib/message-actions'
+import { toast } from '@/hooks/use-toast'
 
 interface IProps {
   settings: SiteSettings
 }
 export function ContactPage(props: IProps) {
   const { settings } = props
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.subject || !formData.message) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const result = await createMessage(formData)
+      
+      if (result.success) {
+        setIsSubmitted(true)
+        setFormData({
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        })
+        
+        // Reset success state after 5 seconds
+        setTimeout(() => {
+          setIsSubmitted(false)
+        }, 5000)
+        
+        toast({
+          title: "Message Sent!",
+          description: "Thank you for contacting us. We'll get back to you soon.",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to send message. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <motion.div
@@ -149,52 +224,126 @@ export function ContactPage(props: IProps) {
                   <CardTitle className="text-2xl text-slate-800">Send us a Message</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
-                          First Name
-                        </label>
-                        <Input id="firstName" placeholder="Your first name" />
+                  {isSubmitted ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="py-12 text-center"
+                    >
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="w-8 h-8 text-green-600" />
                       </div>
-                      <div>
-                        <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
-                          Last Name
-                        </label>
-                        <Input id="lastName" placeholder="Your last name" />
+                      <h3 className="text-xl font-semibold text-slate-800 mb-2">Message Sent Successfully!</h3>
+                      <p className="text-slate-600">Thank you for reaching out. We'll get back to you soon.</p>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
+                            First Name *
+                          </label>
+                          <Input
+                            id="firstName"
+                            placeholder="Your first name"
+                            value={formData.firstName}
+                            onChange={handleInputChange}
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
+                            Last Name *
+                          </label>
+                          <Input
+                            id="lastName"
+                            placeholder="Your last name"
+                            value={formData.lastName}
+                            onChange={handleInputChange}
+                            required
+                            disabled={isSubmitting}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                        Email
-                      </label>
-                      <Input id="email" type="email" placeholder="your.email@example.com" />
-                    </div>
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                          Email *
+                        </label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="your.email@example.com"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          required
+                          disabled={isSubmitting}
+                        />
+                      </div>
 
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
-                        Phone (Optional)
-                      </label>
-                      <Input id="phone" type="tel" placeholder="(555) 123-4567" />
-                    </div>
+                      <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
+                          Phone (Optional)
+                        </label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="(555) 123-4567"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
 
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">
-                        Subject
-                      </label>
-                      <Input id="subject" placeholder="What is this regarding?" />
-                    </div>
+                      <div>
+                        <label htmlFor="subject" className="block text-sm font-medium text-slate-700 mb-2">
+                          Subject *
+                        </label>
+                        <Input
+                          id="subject"
+                          placeholder="What is this regarding?"
+                          value={formData.subject}
+                          onChange={handleInputChange}
+                          required
+                          disabled={isSubmitting}
+                        />
+                      </div>
 
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-2">
-                        Message
-                      </label>
-                      <Textarea id="message" placeholder="Tell us how we can help you..." rows={5} />
-                    </div>
+                      <div>
+                        <label htmlFor="message" className="block text-sm font-medium text-slate-700 mb-2">
+                          Message *
+                        </label>
+                        <Textarea
+                          id="message"
+                          placeholder="Tell us how we can help you..."
+                          rows={5}
+                          value={formData.message}
+                          onChange={handleInputChange}
+                          required
+                          disabled={isSubmitting}
+                        />
+                      </div>
 
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3">Send Message</Button>
-                  </form>
+                      <Button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

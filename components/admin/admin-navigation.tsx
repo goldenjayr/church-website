@@ -37,7 +37,7 @@ const navItems = [
   { name: "Dashboard", href: "/admin", icon: Home },
   { name: "Blog Posts", href: "/admin/blog", icon: FileText },
   { name: "Events", href: "/admin/events", icon: Calendar },
-  { name: "Gallery", href: "/admin/gallery", icon: ImageIcon },
+  // { name: "Gallery", href: "/admin/gallery", icon: ImageIcon },
   { name: "Doctrines", href: "/admin/doctrines", icon: BookOpen },
   { name: "Members", href: "/admin/members", icon: Users },
   { name: "Positions", href: "/admin/positions", icon: Crown },

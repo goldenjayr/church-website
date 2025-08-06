@@ -5,6 +5,7 @@ import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 import {
   Users,
   FileText,
@@ -187,7 +188,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             {dashboardData &&
               [
                 {
@@ -217,6 +218,13 @@ export default function AdminDashboard() {
                   icon: Heart,
                   color: "text-red-600",
                   bgColor: "bg-red-100",
+                },
+                {
+                  title: "Unread Messages",
+                  value: dashboardData.stats.unreadMessages,
+                  icon: MessageSquare,
+                  color: "text-orange-600",
+                  bgColor: "bg-orange-100",
                 },
               ].map((stat, index) => (
                 <motion.div
@@ -342,6 +350,7 @@ export default function AdminDashboard() {
                             {activity.type === "event" && <Calendar className="w-4 h-4 text-green-600" />}
                             {activity.type === "prayer" && <Heart className="w-4 h-4 text-red-600" />}
                             {activity.type === "member" && <Users className="w-4 h-4 text-purple-600" />}
+                            {activity.type === "message" && <MessageSquare className="w-4 h-4 text-orange-600" />}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-slate-900">{activity.title}</p>
@@ -378,9 +387,11 @@ export default function AdminDashboard() {
                     <ImageIcon className="w-6 h-6" />
                     <span className="text-xs">Upload Photo</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <MessageSquare className="w-6 h-6" />
-                    <span className="text-xs">View Messages</span>
+                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent" asChild>
+                    <Link href="/admin/messages">
+                      <MessageSquare className="w-6 h-6" />
+                      <span className="text-xs">View Messages</span>
+                    </Link>
                   </Button>
                   <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
                     <BarChart3 className="w-6 h-6" />
