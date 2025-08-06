@@ -6,6 +6,7 @@ import "../globals.css"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
+import { GoogleAnalytics } from '@next/third-parties/google' // Import GoogleAnalytics
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,25 +35,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-G7074KW0ZZ"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-G7074KW0ZZ');
-          `}
-        </Script>
-      </head>
       <body className={inter.className}>
         <Navigation />
         <main className="min-h-screen">{children}</main>
         <Footer />
         <Toaster />
+          <GoogleAnalytics gaId="G-G7074KW0ZZ" />
       </body>
     </html>
   )
