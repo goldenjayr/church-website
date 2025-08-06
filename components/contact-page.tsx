@@ -1,4 +1,5 @@
 'use client'
+'use client'
 import { SiteSettings } from '@prisma/client'
 import { motion } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Youtube } from "lucide-react"
 import GoogleMapComponent from "./google-map"
+import { TikTokIcon } from './tiktok-icon'
 
 interface IProps {
   settings: SiteSettings
@@ -119,6 +121,16 @@ export function ContactPage(props: IProps) {
                       className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white hover:bg-red-700 transition-colors"
                     >
                       <Youtube className="w-5 h-5" />
+                    </a>
+                  )}
+                  {settings.tiktokUrl && (
+                    <a
+                      href={settings.tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
+                    >
+                      <TikTokIcon className="w-5 h-5" />
                     </a>
                   )}
                 </div>

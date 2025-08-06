@@ -10,7 +10,7 @@ const whatToExpect = [
   {
     icon: Music,
     title: "Worship Music",
-    description: "We begin with 20-30 minutes of contemporary and traditional worship songs",
+    description: "We begin with 1 hour of contemporary and traditional worship songs",
   },
   {
     icon: Heart,
