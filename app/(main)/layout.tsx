@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <head>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-G7074KW0ZZ"
           strategy="afterInteractive"
@@ -47,6 +47,8 @@ export default function RootLayout({
             gtag('config', 'G-G7074KW0ZZ');
           `}
         </Script>
+      </head>
+      <body className={inter.className}>
         <Navigation />
         <main className="min-h-screen">{children}</main>
         <Footer />
