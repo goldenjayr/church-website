@@ -33,7 +33,7 @@ const practicalInfo = [
   {
     icon: Clock,
     title: "Service Length",
-    description: "Our services typically last about 2 hours including fellowship time",
+    description: "Our services typically last about 4 hours including fellowship time",
   },
   {
     icon: Car,
@@ -91,7 +91,7 @@ export function NewHerePage(props: IProps) {
           >
             <h2 className="text-4xl font-bold text-slate-800 mb-6">Welcome to Our Family</h2>
             <p className="text-xl text-slate-600 leading-relaxed mb-8">
-              At Grace Community Church, we believe that everyone has a place at God's table. Whether you're exploring
+              At Divine Jesus Church, we believe that everyone has a place at God's table. Whether you're exploring
               faith for the first time, returning to church after some time away, or looking for a new church home,
               we're excited to welcome you with open arms.
             </p>

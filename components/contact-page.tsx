@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Youtube } from "lucide-react"
-import { getSiteSettings } from '@/lib/settings-actions'
+import GoogleMapComponent from "./google-map"
 
 interface IProps {
   settings: SiteSettings
@@ -209,13 +209,9 @@ export function ContactPage(props: IProps) {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className="bg-slate-200 rounded-lg h-96 flex items-center justify-center"
+            className="bg-slate-200 rounded-lg h-96"
           >
-            <div className="text-center text-slate-600">
-              <MapPin className="w-16 h-16 mx-auto mb-4" />
-              <p className="text-lg">Interactive Map Coming Soon</p>
-              <p className="text-sm">{settings.contactAddress || "123 Faith Street, Hope City, HC 12345"}</p>
-            </div>
+            <GoogleMapComponent />
           </motion.div>
         </div>
       </section>
