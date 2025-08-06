@@ -206,19 +206,17 @@ export function AboutPage(props: IProps) {
             <h2 className="text-4xl font-bold text-slate-800 mb-8">Our Story</h2>
             <div className="bg-white rounded-lg shadow-lg p-8">
               <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                Divine Jesus Church was founded in 1995 by a small group of families who felt called to create a church
-                that would be a beacon of hope and love in our community. What started as a home Bible study has grown
-                into a thriving congregation of over 500 members.
+                Divine Jesus Church was founded in 2016 by a small group of faith-filled families who felt led by God to create a church that would be a beacon of hope, love, and truth within the community. What began as a simple home Bible study soon grew, driven by a shared passion to worship, study the Word, and serve others. Today, through God’s grace, we have become a thriving congregation with over 100 members and growing.
+
               </p>
               <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                Throughout our history, we have remained committed to our core mission of making disciples and serving
-                our community. We have weathered challenges together, celebrated victories, and grown stronger in our
-                faith and fellowship.
+                From the beginning, our focus has been clear: to make disciples and build a Christ-centered community. Over the years, we’ve remained faithful to that mission—weathering challenges together, celebrating spiritual victories, and walking with one another in faith. Through every season, our fellowship has grown deeper, our vision stronger, and our hearts more united.
+              </p>
+              <p className="text-lg text-slate-600 leading-relaxed mb-6">
+                We are more than just a church—we are a family. A place where people from all walks of life come together to find encouragement, purpose, healing, and direction. Whether you’re new to the faith or have walked with Christ for many years, there is a place for you here.
               </p>
               <p className="text-lg text-slate-600 leading-relaxed">
-                Today, Divine Jesus Church continues to be a place where people from all walks of life can come together
-                to worship, learn, grow, and serve. We are excited about what God has in store for our future and invite
-                you to be part of our ongoing story.
+                We believe the best is yet to come and warmly invite you to be part of our ongoing story of faith, service, and transformation.
               </p>
             </div>
           </motion.div>
