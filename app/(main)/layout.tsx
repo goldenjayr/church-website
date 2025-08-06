@@ -25,7 +25,7 @@ export const metadata: Metadata = {
       },
     ],
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -40,8 +40,8 @@ export default function RootLayout({
         <main className="min-h-screen">{children}</main>
         <Footer />
         <Toaster />
-          <GoogleAnalytics gaId="G-G7074KW0ZZ" />
       </body>
+      <GoogleAnalytics gaId="G-G7074KW0ZZ" />
     </html>
   )
 }
