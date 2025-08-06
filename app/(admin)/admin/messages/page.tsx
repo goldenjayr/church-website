@@ -58,6 +58,9 @@ import {
   ChevronRight,
   StarOff,
   ArchiveX,
+  Plus,
+  Edit,
+  FileText,
 } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth-actions"
 import {
@@ -70,7 +73,9 @@ import {
   deleteMessages,
   updateMessageNotes,
   getMessageStats,
+  sendMessageReply,
 } from "@/lib/message-actions"
+import { getSiteSettings } from "@/lib/settings-actions"
 import type { User, ContactMessage, MessageStatus } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
@@ -97,6 +102,55 @@ export default function MessagesPage() {
   const [replyMessage, setReplyMessage] = useState("")
   const [adminNotes, setAdminNotes] = useState("")
   const [isEditingNotes, setIsEditingNotes] = useState(false)
+  const [isSendingReply, setIsSendingReply] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<any>(null)
+  const [emailTemplates] = useState([
+    { 
+      id: 'greeting', 
+      name: 'Friendly Greeting',
+      content: `Thank you for reaching out to Divine Jesus Church! We appreciate you taking the time to contact us.
+
+[Your message here]
+
+If you have any further questions or need additional assistance, please don't hesitate to reach out.
+
+May God bless you abundantly!`
+    },
+    {
+      id: 'event',
+      name: 'Event Information',
+      content: `Thank you for your interest in our church events!
+
+[Event details here]
+
+We'd love to see you there! Please let us know if you have any questions or need directions to our church.
+
+Looking forward to seeing you!`
+    },
+    {
+      id: 'prayer',
+      name: 'Prayer Support',
+      content: `Thank you for sharing your prayer request with us. We want you to know that we are standing with you in prayer.
+
+[Your message here]
+
+Please know that our prayer team will be lifting you up in prayer. God hears every prayer and cares deeply about what you're going through.
+
+Be encouraged - we serve a faithful God!`
+    },
+    {
+      id: 'general',
+      name: 'General Response',
+      content: `Thank you for contacting Divine Jesus Church.
+
+[Your response here]
+
+We hope this information is helpful. Please feel free to reach out if you need anything else.
+
+Blessings!`
+    }
+  ])
+  const [selectedTemplate, setSelectedTemplate] = useState('')
 
   useEffect(() => {
     loadData()
@@ -108,8 +162,12 @@ export default function MessagesPage() {
 
   const loadData = async () => {
     try {
-      const currentUser = await getCurrentUser()
+      const [currentUser, settings] = await Promise.all([
+        getCurrentUser(),
+        getSiteSettings()
+      ])
       setUser(currentUser)
+      setSiteSettings(settings)
       
       if (currentUser && currentUser.role === "ADMIN") {
         await refreshMessages()
@@ -752,6 +810,7 @@ export default function MessagesPage() {
                             </Button>
                             <Button
                               onClick={() => setShowReplyDialog(true)}
+                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                             >
                               <Reply className="w-4 h-4 mr-2" />
                               Reply via Email
@@ -797,52 +856,292 @@ export default function MessagesPage() {
         </Dialog>
 
         {/* Reply Dialog */}
-        <Dialog open={showReplyDialog} onOpenChange={setShowReplyDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Reply to {selectedMessage?.firstName} {selectedMessage?.lastName}</DialogTitle>
+        <Dialog open={showReplyDialog} onOpenChange={(open) => {
+          setShowReplyDialog(open)
+          if (!open) {
+            setReplyMessage('')
+            setSelectedTemplate('')
+          }
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="pb-4 border-b">
+              <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                  <Reply className="w-5 h-5 text-white" />
+                </div>
+                Compose Reply
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700">To:</label>
-                <p className="text-sm text-slate-600">{selectedMessage?.email}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700">Subject:</label>
-                <p className="text-sm text-slate-600">Re: {selectedMessage?.subject}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700">Message:</label>
-                <Textarea
-                  value={replyMessage}
-                  onChange={(e) => setReplyMessage(e.target.value)}
-                  placeholder="Type your reply here..."
-                  rows={8}
-                  className="mt-1"
-                />
+            
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid lg:grid-cols-5 gap-6 p-6">
+                {/* Left side - Email Compose */}
+                <div className="lg:col-span-3 space-y-4">
+                  {/* Recipients */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Mail className="w-4 h-4 text-slate-500" />
+                          <span className="text-sm font-medium text-slate-700">To:</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="w-6 h-6">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs">
+                              {selectedMessage && getInitials(selectedMessage.firstName, selectedMessage.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium text-slate-900">
+                            {selectedMessage?.firstName} {selectedMessage?.lastName}
+                          </span>
+                          <span className="text-sm text-slate-600">
+                            &lt;{selectedMessage?.email}&gt;
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileText className="w-4 h-4 text-slate-500" />
+                        <span className="text-sm font-medium text-slate-700">Subject:</span>
+                      </div>
+                      <p className="text-sm font-medium text-slate-900">Re: {selectedMessage?.subject}</p>
+                    </div>
+                  </div>
+
+                  {/* Email Templates */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-2">
+                      <MessageSquare className="w-4 h-4" />
+                      Quick Templates
+                    </label>
+                    <Select value={selectedTemplate} onValueChange={(value) => {
+                      setSelectedTemplate(value)
+                      const template = emailTemplates.find(t => t.id === value)
+                      if (template) {
+                        setReplyMessage(template.content)
+                      }
+                    }}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choose a template (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {emailTemplates.map(template => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Message Compose */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 flex items-center justify-between mb-2">
+                      <span className="flex items-center gap-2">
+                        <Edit className="w-4 h-4" />
+                        Message
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {replyMessage.length} characters
+                      </span>
+                    </label>
+                    <Textarea
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      placeholder="Type your reply here..."
+                      rows={12}
+                      className="resize-none font-normal"
+                    />
+                  </div>
+
+                  {/* Signature */}
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 mb-1">Your signature will be added automatically:</p>
+                    <p className="text-sm text-blue-900 italic">
+                      Blessings,<br />
+                      {user?.name || 'Divine Jesus Church Team'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right side - Original Message */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2 mb-3">
+                      <Clock className="w-4 h-4" />
+                      Original Message
+                    </h3>
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">From:</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {selectedMessage?.firstName} {selectedMessage?.lastName}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Date:</p>
+                        <p className="text-sm text-slate-700">
+                          {selectedMessage && format(new Date(selectedMessage.createdAt), "PPP 'at' p")}
+                        </p>
+                      </div>
+                      {selectedMessage?.phone && (
+                        <div>
+                          <p className="text-xs text-slate-500 mb-1">Phone:</p>
+                          <p className="text-sm text-slate-700">{selectedMessage.phone}</p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Subject:</p>
+                        <p className="text-sm font-medium text-slate-900">{selectedMessage?.subject}</p>
+                      </div>
+                      <div className="pt-3 border-t border-slate-200">
+                        <p className="text-xs text-slate-500 mb-2">Message:</p>
+                        <div className="max-h-48 overflow-y-auto">
+                          <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                            {selectedMessage?.message}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-700 mb-3">Quick Actions</h3>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          const greeting = `Dear ${selectedMessage?.firstName},\n\n`
+                          if (!replyMessage.startsWith(greeting)) {
+                            setReplyMessage(greeting + replyMessage)
+                          }
+                        }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Greeting
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          const serviceInfo = `\n\nOur service times are:\n- Sabbath Worship: Saturdays at 8:00 AM\n- Prayer Meeting: Wednesdays at 7:00 PM\n- Bible Study: Sundays at 9:00 PM`
+                          if (!replyMessage.includes('service times')) {
+                            setReplyMessage(replyMessage + serviceInfo)
+                          }
+                        }}
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Add Service Times
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          const phone = siteSettings?.contactPhone || 'Not available'
+                          const email = siteSettings?.contactEmail || process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'info@divinejesus.org'
+                          const address = siteSettings?.contactAddress || 'Visit our website for directions'
+                          
+                          const contactInfo = `\n\nFor more information, you can reach us at:\nPhone: ${phone}\nEmail: ${email}\nAddress: ${address}`
+                          if (!replyMessage.includes('reach us at')) {
+                            setReplyMessage(replyMessage + contactInfo)
+                          }
+                        }}
+                      >
+                        <Phone className="w-4 h-4 mr-2" />
+                        Add Contact Info
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowReplyDialog(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  // Here you would typically send the email
-                  toast({
-                    title: "Reply Sent",
-                    description: "Your reply has been sent successfully",
-                  })
-                  if (selectedMessage) {
-                    handleUpdateStatus(selectedMessage.id, "REPLIED")
-                  }
-                  setShowReplyDialog(false)
-                  setReplyMessage("")
-                }}
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Send Reply
-              </Button>
+
+            <DialogFooter className="border-t pt-4 px-6 pb-6">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span>Email will be sent via Resend</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowReplyDialog(false)
+                      setReplyMessage('')
+                      setSelectedTemplate('')
+                    }}
+                    disabled={isSendingReply}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      if (!selectedMessage || !replyMessage.trim()) {
+                        toast({
+                          title: "Error",
+                          description: "Please enter a message",
+                          variant: "destructive",
+                        })
+                        return
+                      }
+                      
+                      setIsSendingReply(true)
+                      
+                      try {
+                        const result = await sendMessageReply(
+                          selectedMessage.id,
+                          replyMessage,
+                          user?.name || undefined
+                        )
+                        
+                        if (result.success) {
+                          toast({
+                            title: "Reply Sent Successfully! ✉️",
+                            description: `Your reply has been sent to ${selectedMessage.firstName} ${selectedMessage.lastName}`,
+                          })
+                          await refreshMessages()
+                          if (selectedMessage) {
+                            const updated = await getMessage(selectedMessage.id)
+                            if (updated) setSelectedMessage(updated)
+                          }
+                          setShowReplyDialog(false)
+                          setReplyMessage('')
+                          setSelectedTemplate('')
+                        } else {
+                          toast({
+                            title: "Error",
+                            description: result.error || "Failed to send reply",
+                            variant: "destructive",
+                          })
+                        }
+                      } finally {
+                        setIsSendingReply(false)
+                      }
+                    }}
+                    disabled={isSendingReply || !replyMessage.trim()}
+                    className="min-w-[140px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+                  >
+                    {isSendingReply ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Send Reply
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>

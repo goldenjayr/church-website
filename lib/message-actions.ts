@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma-client'
 import { MessageStatus } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { sendReplyEmail, sendNewMessageNotification } from '@/lib/email-service'
 
 // Get all messages with optional filters
 export async function getMessages(filters?: {
@@ -75,7 +76,15 @@ export async function createMessage(data: {
     const message = await prisma.contactMessage.create({
       data,
     })
-
+    
+    // Send notification email to admin (non-blocking)
+    sendNewMessageNotification({
+      ...data,
+      createdAt: message.createdAt,
+    }).catch(error => {
+      console.error('Failed to send notification email:', error)
+    })
+    
     revalidatePath('/admin/messages')
     return { success: true, message }
   } catch (error) {
@@ -208,7 +217,7 @@ export async function getMessageStats() {
       prisma.contactMessage.count({ where: { starred: true } }),
       prisma.contactMessage.count({ where: { archived: true } }),
     ])
-
+    
     return {
       total,
       unread,
@@ -218,5 +227,52 @@ export async function getMessageStats() {
   } catch (error) {
     console.error('Error fetching message stats:', error)
     throw error
+  }
+}
+
+// Send reply email to a message
+export async function sendMessageReply(messageId: string, replyText: string, senderName?: string) {
+  try {
+    const message = await prisma.contactMessage.findUnique({
+      where: { id: messageId },
+    })
+    
+    if (!message) {
+      throw new Error('Message not found')
+    }
+    
+    // Send the email
+    const emailResult = await sendReplyEmail({
+      to: message.email,
+      subject: `Re: ${message.subject}`,
+      message: replyText,
+      originalMessage: {
+        firstName: message.firstName,
+        lastName: message.lastName,
+        subject: message.subject,
+        message: message.message,
+        createdAt: message.createdAt,
+      },
+      senderName,
+    })
+    
+    if (emailResult.success) {
+      // Update message status to REPLIED
+      await prisma.contactMessage.update({
+        where: { id: messageId },
+        data: {
+          status: 'REPLIED',
+          repliedAt: new Date(),
+        },
+      })
+      
+      revalidatePath('/admin/messages')
+      return { success: true, message: 'Reply sent successfully' }
+    } else {
+      return { success: false, error: 'Failed to send email' }
+    }
+  } catch (error) {
+    console.error('Error sending reply:', error)
+    return { success: false, error: 'Failed to send reply' }
   }
 }
