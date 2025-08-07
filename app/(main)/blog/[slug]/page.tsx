@@ -28,7 +28,8 @@ interface BlogPostPageProps {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = await getBlogPostBySlug(params.slug)
+  const { slug } = await params
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) {
     return {
@@ -62,7 +63,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await getBlogPostBySlug(params.slug)
+  const { slug } = await params
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) {
     return (

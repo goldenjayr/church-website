@@ -15,7 +15,14 @@ export async function getPublicEvents() {
 }
 
 export async function getPublicEventById(id: string) {
-  return await prisma.event.findUnique({
-    where: { id, published: true },
+  const event = await prisma.event.findUnique({
+    where: { id },
   });
+  
+  // Return null if event doesn't exist or is not published
+  if (!event || !event.published) {
+    return null;
+  }
+  
+  return event;
 }

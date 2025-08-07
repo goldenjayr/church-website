@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Calendar as CalendarIcon, Clock, MapPin, Users, Eye } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Calendar as CalendarIcon, Clock, MapPin, Users, Eye, ClipboardList } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User, Event } from "@prisma/client"
@@ -177,7 +177,16 @@ export default function AdminEventsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2 ml-4">
-                           <Button
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200"
+                            onClick={() => router.push(`/admin/events/${event.id}/rsvps`)}
+                            title="View RSVPs"
+                          >
+                            <ClipboardList className="w-4 h-4" />
+                          </Button>
+                          <Button
                             size="sm"
                             variant="ghost"
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
