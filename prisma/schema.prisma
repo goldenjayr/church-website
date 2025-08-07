@@ -298,6 +298,32 @@ enum MessageStatus {
   PENDING
 }
 
+enum DonationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  GCASH
+  PAYPAL
+  OTHER
+}
+
+enum RecurringFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
 model SiteSettings {
   id              String   @id @default(cuid()) // Should only have one entry
   siteName        String?
@@ -312,4 +338,109 @@ model SiteSettings {
   tiktokUrl       String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model Donation {
+  id                    String              @id @default(cuid())
+  transactionId         String              @unique
+  stripePaymentIntentId String?             @unique
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  
+  // Donation details
+  amount                Decimal             @db.Decimal(10, 2)
+  currency              String              @default("USD")
+  category              String
+  paymentMethod         PaymentMethod
+  status                DonationStatus      @default(PENDING)
+  
+  // Donor information
+  firstName             String
+  lastName              String
+  email                 String
+  phone                 String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  country               String              @default("USA")
+  
+  // Recurring donation fields
+  isRecurring           Boolean             @default(false)
+  recurringFrequency    RecurringFrequency?
+  recurringStartDate    DateTime?
+  recurringEndDate      DateTime?
+  recurringStatus       String?
+  
+  // Additional information
+  message               String?
+  isAnonymous           Boolean             @default(false)
+  taxDeductible         Boolean             @default(true)
+  receiptSent           Boolean             @default(false)
+  receiptSentAt         DateTime?
+  
+  // Security and tracking
+  ipAddress             String?
+  userAgent             String?
+  referrerUrl           String?
+  sessionId             String?
+  
+  // Processing details
+  processedAt           DateTime?
+  failureReason         String?
+  refundedAt            DateTime?
+  refundAmount          Decimal?            @db.Decimal(10, 2)
+  refundReason          String?
+  
+  // Metadata
+  metadata              Json?
+  
+  // Timestamps
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  
+  // Relations
+  receipts              DonationReceipt[]
+  recurringLogs         RecurringDonationLog[] @relation("OriginalDonation")
+  executedFromLog       RecurringDonationLog[] @relation("ExecutedDonation")
+  
+  @@index([email])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
+  @@index([isRecurring])
+  @@index([stripeCustomerId])
+}
+
+model DonationReceipt {
+  id            String   @id @default(cuid())
+  donationId    String
+  receiptNumber String   @unique
+  receiptUrl    String?
+  sentTo        String
+  sentAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  donation      Donation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  
+  @@index([donationId])
+}
+
+model RecurringDonationLog {
+  id                  String    @id @default(cuid())
+  originalDonationId  String
+  executedDonationId  String?
+  scheduledDate       DateTime
+  executedAt          DateTime?
+  status              String
+  errorMessage        String?
+  createdAt           DateTime  @default(now())
+  
+  // Relations
+  originalDonation    Donation  @relation("OriginalDonation", fields: [originalDonationId], references: [id], onDelete: Cascade)
+  executedDonation    Donation? @relation("ExecutedDonation", fields: [executedDonationId], references: [id], onDelete: SetNull)
+  
+  @@index([originalDonationId])
+  @@index([scheduledDate])
 }

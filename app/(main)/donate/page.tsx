@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "motion/react"
+import { useState, FormEvent } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,21 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Heart, CreditCard, Smartphone, Building, Globe, Shield, Users, BookOpen } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { 
+  Heart, 
+  CreditCard, 
+  Smartphone, 
+  Building, 
+  Globe, 
+  Shield, 
+  Users, 
+  BookOpen, 
+  CheckCircle, 
+  XCircle,
+  Loader2,
+  AlertCircle
+} from "lucide-react"
 
 const donationCategories = [
   {
@@ -79,12 +93,26 @@ const paymentMethods = [
 ]
 
 export default function DonatePage() {
+  const { toast } = useToast()
   const [selectedCategory, setSelectedCategory] = useState("tithes")
   const [amount, setAmount] = useState("")
   const [customAmount, setCustomAmount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isRecurring, setIsRecurring] = useState(false)
   const [frequency, setFrequency] = useState("monthly")
+  
+  // Form fields
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [message, setMessage] = useState("")
+  
+  // Form state
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [transactionId, setTransactionId] = useState("")
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const selectedCategoryData = donationCategories.find((cat) => cat.id === selectedCategory)
 
@@ -100,6 +128,134 @@ export default function DonatePage() {
 
   const getFinalAmount = () => {
     return customAmount || amount
+  }
+
+  // Validate email
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  // Validate phone number (optional but if provided, should be valid)
+  const validatePhone = (phone: string) => {
+    if (!phone) return true // Phone is optional
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/
+    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10
+  }
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (!getFinalAmount()) {
+      newErrors.amount = "Please select or enter a donation amount"
+    } else if (parseFloat(getFinalAmount()) <= 0) {
+      newErrors.amount = "Amount must be greater than 0"
+    }
+
+    if (!firstName.trim()) {
+      newErrors.firstName = "First name is required"
+    }
+
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required"
+    }
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required"
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Please enter a valid email address"
+    }
+
+    if (phone && !validatePhone(phone)) {
+      newErrors.phone = "Please enter a valid phone number"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  // Handle form submission
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the errors in the form",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrors({})
+
+    try {
+      const response = await fetch("/api/donations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category: selectedCategory,
+          amount: parseFloat(getFinalAmount()),
+          isRecurring,
+          frequency: isRecurring ? frequency : undefined,
+          paymentMethod,
+          firstName,
+          lastName,
+          email,
+          phone: phone || undefined,
+          message: message || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSubmitSuccess(true)
+        setTransactionId(data.transactionId)
+        toast({
+          title: "Donation Successful!",
+          description: `Thank you for your generous donation of $${getFinalAmount()}`,
+        })
+        
+        // Reset form after a delay
+        setTimeout(() => {
+          resetForm()
+        }, 5000)
+      } else {
+        throw new Error(data.error || "Failed to process donation")
+      }
+    } catch (error) {
+      console.error("Donation error:", error)
+      toast({
+        title: "Donation Failed",
+        description: error instanceof Error ? error.message : "An error occurred while processing your donation",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Reset form
+  const resetForm = () => {
+    setSelectedCategory("tithes")
+    setAmount("")
+    setCustomAmount("")
+    setPaymentMethod("card")
+    setIsRecurring(false)
+    setFrequency("monthly")
+    setFirstName("")
+    setLastName("")
+    setEmail("")
+    setPhone("")
+    setMessage("")
+    setSubmitSuccess(false)
+    setTransactionId("")
+    setErrors({})
   }
 
   return (
@@ -215,6 +371,12 @@ export default function DonatePage() {
                           step="0.01"
                         />
                       </div>
+                      {errors.amount && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          {errors.amount}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -284,25 +446,74 @@ export default function DonatePage() {
                       <Label htmlFor="firstName" className="text-sm font-medium text-slate-700 mb-2 block">
                         First Name *
                       </Label>
-                      <Input id="firstName" required />
+                      <Input 
+                        id="firstName" 
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className={errors.firstName ? "border-red-500" : ""}
+                        required 
+                      />
+                      {errors.firstName && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          {errors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="lastName" className="text-sm font-medium text-slate-700 mb-2 block">
                         Last Name *
                       </Label>
-                      <Input id="lastName" required />
+                      <Input 
+                        id="lastName" 
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className={errors.lastName ? "border-red-500" : ""}
+                        required 
+                      />
+                      {errors.lastName && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          {errors.lastName}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="email" className="text-sm font-medium text-slate-700 mb-2 block">
                         Email Address *
                       </Label>
-                      <Input id="email" type="email" required />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={errors.email ? "border-red-500" : ""}
+                        required 
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="phone" className="text-sm font-medium text-slate-700 mb-2 block">
                         Phone Number
                       </Label>
-                      <Input id="phone" type="tel" />
+                      <Input 
+                        id="phone" 
+                        type="tel" 
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className={errors.phone ? "border-red-500" : ""}
+                      />
+                      {errors.phone && (
+                        <p className="text-red-500 text-xs mt-1 flex items-center">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -311,7 +522,13 @@ export default function DonatePage() {
                     <Label htmlFor="message" className="text-sm font-medium text-slate-700 mb-2 block">
                       Special Instructions or Prayer Requests (Optional)
                     </Label>
-                    <Textarea id="message" placeholder="Any special instructions or prayer requests..." rows={3} />
+                    <Textarea 
+                      id="message" 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Any special instructions or prayer requests..." 
+                      rows={3} 
+                    />
                   </div>
 
                   {/* Security Notice */}
@@ -359,13 +576,92 @@ export default function DonatePage() {
                   <Button
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold"
-                    disabled={!getFinalAmount()}
+                    disabled={!getFinalAmount() || isSubmitting}
+                    onClick={handleSubmit}
                   >
-                    {isRecurring ? `Set Up ${frequency} Donation` : "Donate Now"} - ${getFinalAmount() || "0.00"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>{isRecurring ? `Set Up ${frequency} Donation` : "Donate Now"} - ${getFinalAmount() || "0.00"}</>
+                    )}
                   </Button>
                 </form>
               </CardContent>
             </Card>
+
+            {/* Success State */}
+            <AnimatePresence>
+              {submitSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-8"
+                >
+                  <Card className="border-none shadow-xl bg-gradient-to-br from-green-50 to-emerald-50">
+                    <CardContent className="p-8 text-center">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                      >
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <CheckCircle className="w-12 h-12 text-green-600" />
+                        </div>
+                      </motion.div>
+                      <h2 className="text-3xl font-bold text-slate-800 mb-4">Thank You for Your Generosity!</h2>
+                      <p className="text-lg text-slate-600 mb-6">
+                        Your donation has been successfully processed.
+                      </p>
+                      <div className="bg-white rounded-lg p-6 mb-6 text-left max-w-md mx-auto">
+                        <h3 className="font-semibold text-slate-800 mb-3">Donation Details</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Transaction ID:</span>
+                            <span className="font-mono text-xs bg-slate-100 px-2 py-1 rounded">{transactionId}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Amount:</span>
+                            <span className="font-semibold">${getFinalAmount()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Category:</span>
+                            <span className="font-medium">{selectedCategoryData?.title}</span>
+                          </div>
+                          {isRecurring && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-600">Frequency:</span>
+                              <span className="font-medium capitalize">{frequency}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-6">
+                        A confirmation email has been sent to <strong>{email}</strong>
+                      </p>
+                      <div className="flex gap-4 justify-center">
+                        <Button
+                          onClick={resetForm}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Make Another Donation
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.print()}
+                        >
+                          Print Receipt
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </section>
