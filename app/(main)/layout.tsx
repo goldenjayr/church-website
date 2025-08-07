@@ -12,6 +12,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Divine Jesus Church",
   description: "A welcoming community of faith, hope, and love",
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     title: "Divine Jesus Church",
     description: "A welcoming community of faith, hope, and love",
