@@ -288,7 +288,7 @@ export function BlogEngagement({ slug, className }: BlogEngagementProps) {
   );
 }
 
-// Compact version for list views
+// Compact version for list views - TRACKS VIEWS (use for main post only)
 export function BlogEngagementCompact({ slug, className }: BlogEngagementProps) {
   const { views, likes, isLoading } = useBlogEngagement(slug);
 
@@ -312,6 +312,57 @@ export function BlogEngagementCompact({ slug, className }: BlogEngagementProps) 
       <span className="flex items-center gap-1">
         <Heart className="w-4 h-4" />
         {formatNumber(likes)}
+      </span>
+    </div>
+  );
+}
+
+// Stats-only version for related posts - DOES NOT TRACK VIEWS
+export function BlogEngagementStats({ slug, className }: BlogEngagementProps) {
+  const [stats, setStats] = useState({ views: 0, likes: 0, isLoading: true });
+  
+  useEffect(() => {
+    // Only fetch stats, don't track views
+    const loadStats = async () => {
+      try {
+        const response = await fetch(`/api/blog/${slug}/stats`);
+        if (response.ok) {
+          const data = await response.json();
+          setStats({
+            views: data.totalViews || 0,
+            likes: data.totalLikes || 0,
+            isLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error('Error loading stats:', error);
+        setStats(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+    
+    loadStats();
+  }, [slug]);
+
+  if (stats.isLoading) {
+    return (
+      <div className={cn('flex items-center gap-3 text-sm text-gray-500', className)}>
+        <div className="animate-pulse flex items-center gap-3">
+          <div className="h-4 w-12 bg-gray-200 rounded" />
+          <div className="h-4 w-12 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('flex items-center gap-3 text-sm text-gray-500', className)}>
+      <span className="flex items-center gap-1">
+        <Eye className="w-4 h-4" />
+        {formatNumber(stats.views)}
+      </span>
+      <span className="flex items-center gap-1">
+        <Heart className="w-4 h-4" />
+        {formatNumber(stats.likes)}
       </span>
     </div>
   );

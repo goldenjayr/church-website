@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { debounce } from 'lodash';
 import { getCurrentUser } from '@/lib/auth-actions';
 import type { User } from '@prisma/client';
 
@@ -15,6 +14,33 @@ interface EngagementMetrics {
   scrollDepth: number;
   timeOnPage: number;
   clicks: number;
+}
+
+// Custom debounce implementation to avoid lodash dependency
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
+// Custom throttle for scroll events
+function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle = false;
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func(...args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
 }
 
 export function useBlogEngagement(slug: string) {
@@ -32,83 +58,142 @@ export function useBlogEngagement(slug: string) {
   const clickCount = useRef<number>(0);
   const viewTracked = useRef<boolean>(false);
   const engagementInterval = useRef<NodeJS.Timeout>();
+  const lastEngagementUpdate = useRef<number>(0);
+  const pendingEngagement = useRef<boolean>(false);
 
-  // Load current user
+  // Memoize session ID to avoid repeated storage access
+  const sessionId = useMemo(() => getOrCreateSessionId(), []);
+
+  // Load current user with caching
   useEffect(() => {
-    getCurrentUser().then(setUser);
+    let cancelled = false;
+    const loadUser = async () => {
+      const cachedUser = sessionStorage.getItem('cached_user');
+      if (cachedUser) {
+        try {
+          setUser(JSON.parse(cachedUser));
+        } catch {}
+      }
+      
+      const freshUser = await getCurrentUser();
+      if (!cancelled) {
+        setUser(freshUser);
+        if (freshUser) {
+          sessionStorage.setItem('cached_user', JSON.stringify(freshUser));
+        }
+      }
+    };
+    loadUser();
+    return () => { cancelled = true; };
   }, []);
 
-  // Track page view
+  // Optimized view tracking with request coalescing
   const trackView = useCallback(async () => {
     if (viewTracked.current) return;
     
     try {
-      const sessionId = getOrCreateSessionId();
-      const response = await fetch(`/api/blog/${slug}/views`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          referrer: document.referrer,
-          sessionId,
-        }),
-      });
-
-      const data = await response.json();
+      // Use requestIdleCallback for non-critical tracking
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          if (!viewTracked.current) {
+            sendViewRequest();
+          }
+        });
+      } else {
+        sendViewRequest();
+      }
       
-      if (response.ok && data.success) {
-        viewTracked.current = true;
-        // Update session ID if server provided a new one
-        if (data.sessionId && data.sessionId !== sessionId) {
-          if (typeof window !== 'undefined') {
+      async function sendViewRequest() {
+        const response = await fetch(`/api/blog/${slug}/views`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            referrer: document.referrer,
+            sessionId,
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          viewTracked.current = true;
+          // Update session ID if server provided a new one
+          if (data.sessionId && data.sessionId !== sessionId) {
             sessionStorage.setItem('blog_session_id', data.sessionId);
           }
+        } else if (data.cached) {
+          viewTracked.current = true;
         }
-      } else if (data.cached) {
-        // View was already counted in this session
-        viewTracked.current = true;
       }
     } catch (error) {
       console.error('Error tracking view:', error);
     }
-  }, [slug]);
+  }, [slug, sessionId]);
 
-  // Track engagement metrics
+  // Optimized engagement tracking with batching
   const trackEngagement = useCallback(async () => {
-    const timeOnPage = Math.floor((Date.now() - startTime.current) / 1000);
+    // Avoid tracking if less than 10 seconds since last update
+    const now = Date.now();
+    if (now - lastEngagementUpdate.current < 10000) return;
+    
+    // Prevent concurrent requests
+    if (pendingEngagement.current) return;
+    pendingEngagement.current = true;
+    
+    const timeOnPage = Math.floor((now - startTime.current) / 1000);
+    lastEngagementUpdate.current = now;
     
     try {
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      
       await fetch(`/api/blog/${slug}/engagement`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId: getOrCreateSessionId(),
+          sessionId,
           scrollDepth: maxScrollDepth.current,
           timeOnPage,
           clicks: clickCount.current,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeout);
     } catch (error) {
-      console.error('Error tracking engagement:', error);
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error tracking engagement:', error);
+      }
+    } finally {
+      pendingEngagement.current = false;
     }
-  }, [slug]);
+  }, [slug, sessionId]);
 
-  // Debounced engagement tracking
-  const debouncedTrackEngagement = useCallback(
-    debounce(trackEngagement, 5000),
+  // Optimized debounced tracking
+  const debouncedTrackEngagement = useMemo(
+    () => debounce(trackEngagement, 5000),
     [trackEngagement]
   );
 
-  // Load initial data
+  // Combined initial data loading with parallel requests
   useEffect(() => {
+    let cancelled = false;
+    
     const loadData = async () => {
       try {
-        const response = await fetch(`/api/blog/${slug}/stats`);
-        if (response.ok) {
-          const stats = await response.json();
+        // Parallel fetch for stats and view tracking
+        const [statsResponse] = await Promise.all([
+          fetch(`/api/blog/${slug}/stats`),
+          trackView(), // Track view in parallel
+        ]);
+        
+        if (!cancelled && statsResponse.ok) {
+          const stats = await statsResponse.json();
           setData({
             views: stats.totalViews || 0,
             likes: stats.totalLikes || 0,
@@ -118,84 +203,140 @@ export function useBlogEngagement(slug: string) {
         }
       } catch (error) {
         console.error('Error loading blog stats:', error);
-        setData(prev => ({ ...prev, isLoading: false }));
+        if (!cancelled) {
+          setData(prev => ({ ...prev, isLoading: false }));
+        }
       }
     };
 
     loadData();
-    trackView();
+    return () => { cancelled = true; };
   }, [slug, trackView]);
 
-  // Track scroll depth
+  // Optimized scroll tracking with throttling and passive listener
   useEffect(() => {
-    const handleScroll = () => {
+    // Pre-calculate values that don't change
+    let ticking = false;
+    
+    const updateScrollDepth = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollPercentage = (scrollTop + windowHeight) / documentHeight * 100;
+      const scrollPercentage = Math.min(100, (scrollTop + windowHeight) / documentHeight * 100);
       
-      maxScrollDepth.current = Math.max(maxScrollDepth.current, Math.min(100, scrollPercentage));
-      debouncedTrackEngagement();
+      maxScrollDepth.current = Math.max(maxScrollDepth.current, scrollPercentage);
+      ticking = false;
     };
+    
+    const handleScroll = throttle(() => {
+      if (!ticking) {
+        requestAnimationFrame(updateScrollDepth);
+        ticking = true;
+      }
+      debouncedTrackEngagement();
+    }, 250);
 
-    window.addEventListener('scroll', handleScroll);
+    // Use passive listener for better scroll performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [debouncedTrackEngagement]);
 
-  // Track clicks
+  // Optimized click tracking with delegation
   useEffect(() => {
-    const handleClick = () => {
-      clickCount.current++;
-      debouncedTrackEngagement();
-    };
+    const handleClick = throttle((e: MouseEvent) => {
+      // Only track meaningful clicks (not on empty space)
+      if (e.target && (e.target as HTMLElement).tagName) {
+        clickCount.current++;
+        debouncedTrackEngagement();
+      }
+    }, 1000);
 
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    // Use capture phase for better performance
+    document.addEventListener('click', handleClick, { capture: true, passive: true });
+    return () => document.removeEventListener('click', handleClick, { capture: true });
   }, [debouncedTrackEngagement]);
 
-  // Track time on page with periodic updates
+  // Smart interval management - only track when page is visible
   useEffect(() => {
-    engagementInterval.current = setInterval(() => {
-      trackEngagement();
-    }, 30000); // Every 30 seconds
-
-    return () => {
-      if (engagementInterval.current) {
-        clearInterval(engagementInterval.current);
+    let interval: NodeJS.Timeout | null = null;
+    
+    const startTracking = () => {
+      if (!interval && document.visibilityState === 'visible') {
+        interval = setInterval(() => {
+          trackEngagement();
+        }, 45000); // Increased to 45 seconds to reduce server load
+        engagementInterval.current = interval;
       }
+    };
+    
+    const stopTracking = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        startTracking();
+      } else {
+        stopTracking();
+        // Track engagement when page becomes hidden
+        trackEngagement();
+      }
+    };
+    
+    // Start tracking if page is visible
+    startTracking();
+    
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      stopTracking();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [trackEngagement]);
 
-  // Track when user leaves the page
+  // Optimized beforeunload tracking
   useEffect(() => {
     const handleBeforeUnload = () => {
       const timeOnPage = Math.floor((Date.now() - startTime.current) / 1000);
       
-      // Use sendBeacon for reliable tracking on page leave
-      const data = new FormData();
-      data.append('sessionId', getOrCreateSessionId());
-      data.append('timeOnPage', timeOnPage.toString());
-      data.append('scrollDepth', maxScrollDepth.current.toString());
-      data.append('clicks', clickCount.current.toString());
-      
-      navigator.sendBeacon(`/api/blog/${slug}/engagement`, data);
+      // Only send if we have meaningful data
+      if (timeOnPage > 2 || maxScrollDepth.current > 5 || clickCount.current > 0) {
+        const data = new FormData();
+        data.append('sessionId', sessionId);
+        data.append('timeOnPage', timeOnPage.toString());
+        data.append('scrollDepth', maxScrollDepth.current.toString());
+        data.append('clicks', clickCount.current.toString());
+        
+        navigator.sendBeacon(`/api/blog/${slug}/engagement`, data);
+      }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [slug]);
+  }, [slug, sessionId]);
 
-  // Toggle like function
-  const toggleLike = async () => {
+  // Toggle like with optimistic updates
+  const toggleLike = useCallback(async () => {
     if (!user) {
-      // Redirect to login
       router.push(`/login?redirect=/blog/${slug}`);
       return;
     }
 
+    // Optimistic update
+    const previousData = data;
+    setData(prev => ({
+      ...prev,
+      likes: prev.hasLiked ? Math.max(0, prev.likes - 1) : prev.likes + 1,
+      hasLiked: !prev.hasLiked,
+    }));
+
     try {
       const response = await fetch(`/api/blog/${slug}/likes`, {
-        method: data.hasLiked ? 'DELETE' : 'POST',
+        method: previousData.hasLiked ? 'DELETE' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -203,16 +344,22 @@ export function useBlogEngagement(slug: string) {
 
       if (response.ok) {
         const result = await response.json();
+        // Update with server data
         setData(prev => ({
           ...prev,
           likes: result.likeCount,
           hasLiked: result.liked,
         }));
+      } else {
+        // Revert on error
+        setData(previousData);
       }
     } catch (error) {
       console.error('Error toggling like:', error);
+      // Revert on error
+      setData(previousData);
     }
-  };
+  }, [user, data, slug, router]);
 
   return {
     ...data,

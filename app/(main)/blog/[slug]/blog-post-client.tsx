@@ -15,7 +15,7 @@ import { FacebookShareButton, TwitterShareButton, FacebookMessengerShareButton }
 import { FacebookIcon, TwitterIcon, FacebookMessengerIcon } from "react-share"
 import { useState } from "react"
 import { useBlogEngagement, useBlogShare } from "@/hooks/use-blog-engagement"
-import { BlogEngagement, BlogEngagementCompact } from "@/components/blog/blog-engagement"
+import { BlogEngagement, BlogEngagementCompact, BlogEngagementStats } from "@/components/blog/blog-engagement"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
@@ -218,9 +218,9 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                         <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{relatedPost.title}</h3>
                         <p className="text-slate-600 mb-4 line-clamp-3">{relatedPost.excerpt || 'No excerpt available'}</p>
                         
-                        {/* Engagement stats for related posts */}
+                        {/* Engagement stats for related posts - using Stats component that doesn't track views */}
                         <div className="mb-3">
-                          <BlogEngagementCompact slug={relatedPost.slug} />
+                          <BlogEngagementStats slug={relatedPost.slug} />
                         </div>
                         
                         <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
