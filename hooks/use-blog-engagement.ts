@@ -180,17 +180,14 @@ export function useBlogEngagement(slug: string) {
     [trackEngagement]
   );
 
-  // Combined initial data loading with parallel requests
+  // Load stats immediately, track view in background
   useEffect(() => {
     let cancelled = false;
     
     const loadData = async () => {
       try {
-        // Parallel fetch for stats and view tracking
-        const [statsResponse] = await Promise.all([
-          fetch(`/api/blog/${slug}/stats`),
-          trackView(), // Track view in parallel
-        ]);
+        // Load stats immediately - don't wait for view tracking
+        const statsResponse = await fetch(`/api/blog/${slug}/stats`);
         
         if (!cancelled && statsResponse.ok) {
           const stats = await statsResponse.json();
@@ -209,7 +206,15 @@ export function useBlogEngagement(slug: string) {
       }
     };
 
+    // Load stats immediately
     loadData();
+    
+    // Track view in background - completely independent
+    trackView().catch(err => {
+      console.error('Error tracking view:', err);
+      // Don't affect UI - view tracking is non-critical
+    });
+    
     return () => { cancelled = true; };
   }, [slug, trackView]);
 

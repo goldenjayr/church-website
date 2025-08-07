@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Eye, FileText, Tag, Filter } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, FileText, Tag, Filter, BarChart3 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
@@ -139,6 +139,15 @@ export default function AdminBlogPage() {
               <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage your church blog content</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                className="border-green-200 text-green-700 hover:bg-green-50 transition-all duration-200 text-sm sm:text-base justify-center"
+                onClick={() => router.push("/admin/blog/stats")}
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">View Analytics</span>
+                <span className="sm:hidden">Analytics</span>
+              </Button>
               <Button
                 variant="outline"
                 className="border-purple-200 text-purple-700 hover:bg-purple-50 transition-all duration-200 text-sm sm:text-base justify-center"
