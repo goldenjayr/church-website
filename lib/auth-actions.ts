@@ -119,3 +119,171 @@ export async function logout() {
   cookieStore.delete('userId')
   redirect('/')
 }
+
+export async function requestPasswordReset(email: string): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return {
+        success: true,
+        message: 'If an account exists with this email, you will receive a password reset link.'
+      }
+    }
+
+    // Generate a secure random token
+    const crypto = await import('crypto')
+    const token = crypto.randomBytes(32).toString('hex')
+    
+    // Set expiration to 1 hour from now
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
+
+    // Delete any existing tokens for this user
+    await prisma.passwordResetToken.deleteMany({
+      where: { userId: user.id }
+    })
+
+    // Create new token
+    await prisma.passwordResetToken.create({
+      data: {
+        token,
+        userId: user.id,
+        expiresAt
+      }
+    })
+
+    // Send password reset email
+    const { sendPasswordResetEmail } = await import('@/lib/email-service')
+    const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password/${token}`
+    
+    await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name || undefined,
+      resetLink
+    })
+
+    return {
+      success: true,
+      message: 'If an account exists with this email, you will receive a password reset link.'
+    }
+  } catch (error) {
+    console.error('Password reset request error:', error)
+    return {
+      success: false,
+      message: 'Failed to process password reset request'
+    }
+  }
+}
+
+export async function verifyResetToken(token: string): Promise<{
+  valid: boolean;
+  email?: string;
+}> {
+  try {
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true }
+    })
+
+    if (!resetToken) {
+      return { valid: false }
+    }
+
+    // Check if token is expired
+    if (resetToken.expiresAt < new Date()) {
+      return { valid: false }
+    }
+
+    // Check if token has been used
+    if (resetToken.used) {
+      return { valid: false }
+    }
+
+    return {
+      valid: true,
+      email: resetToken.user.email
+    }
+  } catch (error) {
+    console.error('Token verification error:', error)
+    return { valid: false }
+  }
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    // Verify token
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true }
+    })
+
+    if (!resetToken) {
+      return {
+        success: false,
+        message: 'Invalid or expired reset token'
+      }
+    }
+
+    // Check if token is expired
+    if (resetToken.expiresAt < new Date()) {
+      return {
+        success: false,
+        message: 'This password reset link has expired'
+      }
+    }
+
+    // Check if token has been used
+    if (resetToken.used) {
+      return {
+        success: false,
+        message: 'This password reset link has already been used'
+      }
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    // Update user password and mark token as used
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword }
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { used: true }
+      })
+    ])
+
+    // Send confirmation email
+    const { sendPasswordResetSuccessEmail } = await import('@/lib/email-service')
+    await sendPasswordResetSuccessEmail({
+      to: resetToken.user.email,
+      name: resetToken.user.name || undefined
+    })
+
+    return {
+      success: true,
+      message: 'Password has been reset successfully'
+    }
+  } catch (error) {
+    console.error('Password reset error:', error)
+    return {
+      success: false,
+      message: 'Failed to reset password'
+    }
+  }
+}
