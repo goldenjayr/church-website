@@ -109,35 +109,37 @@ export default function NewMemberPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout} >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/admin/members")}
-              className="text-slate-600 hover:text-slate-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Members
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Add New Member</h1>
-              <p className="text-slate-600 mt-2">Create a new church member profile</p>
+          {/* Mobile-optimized header */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.push("/admin/members")}
+                className="flex items-center space-x-2 w-fit -ml-2 sm:ml-0"
+                size="sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Add New Member</h1>
+                <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Create a new church member profile</p>
+              </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Personal Information */}
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-slate-800">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <User className="w-5 h-5 text-blue-600" />
                   <span>Personal Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName">First Name <span className="text-red-500">*</span></Label>
@@ -209,14 +211,14 @@ export default function NewMemberPage() {
             </Card>
 
             {/* Church Information */}
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-slate-800">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <Crown className="w-5 h-5 text-purple-600" />
                   <span>Church Information</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="position">Position (optional)</Label>
@@ -269,14 +271,14 @@ export default function NewMemberPage() {
             </Card>
 
             {/* Preview */}
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-slate-800">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <Users className="w-5 h-5 text-blue-600" />
                   <span>Preview</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start space-x-4 p-6 border rounded-lg bg-white">
                   <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
                     <AvatarImage src={formData.imageUrl} />
@@ -328,21 +330,27 @@ export default function NewMemberPage() {
               </CardContent>
             </Card>
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-4">
+            {/* Submit Buttons - Mobile optimized */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.push("/admin/members")}
+                className="w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={saving || !formData.firstName.trim() || !formData.lastName.trim()}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 w-full sm:w-auto order-1 sm:order-2"
               >
-                {saving ? "Creating..." : "Create Member"}
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Creating...
+                  </>
+                ) : "Create Member"}
               </Button>
             </div>
           </form>

@@ -127,36 +127,38 @@ export default function EditPositionPage() {
 
   return (
       <AdminPageLayout user={user} onLogout={handleLogout} >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/admin/positions")}
-              className="text-slate-600 hover:text-slate-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Positions
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Edit Position</h1>
-              <p className="text-slate-600 mt-2">Update position details</p>
+          {/* Mobile-optimized header */>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => router.push("/admin/positions")}
+                className="flex items-center space-x-2 w-fit -ml-2 sm:ml-0"
+                size="sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Edit Position</h1>
+                <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Update position details</p>
+              </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-slate-800">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <Crown className="w-5 h-5 text-purple-600" />
                   <span>Position Details</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <div>
-                  <Label htmlFor="name">Position Name</Label>
+                  <Label htmlFor="name">Position Name <span className="text-red-500">*</span></Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -195,12 +197,12 @@ export default function EditPositionPage() {
                         />
                         <span className="text-sm text-slate-500">{formData.color}</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-5 sm:flex sm:flex-wrap gap-2">
                         {PRESET_COLORS.map((color) => (
                           <button
                             key={color}
                             type="button"
-                            className="w-6 h-6 rounded-full border-2 border-slate-300 hover:scale-110 transition-transform"
+                            className="w-8 h-8 sm:w-6 sm:h-6 rounded-full border-2 border-slate-300 hover:scale-110 transition-transform"
                             style={{ backgroundColor: color }}
                             onClick={() => setFormData(prev => ({ ...prev, color }))}
                             title={color}
@@ -227,14 +229,14 @@ export default function EditPositionPage() {
             </Card>
 
             {/* Preview */}
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center space-x-2 text-slate-800">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <Palette className="w-5 h-5 text-purple-600" />
                   <span>Preview</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center space-x-4 p-4 border rounded-lg bg-white">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center"
@@ -254,21 +256,31 @@ export default function EditPositionPage() {
               </CardContent>
             </Card>
 
-            {/* Submit Button */}
-            <div className="flex justify-end space-x-4">
+            {/* Submit Buttons - Mobile optimized */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.push("/admin/positions")}
+                className="w-full sm:w-auto order-2 sm:order-1"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={saving || !formData.name.trim() || !hasChanges()}
-                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                className={`w-full sm:w-auto order-1 sm:order-2 transition-all duration-300 ${
+                  hasChanges()
+                    ? "bg-green-600 hover:bg-green-700 shadow-lg"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
               >
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                    Saving...
+                  </>
+                ) : hasChanges() ? "Save Changes" : "No Changes"}
               </Button>
             </div>
           </form>
