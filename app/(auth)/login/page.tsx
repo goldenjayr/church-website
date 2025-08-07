@@ -147,11 +147,16 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="text-center text-sm text-slate-600">
-                Don't have an account?{" "}
-                <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                  Sign Up
-                </Link>
+              <div className="text-center">
+                <p className="text-sm text-slate-600">
+                  New to our community?{" "}
+                  <Link href="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
+                    Join us today
+                  </Link>
+                </p>
+                <p className="text-xs text-slate-500 mt-2">
+                  Create an account to access member features
+                </p>
               </div>
             </form>
           </CardContent>

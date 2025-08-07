@@ -1,18 +1,18 @@
-"use server"
+'use server'
 
-import { prisma } from "@/lib/prisma-client"
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { User, Role } from "@prisma/client"
-import * as bcrypt from "bcryptjs"
-import * as jwt from "jsonwebtoken"
+import { prisma } from '@/lib/prisma-client'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { User, Role } from '@prisma/client'
+import * as bcrypt from 'bcryptjs'
+import * as jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production"
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
   try {
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email }
     })
 
     if (!user) {
@@ -21,34 +21,34 @@ export async function authenticateUser(email: string, password: string): Promise
 
     // Compare the password with the hashed password
     const isValidPassword = await bcrypt.compare(password, user.password)
-    
+
     if (!isValidPassword) {
       return null
     }
 
     return user
   } catch (error) {
-    console.error("Authentication error:", error)
+    console.error('Authentication error:', error)
     return null
   }
 }
 
 export async function registerUser(
-  email: string, 
-  password: string, 
+  email: string,
+  password: string,
   name: string,
-  role: Role = "USER"
+  role: Role = 'USER'
 ): Promise<{ success: boolean; message: string; user?: User }> {
   try {
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email }
     })
 
     if (existingUser) {
-      return { 
-        success: false, 
-        message: "User with this email already exists" 
+      return {
+        success: false,
+        message: 'User with this email already exists'
       }
     }
 
@@ -61,20 +61,20 @@ export async function registerUser(
         email,
         password: hashedPassword,
         name,
-        role,
-      },
+        role
+      }
     })
 
     return {
       success: true,
-      message: "User registered successfully",
-      user,
+      message: 'User registered successfully',
+      user
     }
   } catch (error) {
-    console.error("Registration error:", error)
+    console.error('Registration error:', error)
     return {
       success: false,
-      message: "Failed to register user",
+      message: 'Failed to register user'
     }
   }
 }
@@ -82,40 +82,40 @@ export async function registerUser(
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies()
-    const userId = cookieStore.get("userId")?.value
+    const userId = cookieStore.get('userId')?.value
 
     if (!userId) {
       return null
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId }
     })
 
     return user
   } catch (error) {
-    console.error("Get current user error:", error)
+    console.error('Get current user error:', error)
     return null
   }
 }
 
 export async function setCurrentUser(user: User | null) {
   const cookieStore = await cookies()
-  
+
   if (user) {
-    cookieStore.set("userId", user.id, {
+    cookieStore.set('userId', user.id, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 // 30 days
     })
   } else {
-    cookieStore.delete("userId")
+    cookieStore.delete('userId')
   }
 }
 
 export async function logout() {
   const cookieStore = await cookies()
-  cookieStore.delete("userId")
-  redirect("/admin")
+  cookieStore.delete('userId')
+  redirect('/admin')
 }
