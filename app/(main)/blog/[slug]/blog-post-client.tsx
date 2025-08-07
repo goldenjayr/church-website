@@ -4,7 +4,7 @@ import { motion } from "motion/react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, Tag, ArrowLeft, Share2, Heart, Clock, Copy, Check } from "lucide-react"
+import { Calendar, User, Tag, ArrowLeft, Share2, Heart, Clock, Copy, Check, Eye } from "lucide-react"
 import Link from "next/link"
 import type { BlogPost, User as UserType, BlogCategory } from "@prisma/client"
 import { getAuthorDisplay } from "@/lib/author-utils"
@@ -14,6 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { FacebookShareButton, TwitterShareButton, FacebookMessengerShareButton } from "react-share"
 import { FacebookIcon, TwitterIcon, FacebookMessengerIcon } from "react-share"
 import { useState } from "react"
+import { useBlogEngagement, useBlogShare } from "@/hooks/use-blog-engagement"
+import { BlogEngagement, BlogEngagementCompact } from "@/components/blog/blog-engagement"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
@@ -137,47 +139,8 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <Popover onOpenChange={(open) => !open && setIsCopied(false)}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-60">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-center text-sm text-slate-700 mb-2">Share Post</h4>
-                    <FacebookShareButton url={shareUrl} quote={post.title} className="w-full">
-                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
-                        <FacebookIcon size={24} round />
-                        <span className="text-sm">Share on Facebook</span>
-                      </div>
-                    </FacebookShareButton>
-                    <TwitterShareButton url={shareUrl} title={post.title} className="w-full">
-                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
-                        <TwitterIcon size={24} round />
-                        <span className="text-sm">Share on X</span>
-                      </div>
-                    </TwitterShareButton>
-                    <FacebookMessengerShareButton url={shareUrl} appId="your-facebook-app-id" className="w-full"> {/* Replace with your FB App ID */}
-                      <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-slate-100 transition-colors">
-                        <FacebookMessengerIcon size={24} round />
-                        <span className="text-sm">Share on Messenger</span>
-                      </div>
-                    </FacebookMessengerShareButton>
-                    <Button variant="ghost" onClick={copyToClipboard} className="w-full justify-start p-2">
-                      {isCopied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
-                      <span className="text-sm">{isCopied ? 'Copied!' : 'Copy Link'}</span>
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <Button variant="outline" size="sm">
-                <Heart className="w-4 h-4 mr-2" />
-                Like
-              </Button>
-            </div>
+            {/* Integrated Engagement System with Views, Likes, and Share */}
+            <BlogEngagement slug={post.slug} />
           </motion.div>
         </div>
       </section>
@@ -254,6 +217,12 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                         )}
                         <h3 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{relatedPost.title}</h3>
                         <p className="text-slate-600 mb-4 line-clamp-3">{relatedPost.excerpt || 'No excerpt available'}</p>
+                        
+                        {/* Engagement stats for related posts */}
+                        <div className="mb-3">
+                          <BlogEngagementCompact slug={relatedPost.slug} />
+                        </div>
+                        
                         <div className="flex items-center justify-between text-sm text-slate-500 mb-4">
                           <div className="flex items-center space-x-2">
                             {(() => {
