@@ -117,5 +117,5 @@ export async function setCurrentUser(user: User | null) {
 export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('userId')
-  redirect('/admin')
+  redirect('/')
 }

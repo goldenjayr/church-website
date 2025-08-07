@@ -108,14 +108,6 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               </Button>
             </form>
 
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-slate-800 mb-2">Demo Credentials:</h3>
-              <p className="text-sm text-slate-600">
-                <strong>Email:</strong> admin@divinejesus.org
-                <br />
-                <strong>Password:</strong> admin123
-              </p>
-            </div>
           </CardContent>
         </Card>
       </motion.div>

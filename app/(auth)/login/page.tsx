@@ -28,10 +28,10 @@ export default function LoginPage() {
 
     try {
       const user = await authenticateUser(email, password)
-      
+
       if (user) {
         await setCurrentUser(user)
-        
+
         // Redirect based on user role
         if (user.role === "ADMIN") {
           router.push("/admin")
@@ -89,8 +89,8 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-slate-700">
                     Password
                   </Label>
-                  <Link 
-                    href="/forgot-password" 
+                  <Link
+                    href="/forgot-password"
                     className="text-sm text-blue-600 hover:text-blue-700"
                   >
                     Forgot Password?
@@ -111,13 +111,13 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="remember" 
+                <Checkbox
+                  id="remember"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
-                <Label 
-                  htmlFor="remember" 
+                <Label
+                  htmlFor="remember"
                   className="text-sm text-slate-600 cursor-pointer"
                 >
                   Remember me for 30 days
@@ -130,9 +130,9 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3" 
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3"
                 disabled={loading}
               >
                 {loading ? "Signing in..." : "Sign In"}
@@ -161,24 +161,6 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
-
-        {/* Demo credentials for testing */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6 p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg"
-        >
-          <h3 className="font-semibold text-slate-800 mb-2 text-sm">Demo Credentials:</h3>
-          <div className="space-y-2 text-xs text-slate-600">
-            <div>
-              <strong>Admin:</strong> admin@divinejesus.org / admin123
-            </div>
-            <div>
-              <strong>User:</strong> user@example.com / user123
-            </div>
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   )
