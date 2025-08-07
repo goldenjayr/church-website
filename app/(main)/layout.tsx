@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import Script from "next/script"
 import Head from "next/head"
 import "../globals.css"
-import { Navigation } from "@/components/navigation"
+import { NavigationOptimized } from "@/components/navigation-optimized"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/toaster"
 import { GoogleAnalytics } from '@next/third-parties/google' // Import GoogleAnalytics
@@ -40,7 +40,7 @@ export default function RootLayout({
         <meta name="google-site-verification" content="9t1-nbqu6UmssVU8tnZ4r5YjUAG_vp0uahgZEKowXOs" />
       </head>
       <body className={inter.className}>
-        <Navigation />
+        <NavigationOptimized />
         <main className="min-h-screen">{children}</main>
         <Footer />
         <Toaster />
