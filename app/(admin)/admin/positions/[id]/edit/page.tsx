@@ -126,10 +126,9 @@ export default function EditPositionPage() {
   }
 
   return (
-      <AdminPageLayout user={user} onLogout={handleLogout} >
+    <AdminPageLayout user={user} onLogout={handleLogout}>
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Mobile-optimized header */>
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <Button
