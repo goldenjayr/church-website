@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Users,
   FileText,
@@ -19,138 +20,62 @@ import {
   Plus,
   Edit,
   Eye,
+  TrendingUp,
+  TrendingDown,
+  UserPlus,
+  Clock,
+  Bell,
+  ChevronRight,
+  Activity,
+  Download,
+  RefreshCw,
+  Star,
+  HandHeart,
+  Briefcase,
 } from "lucide-react"
 import { getCurrentUser, setCurrentUser } from "@/lib/auth-actions"
 import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
+import { cn } from "@/lib/utils"
 
-// Mock stats data
-const stats = [
-  {
-    title: "Total Members",
-    value: "342",
-    change: "+12 this month",
-    icon: Users,
-    color: "text-blue-600",
-    bgColor: "bg-blue-100",
-  },
-  {
-    title: "Blog Posts",
-    value: "28",
-    change: "+3 this week",
-    icon: FileText,
-    color: "text-green-600",
-    bgColor: "bg-green-100",
-  },
-  {
-    title: "Upcoming Events",
-    value: "8",
-    change: "2 this weekend",
-    icon: Calendar,
-    color: "text-purple-600",
-    bgColor: "bg-purple-100",
-  },
-  {
-    title: "Prayer Requests",
-    value: "15",
-    change: "5 new today",
-    icon: Heart,
-    color: "text-red-600",
-    bgColor: "bg-red-100",
-  },
-]
-
-// Mock recent activity
-const recentActivity = [
-  {
-    id: 1,
-    type: "blog",
-    title: "New blog post published",
-    description: "Walking in Faith Daily",
-    time: "2 hours ago",
-    user: "Pastor John",
-  },
-  {
-    id: 2,
-    type: "event",
-    title: "Event created",
-    description: "Youth Bible Study",
-    time: "4 hours ago",
-    user: "Sarah Wilson",
-  },
-  {
-    id: 3,
-    type: "prayer",
-    title: "Prayer request submitted",
-    description: "Healing for family member",
-    time: "6 hours ago",
-    user: "Anonymous",
-  },
-  {
-    id: 4,
-    type: "member",
-    title: "New member registered",
-    description: "John and Mary Smith",
-    time: "1 day ago",
-    user: "System",
-  },
-]
-
-// Mock content overview
-const contentOverview = [
-  {
-    title: "Blog Posts",
-    count: 28,
-    published: 25,
-    drafts: 3,
-    icon: FileText,
-    href: "/admin/blog",
-  },
-  {
-    title: "Events",
-    count: 12,
-    published: 8,
-    drafts: 4,
-    icon: Calendar,
-    href: "/admin/events",
-  },
-  {
-    title: "Gallery Images",
-    count: 156,
-    published: 150,
-    drafts: 6,
-    icon: ImageIcon,
-    href: "/admin/gallery",
-  },
-  {
-    title: "Doctrines",
-    count: 8,
-    published: 8,
-    drafts: 0,
-    icon: BookOpen,
-    href: "/admin/doctrines",
-  },
-]
-
-import { getDashboardData } from "@/lib/dashboard-actions";
+import { getDashboardData, getQuickStats } from "@/lib/dashboard-actions";
+import { exportToCSV, exportToJSON, generateDashboardReport } from "@/lib/export-utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const router = useRouter();
+
+  const loadData = async () => {
+    const [currentUser, data] = await Promise.all([
+      getCurrentUser(),
+      getDashboardData(),
+    ]);
+    setUser(currentUser);
+    setDashboardData(data);
+    setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    const data = await getDashboardData();
+    setDashboardData(data);
+    setIsRefreshing(false);
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      const [currentUser, data] = await Promise.all([
-        getCurrentUser(),
-        getDashboardData(),
-      ]);
-      setUser(currentUser);
-      setDashboardData(data);
-      setLoading(false);
-    };
-
     loadData();
   }, []);
 
@@ -179,24 +104,53 @@ export default function AdminDashboard() {
     <AdminPageLayout user={user} onLogout={handleLogout}>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600 mt-2">
-              Welcome back, {user.name}! Here's what's happening at Divine Jesus Church.
-            </p>
+          {/* Header with refresh button */}
+          <div className="mb-8 flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-slate-600 mt-2">
+                Welcome back, {user.name}! Here's what's happening at your church.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="gap-2"
+              >
+                <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                Refresh
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <Link href="/admin/analytics">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Analytics
+                </Link>
+              </Button>
+            </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          {/* Stats Grid - Core metrics only */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {dashboardData &&
               [
                 {
                   title: "Total Members",
                   value: dashboardData.stats.totalMembers,
+                  change: dashboardData.stats.monthlyMembers > 0 
+                    ? `+${dashboardData.stats.monthlyMembers} this month` 
+                    : "No new this month",
                   icon: Users,
                   color: "text-blue-600",
                   bgColor: "bg-blue-100",
+                  trend: dashboardData.stats.monthlyMembers > 0 ? "up" : "neutral",
+                  href: "/admin/members"
                 },
                 {
                   title: "Blog Posts",
@@ -204,6 +158,7 @@ export default function AdminDashboard() {
                   icon: FileText,
                   color: "text-green-600",
                   bgColor: "bg-green-100",
+                  href: "/admin/blog"
                 },
                 {
                   title: "Upcoming Events",
@@ -211,20 +166,19 @@ export default function AdminDashboard() {
                   icon: Calendar,
                   color: "text-purple-600",
                   bgColor: "bg-purple-100",
-                },
-                {
-                  title: "Prayer Requests",
-                  value: dashboardData.stats.prayerRequests,
-                  icon: Heart,
-                  color: "text-red-600",
-                  bgColor: "bg-red-100",
+                  href: "/admin/events"
                 },
                 {
                   title: "Unread Messages",
                   value: dashboardData.stats.unreadMessages,
+                  change: dashboardData.stats.todayMessages > 0 
+                    ? `${dashboardData.stats.todayMessages} today` 
+                    : "None today",
                   icon: MessageSquare,
                   color: "text-orange-600",
                   bgColor: "bg-orange-100",
+                  trend: dashboardData.stats.todayMessages > 0 ? "up" : "neutral",
+                  href: "/admin/messages"
                 },
               ].map((stat, index) => (
                 <motion.div
@@ -233,19 +187,30 @@ export default function AdminDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
+                  <Link href={stat.href || "#"}>
+                    <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center`}>
+                            <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                          </div>
+                          {stat.trend && (
+                            <div>
+                              {stat.trend === "up" && <TrendingUp className="w-4 h-4 text-green-600" />}
+                              {stat.trend === "down" && <TrendingDown className="w-4 h-4 text-red-600" />}
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                          <p className="text-3xl font-bold text-slate-900 mt-2">{stat.value}</p>
+                          <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                          {stat.change && (
+                            <p className="text-xs text-slate-500 mt-1">{stat.change}</p>
+                          )}
                         </div>
-                        <div className={`w-12 h-12 ${stat.bgColor} rounded-full flex items-center justify-center`}>
-                          <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
           </div>
@@ -256,10 +221,17 @@ export default function AdminDashboard() {
               <Card className="border-none shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span>Content Overview</span>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create New
+                    <span className="flex items-center gap-2">
+                      <Activity className="w-5 h-5 text-slate-700" />
+                      <span className="text-slate-900">Content Overview</span>
+                    </span>
+                    <Button 
+                      size="sm" 
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
+                      onClick={() => router.push('/admin/blog/new')}
+                    >
+                      <Plus className="w-4 h-4 mr-1.5 group-hover:rotate-90 transition-transform duration-200" />
+                      <span className="font-medium">New Post</span>
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -269,27 +241,48 @@ export default function AdminDashboard() {
                       [
                         {
                           title: "Blog Posts",
-                          ...dashboardData.contentOverview.blogPosts,
+                          published: dashboardData.contentOverview.blogPosts.published,
+                          drafts: dashboardData.contentOverview.blogPosts.drafts,
+                          total: dashboardData.contentOverview.blogPosts.total,
                           icon: FileText,
                           href: "/admin/blog",
+                          statusLabels: { published: "published", drafts: "drafts" }
                         },
                         {
                           title: "Events",
-                          ...dashboardData.contentOverview.events,
+                          published: dashboardData.contentOverview.events.published,
+                          drafts: dashboardData.contentOverview.events.drafts,
+                          total: dashboardData.contentOverview.events.total,
                           icon: Calendar,
                           href: "/admin/events",
+                          statusLabels: { published: "published", drafts: "drafts" }
                         },
                         {
-                          title: "Gallery Images",
-                          ...dashboardData.contentOverview.galleryImages,
-                          icon: ImageIcon,
-                          href: "/admin/gallery",
+                          title: "Members",
+                          published: dashboardData.contentOverview.members.active,
+                          drafts: dashboardData.contentOverview.members.inactive,
+                          total: dashboardData.contentOverview.members.total,
+                          icon: Users,
+                          href: "/admin/members",
+                          statusLabels: { published: "active", drafts: "inactive" }
+                        },
+                        {
+                          title: "Positions",
+                          published: dashboardData.contentOverview.positions.active,
+                          drafts: dashboardData.contentOverview.positions.inactive,
+                          total: dashboardData.contentOverview.positions.total,
+                          icon: Briefcase,
+                          href: "/admin/positions",
+                          statusLabels: { published: "active", drafts: "inactive" }
                         },
                         {
                           title: "Doctrines",
-                          ...dashboardData.contentOverview.doctrines,
+                          published: dashboardData.contentOverview.doctrines.published,
+                          drafts: dashboardData.contentOverview.doctrines.drafts,
+                          total: dashboardData.contentOverview.doctrines.total,
                           icon: BookOpen,
                           href: "/admin/doctrines",
+                          statusLabels: { published: "published", drafts: "drafts" }
                         },
                       ].map((item, index) => (
                         <motion.div
@@ -297,30 +290,26 @@ export default function AdminDashboard() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.5, delay: index * 0.1 }}
-                          className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                         >
-                          <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <item.icon className="w-5 h-5 text-blue-600" />
+                          <Link href={item.href}>
+                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer group">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                  <item.icon className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                                  <p className="text-sm text-slate-600">
+                                    {item.published} {item.statusLabels.published}, {item.drafts} {item.statusLabels.drafts}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant="outline" className="bg-white">{item.total} total</Badge>
+                                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
+                              </div>
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-slate-900">{item.title}</h3>
-                              <p className="text-sm text-slate-600">
-                                {item.published} published, {item.drafts} drafts
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant="outline">{item.total} total</Badge>
-                            <div className="flex space-x-1">
-                              <Button size="sm" variant="ghost">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button size="sm" variant="ghost">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                          </Link>
                         </motion.div>
                       ))}
                   </div>
@@ -332,7 +321,10 @@ export default function AdminDashboard() {
             <div>
               <Card className="border-none shadow-lg">
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Recent Activity
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -348,7 +340,6 @@ export default function AdminDashboard() {
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                             {activity.type === "blog" && <FileText className="w-4 h-4 text-blue-600" />}
                             {activity.type === "event" && <Calendar className="w-4 h-4 text-green-600" />}
-                            {activity.type === "prayer" && <Heart className="w-4 h-4 text-red-600" />}
                             {activity.type === "member" && <Users className="w-4 h-4 text-purple-600" />}
                             {activity.type === "message" && <MessageSquare className="w-4 h-4 text-orange-600" />}
                           </div>
@@ -367,40 +358,201 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="mt-8">
+          {/* Quick Actions - Enhanced with more functionality */}
+          <div className="mt-8 grid lg:grid-cols-2 gap-8">
+            {/* Quick Actions Card */}
             <Card className="border-none shadow-lg">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5" />
+                  Quick Actions
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <FileText className="w-6 h-6" />
-                    <span className="text-xs">New Post</span>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    onClick={() => router.push('/admin/blog/new')}
+                  >
+                    <FileText className="w-6 h-6 text-blue-600" />
+                    <span className="text-xs font-medium">New Post</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <Calendar className="w-6 h-6" />
-                    <span className="text-xs">Add Event</span>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors"
+                    onClick={() => router.push('/admin/events/new')}
+                  >
+                    <Calendar className="w-6 h-6 text-purple-600" />
+                    <span className="text-xs font-medium">Add Event</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <ImageIcon className="w-6 h-6" />
-                    <span className="text-xs">Upload Photo</span>
+                  <Link href="/admin/messages" className="relative">
+                    <Button 
+                      variant="outline" 
+                      className="h-20 flex-col space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors w-full relative" 
+                    >
+                      <MessageSquare className="w-6 h-6 text-orange-600" />
+                      <span className="text-xs font-medium">Messages</span>
+                      {dashboardData?.stats.unreadMessages > 0 && (
+                        <Badge className="absolute -top-2 -right-2 bg-red-500 text-white border-0 h-5 min-w-[20px] flex items-center justify-center text-xs">
+                          {dashboardData.stats.unreadMessages}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                    onClick={() => router.push('/admin/members/new')}
+                  >
+                    <UserPlus className="w-6 h-6 text-indigo-600" />
+                    <span className="text-xs font-medium">Add Member</span>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent" asChild>
-                    <Link href="/admin/messages">
-                      <MessageSquare className="w-6 h-6" />
-                      <span className="text-xs">View Messages</span>
+                  <Button 
+                    variant="outline" 
+                    className="h-20 flex-col space-y-2 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                    asChild
+                  >
+                    <Link href="/admin/settings">
+                      <Settings className="w-6 h-6 text-slate-600" />
+                      <span className="text-xs font-medium">Settings</span>
                     </Link>
                   </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <BarChart3 className="w-6 h-6" />
-                    <span className="text-xs">Analytics</span>
-                  </Button>
-                  <Button variant="outline" className="h-20 flex-col space-y-2 bg-transparent">
-                    <Settings className="w-6 h-6" />
-                    <span className="text-xs">Settings</span>
-                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System Health / Notifications */}
+            <Card className="border-none shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  System Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Unread Messages */}
+                  <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="w-5 h-5 text-amber-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Unread Messages</p>
+                        <p className="text-xs text-slate-600">
+                          {dashboardData?.stats.unreadMessages || 0} messages need attention
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link href="/admin/messages">
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* Upcoming Events */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">Upcoming Events</p>
+                        <p className="text-xs text-slate-600">
+                          {dashboardData?.stats.upcomingEvents || 0} events scheduled
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link href="/admin/events">
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* New Members This Month */}
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <UserPlus className="w-5 h-5 text-green-600" />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">New Members</p>
+                        <p className="text-xs text-slate-600">
+                          {dashboardData?.stats.monthlyMembers || 0} joined this month
+                        </p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="ghost" asChild>
+                      <Link href="/admin/members">
+                        <ChevronRight className="w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* Export Data */}
+                  <div className="pt-2 border-t">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Export Dashboard Data
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            if (dashboardData) {
+                              exportToCSV(dashboardData, 'church-dashboard');
+                              toast({
+                                title: "Export Successful",
+                                description: "Dashboard data exported as CSV",
+                              });
+                            }
+                          }}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Export as CSV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            if (dashboardData) {
+                              exportToJSON(dashboardData, 'church-dashboard');
+                              toast({
+                                title: "Export Successful",
+                                description: "Dashboard data exported as JSON",
+                              });
+                            }
+                          }}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Export as JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            if (dashboardData) {
+                              const report = generateDashboardReport(dashboardData);
+                              const blob = new Blob([report], { type: 'text/plain' });
+                              const url = URL.createObjectURL(blob);
+                              const link = document.createElement('a');
+                              link.href = url;
+                              link.download = `church-report-${new Date().toISOString().split('T')[0]}.txt`;
+                              link.click();
+                              URL.revokeObjectURL(url);
+                              toast({
+                                title: "Report Generated",
+                                description: "Dashboard report downloaded successfully",
+                              });
+                            }
+                          }}
+                        >
+                          <BarChart3 className="w-4 h-4 mr-2" />
+                          Generate Report
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </CardContent>
             </Card>
