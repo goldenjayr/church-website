@@ -103,32 +103,38 @@ export default function NewBlogCategoryPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout} >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => router.back()}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900">New Category</h1>
-                <p className="text-slate-600 mt-2">Create a new blog post category</p>
+          {/* Mobile-optimized header */}
+          <div className="mb-6 sm:mb-8">
+            {/* Back button and title section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="flex items-center space-x-2 w-fit -ml-2 sm:ml-0"
+                  size="sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </Button>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">New Category</h1>
+                  <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Create a new blog post category</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
+              
+              {/* Save button */}
               <Button
                 type="submit"
                 form="category-form"
                 disabled={saving || !formData.name.trim() || !formData.slug.trim()}
-                className={`transition-all duration-300 ${formData.name.trim() && formData.slug.trim()
-                  ? "bg-purple-600 hover:bg-purple-700 scale-105 shadow-lg"
+                className={`w-full sm:w-auto justify-center transition-all duration-300 ${formData.name.trim() && formData.slug.trim()
+                  ? "bg-blue-600 hover:bg-blue-700 sm:scale-105 shadow-lg"
                   : "bg-gray-400 cursor-not-allowed"
                   }`}
+                size="sm"
               >
                 <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${formData.name.trim() && formData.slug.trim() ? "rotate-0" : "rotate-12"
                   }`} />
@@ -142,15 +148,15 @@ export default function NewBlogCategoryPage() {
             </div>
           </div>
 
-          <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
-                <CardTitle className="text-slate-800 flex items-center space-x-2">
+          <form id="category-form" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                   <span>Category Details</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <div>
                   <Label htmlFor="name">Name</Label>
                   <Input
@@ -222,12 +228,12 @@ export default function NewBlogCategoryPage() {
                     <Palette className="w-4 h-4" />
                     <span>Category Color</span>
                   </Label>
-                  <div className="grid grid-cols-6 gap-3 mt-2">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3 mt-2">
                     {CATEGORY_COLORS.map((color) => (
                       <button
                         key={color}
                         type="button"
-                        className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${formData.color === color
+                        className={`w-10 h-10 sm:w-8 sm:h-8 rounded-full border-2 transition-all duration-200 ${formData.color === color
                           ? "border-slate-900 scale-110 shadow-lg"
                           : "border-slate-200 hover:scale-105"
                           }`}
@@ -236,12 +242,12 @@ export default function NewBlogCategoryPage() {
                       />
                     ))}
                   </div>
-                  <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex items-center space-x-2 mt-3">
                     <div
                       className="w-4 h-4 rounded-full border border-slate-200"
                       style={{ backgroundColor: formData.color }}
                     />
-                    <span className="text-sm text-slate-600">Selected: {formData.color}</span>
+                    <span className="text-xs sm:text-sm text-slate-600">Selected: {formData.color}</span>
                   </div>
                 </div>
               </CardContent>

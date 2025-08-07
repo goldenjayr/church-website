@@ -28,7 +28,6 @@ import {
   ChevronRight,
   Activity,
   Download,
-  RefreshCw,
   Star,
   HandHeart,
   Briefcase,
@@ -55,7 +54,6 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const router = useRouter();
 
   const loadData = async () => {
@@ -66,13 +64,6 @@ export default function AdminDashboard() {
     setUser(currentUser);
     setDashboardData(data);
     setLoading(false);
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    const data = await getDashboardData();
-    setDashboardData(data);
-    setIsRefreshing(false);
   };
 
   useEffect(() => {
@@ -102,42 +93,34 @@ export default function AdminDashboard() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header with refresh button */}
-          <div className="mb-8 flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-              <p className="text-slate-600 mt-2">
-                Welcome back, {user.name}! Here's what's happening at your church.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="gap-2"
-              >
-                <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-                Refresh
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-              >
-                <Link href="/admin/analytics">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Analytics
-                </Link>
-              </Button>
+          {/* Header with refresh button - Mobile optimized */}
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">
+                  Welcome back{user.name ? `, ${user.name}` : ''}!
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                >
+                  <Link href="/admin/analytics">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Analytics
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Stats Grid - Core metrics only */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Stats Grid - Core metrics only - Mobile optimized */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {dashboardData &&
               [
                 {
@@ -188,24 +171,24 @@ export default function AdminDashboard() {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
                   <Link href={stat.href || "#"}>
-                    <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105">
-                      <CardContent className="p-6">
+                    <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105">
+                      <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between mb-2">
-                          <div className={`w-10 h-10 ${stat.bgColor} rounded-full flex items-center justify-center`}>
-                            <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bgColor} rounded-full flex items-center justify-center`}>
+                            <stat.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${stat.color}`} />
                           </div>
                           {stat.trend && (
-                            <div>
+                            <div className="hidden sm:block">
                               {stat.trend === "up" && <TrendingUp className="w-4 h-4 text-green-600" />}
                               {stat.trend === "down" && <TrendingDown className="w-4 h-4 text-red-600" />}
                             </div>
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                          <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
+                          <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">{stat.title}</p>
+                          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
                           {stat.change && (
-                            <p className="text-xs text-slate-500 mt-1">{stat.change}</p>
+                            <p className="text-xs text-slate-500 mt-1 hidden sm:block">{stat.change}</p>
                           )}
                         </div>
                       </CardContent>
@@ -215,10 +198,10 @@ export default function AdminDashboard() {
               ))}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Content Overview */}
-            <div className="lg:col-span-2">
-              <Card className="border-none shadow-lg">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Content Overview - Mobile optimized */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <Card className="border-none shadow-md sm:shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
@@ -317,9 +300,9 @@ export default function AdminDashboard() {
               </Card>
             </div>
 
-            {/* Recent Activity */}
-            <div>
-              <Card className="border-none shadow-lg">
+            {/* Recent Activity - Mobile optimized */}
+            <div className="order-1 lg:order-2">
+              <Card className="border-none shadow-md sm:shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="w-5 h-5" />
@@ -358,40 +341,40 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quick Actions - Enhanced with more functionality */}
-          <div className="mt-8 grid lg:grid-cols-2 gap-8">
-            {/* Quick Actions Card */}
-            <Card className="border-none shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5" />
+          {/* Quick Actions - Enhanced with more functionality - Mobile optimized */}
+          <div className="mt-6 sm:mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Quick Actions Card - Mobile optimized */}
+            <Card className="border-none shadow-md sm:shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                   Quick Actions
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3 sm:gap-4">
                   <Button 
                     variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors p-2"
                     onClick={() => router.push('/admin/blog/new')}
                   >
-                    <FileText className="w-6 h-6 text-blue-600" />
+                    <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     <span className="text-xs font-medium">New Post</span>
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors"
+                    className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors p-2"
                     onClick={() => router.push('/admin/events/new')}
                   >
-                    <Calendar className="w-6 h-6 text-purple-600" />
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                     <span className="text-xs font-medium">Add Event</span>
                   </Button>
                   <Link href="/admin/messages" className="relative">
                     <Button 
                       variant="outline" 
-                      className="h-20 flex-col space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors w-full relative" 
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors w-full relative p-2" 
                     >
-                      <MessageSquare className="w-6 h-6 text-orange-600" />
+                      <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
                       <span className="text-xs font-medium">Messages</span>
                       {dashboardData?.stats.unreadMessages > 0 && (
                         <Badge className="absolute -top-2 -right-2 bg-red-500 text-white border-0 h-5 min-w-[20px] flex items-center justify-center text-xs">
@@ -402,28 +385,36 @@ export default function AdminDashboard() {
                   </Link>
                   <Button 
                     variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+                    className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors p-2"
                     onClick={() => router.push('/admin/members/new')}
                   >
-                    <UserPlus className="w-6 h-6 text-indigo-600" />
+                    <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
                     <span className="text-xs font-medium">Add Member</span>
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="h-20 flex-col space-y-2 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                    className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-slate-50 hover:border-slate-300 transition-colors p-2"
                     asChild
                   >
                     <Link href="/admin/settings">
-                      <Settings className="w-6 h-6 text-slate-600" />
+                      <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" />
                       <span className="text-xs font-medium">Settings</span>
                     </Link>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-green-50 hover:border-green-300 transition-colors p-2"
+                    onClick={() => router.push('/admin/doctrines')}
+                  >
+                    <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                    <span className="text-xs font-medium">Doctrines</span>
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* System Health / Notifications */}
-            <Card className="border-none shadow-lg">
+            {/* System Health / Notifications - Mobile optimized */}
+            <Card className="border-none shadow-md sm:shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />

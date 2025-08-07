@@ -203,87 +203,101 @@ export default function EditBlogPostPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout} >
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                onClick={() => router.back()}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-slate-900">Edit Blog Post</h1>
-                <p className="text-slate-600 mt-2">Update your blog post</p>
+          {/* Mobile-optimized header */}
+          <div className="mb-6 sm:mb-8">
+            {/* Back button and title section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => router.back()}
+                  className="flex items-center space-x-2 w-fit -ml-2 sm:ml-0"
+                  size="sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </Button>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Edit Blog Post</h1>
+                  <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Update your blog post</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the blog post.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="bg-red-600 hover:bg-red-700"
+              
+              {/* Action buttons - responsive grid on mobile */}
+              <div className="grid grid-cols-2 sm:flex gap-2">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="text-red-600 hover:text-red-700 text-xs sm:text-sm"
+                      size="sm"
                     >
-                      {deleting ? "Deleting..." : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <Button
-                variant="outline"
-                onClick={() => setFormData(prev => ({ ...prev, published: !prev.published }))}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {formData.published ? "Published" : "Draft"}
-              </Button>
-              <Button
-                type="submit"
-                form="blog-post-form"
-                disabled={saving || !hasChanges()}
-                className={`transition-all duration-300 ${hasChanges()
-                    ? "bg-green-600 hover:bg-green-700 scale-105 shadow-lg"
+                      <Trash2 className="w-4 h-4 mr-1 sm:mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="max-w-[95vw] sm:max-w-lg">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the blog post.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                      <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+                      >
+                        {deleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button
+                  variant="outline"
+                  onClick={() => setFormData(prev => ({ ...prev, published: !prev.published }))}
+                  className="text-xs sm:text-sm"
+                  size="sm"
+                >
+                  <Eye className="w-4 h-4 mr-1 sm:mr-2" />
+                  {formData.published ? "Published" : "Draft"}
+                </Button>
+                <Button
+                  type="submit"
+                  form="blog-post-form"
+                  disabled={saving || !hasChanges()}
+                  className={`col-span-2 sm:col-span-1 justify-center text-xs sm:text-sm transition-all duration-300 ${hasChanges()
+                    ? "bg-green-600 hover:bg-green-700 sm:scale-105 shadow-lg"
                     : "bg-gray-400 cursor-not-allowed"
                   }`}
-              >
-                <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
-                  }`} />
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                    Saving...
-                  </>
-                ) : hasChanges() ? "Update Post" : "No Changes"}
-              </Button>
+                  size="sm"
+                >
+                  <Save className={`w-4 h-4 mr-1 sm:mr-2 transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
+                    }`} />
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent mr-1 sm:mr-2" />
+                      Saving...
+                    </>
+                  ) : hasChanges() ? "Update Post" : "No Changes"}
+                </Button>
+              </div>
             </div>
           </div>
 
-          <form id="blog-post-form" onSubmit={handleSubmit} className="space-y-6">
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-lg">
-                <CardTitle className="text-slate-800 flex items-center space-x-2">
+          <form id="blog-post-form" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span>Post Details</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <div>
                   <Label htmlFor="title">Title</Label>
                   <Input
@@ -429,11 +443,12 @@ export default function EditBlogPostPage() {
 
                 <div>
                   <Label>Tags</Label>
-                  <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
                     <Input
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
                       placeholder="Add a tag..."
+                      className="flex-1"
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -442,16 +457,22 @@ export default function EditBlogPostPage() {
                         }
                       }}
                     />
-                    <Button type="button" variant="outline" onClick={addTag}>
-                      Add
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={addTag}
+                      className="w-full sm:w-auto"
+                      size="sm"
+                    >
+                      Add Tag
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {formData.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="flex items-center space-x-1">
-                        <span>{tag}</span>
+                      <Badge key={tag} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                        <span className="text-xs sm:text-sm">{tag}</span>
                         <X
-                          className="w-3 h-3 cursor-pointer"
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
                           onClick={() => removeTag(tag)}
                         />
                       </Badge>
@@ -472,14 +493,14 @@ export default function EditBlogPostPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 hover:shadow-2xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
-                <CardTitle className="text-slate-800 flex items-center space-x-2">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 sm:hover:shadow-2xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl text-slate-800 flex items-center space-x-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                   <span>Content</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <RichTextEditor
                   content={formData.content}
                   onChange={(content) => setFormData(prev => ({ ...prev, content }))}

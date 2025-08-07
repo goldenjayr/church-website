@@ -87,30 +87,26 @@ export default function AdminEventsPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Events</h1>
-              <p className="text-slate-600 mt-2">Manage your church events</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Events</h1>
+              <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage your church events</p>
             </div>
             <Button
-              className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-sm sm:text-base justify-center"
               onClick={() => router.push("/admin/events/new")}
             >
-              <div className="flex items-center space-x-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-semibold">New Event</span>
-              </div>
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="font-semibold">New Event</span>
             </Button>
           </div>
 
-          {/* Search */}
-          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
+          {/* Search - Mobile optimized */}
+          <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 mb-6 sm:mb-8 sm:hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-4 sm:p-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
@@ -123,8 +119,8 @@ export default function AdminEventsPage() {
             </CardContent>
           </Card>
 
-          {/* Events Grid */}
-          <div className="grid gap-6">
+          {/* Events Grid - Mobile optimized */}
+          <div className="grid gap-4 sm:gap-6">
             {filteredEvents.map((event, index) => (
               <motion.div
                 key={event.id}
@@ -132,55 +128,58 @@ export default function AdminEventsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
                   <div className="flex">
-                    <div className="w-2 bg-gradient-to-b from-purple-500 to-indigo-500"></div>
-                    <CardContent className="p-6 flex-1">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-3">
-                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                              <CalendarIcon className="w-5 h-5 text-purple-600" />
+                    <div className="w-1 sm:w-2 bg-gradient-to-b from-purple-500 to-indigo-500"></div>
+                    <CardContent className="p-4 sm:p-6 flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start sm:items-center gap-3 mb-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                             </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-slate-900">{event.title}</h3>
-                              <div className="flex items-center space-x-4 text-sm text-slate-500 mt-1">
-                                <div className="flex items-center space-x-1">
-                                  <CalendarIcon className="w-4 h-4" />
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-lg sm:text-xl font-bold text-slate-900 line-clamp-2">{event.title}</h3>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-500 mt-1">
+                                <div className="flex items-center gap-1">
+                                  <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                                   <span>{new Date(event.date).toLocaleDateString()}</span>
                                 </div>
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="w-4 h-4" />
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                                   <span>{event.time}</span>
                                 </div>
                               </div>
                             </div>
                           </div>
 
-                          <p className="text-slate-600 mb-4 line-clamp-2">{event.description}</p>
+                          <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4 line-clamp-2">{event.description}</p>
 
-                          <div className="flex flex-wrap items-center gap-3">
-                            <Badge variant={event.published ? "default" : "secondary"}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge 
+                              variant={event.published ? "default" : "secondary"}
+                              className="text-xs"
+                            >
                               {event.published ? "Published" : "Draft"}
                             </Badge>
-                            <div className="flex items-center space-x-1 text-sm text-slate-600">
-                              <MapPin className="w-4 h-4" />
-                              <span>{event.location}</span>
+                            <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600">
+                              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span className="line-clamp-1">{event.location}</span>
                             </div>
                             {event.maxAttendees && (
-                              <div className="flex items-center space-x-1 text-sm text-slate-600">
-                                <Users className="w-4 h-4" />
-                                <span>{event.maxAttendees} attendees max</span>
+                              <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600">
+                                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <span>{event.maxAttendees} max</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center space-x-2 ml-4">
+                        <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                             onClick={() => router.push(`/admin/events/${event.id}/rsvps`)}
                             title="View RSVPs"
                           >
@@ -189,7 +188,7 @@ export default function AdminEventsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                             onClick={() => window.open(`/events/${event.id}`, '_blank')}
                             title="Preview Event"
                           >
@@ -198,7 +197,7 @@ export default function AdminEventsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-green-600 hover:text-green-700"
+                            className="text-green-600 hover:text-green-700 h-8 w-8 sm:h-9 sm:w-9 p-0"
                             onClick={() => router.push(`/admin/events/${event.id}/edit`)}
                           >
                             <Edit className="w-4 h-4" />
@@ -206,7 +205,7 @@ export default function AdminEventsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-red-600 hover:text-red-700"
+                            className="text-red-600 hover:text-red-700 h-8 w-8 sm:h-9 sm:w-9 p-0"
                             onClick={() => handleDeleteEvent(event.id)}
                             disabled={deletingId === event.id}
                           >

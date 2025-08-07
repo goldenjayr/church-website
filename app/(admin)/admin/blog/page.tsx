@@ -130,41 +130,38 @@ export default function AdminBlogPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Blog Posts</h1>
-              <p className="text-slate-600 mt-2">Manage your church blog content</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Blog Posts</h1>
+              <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage your church blog content</p>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
-                className="border-purple-200 text-purple-700 hover:bg-purple-50 transition-all duration-200"
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 transition-all duration-200 text-sm sm:text-base justify-center"
                 onClick={() => router.push("/admin/blog/categories")}
               >
                 <Tag className="w-4 h-4 mr-2" />
-                Manage Categories
+                <span className="hidden sm:inline">Manage Categories</span>
+                <span className="sm:hidden">Categories</span>
               </Button>
               <Button
-                className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-sm sm:text-base justify-center"
                 onClick={() => router.push("/admin/blog/new")}
               >
-                <div className="flex items-center space-x-2">
-                  <div className="bg-white/20 rounded-full p-1">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <span className="font-semibold">New Post</span>
-                </div>
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                <span className="font-semibold">New Post</span>
               </Button>
             </div>
           </div>
 
-          {/* Filters */}
-          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Filters - Mobile optimized */}
+          <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 mb-6 sm:mb-8 sm:hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                 <div className="md:col-span-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -177,11 +174,11 @@ export default function AdminBlogPage() {
                   </div>
                 </div>
 
-                {/* Categories */}
-                <div>
+                {/* Categories - Mobile optimized */}
+                <div className="col-span-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Tag className="w-4 h-4 text-slate-600" />
-                    <label className="text-sm font-medium text-slate-700">Categories</label>
+                    <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
+                    <label className="text-xs sm:text-sm font-medium text-slate-700">Categories</label>
                     {selectedCategories.length > 0 && (
                       <Button
                         variant="ghost"
@@ -202,11 +199,11 @@ export default function AdminBlogPage() {
                   />
                 </div>
 
-                {/* Tags */}
-                <div>
+                {/* Tags - Mobile optimized */}
+                <div className="col-span-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <Filter className="w-4 h-4 text-slate-600" />
-                    <label className="text-sm font-medium text-slate-700">Filter by Tags</label>
+                    <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
+                    <label className="text-xs sm:text-sm font-medium text-slate-700">Filter by Tags</label>
                     {selectedTags.length > 0 && (
                       <Button
                         variant="ghost"
@@ -230,8 +227,8 @@ export default function AdminBlogPage() {
             </CardContent>
           </Card>
 
-          {/* Posts Grid */}
-          <div className="grid gap-6">
+          {/* Posts Grid - Mobile optimized */}
+          <div className="grid gap-4 sm:gap-6">
             {filteredPosts.map((post, index) => (
               <motion.div
                 key={post.id}
@@ -239,31 +236,35 @@ export default function AdminBlogPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
+                <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start sm:items-center gap-3 mb-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                           </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-slate-900">{post.title}</h3>
-                            <p className="text-sm text-slate-500">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 line-clamp-2">{post.title}</h3>
+                            <p className="text-xs sm:text-sm text-slate-500 mt-1">
                               By {post.authorName || post.author?.name || 'Unknown Author'} • {new Date(post.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
 
-                        <p className="text-slate-600 mb-4 line-clamp-2">{post.excerpt || 'No excerpt available'}</p>
+                        <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4 line-clamp-2">{post.excerpt || 'No excerpt available'}</p>
 
-                        <div className="flex items-center space-x-3">
-                          <Badge variant={post.published ? "default" : "secondary"}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge 
+                            variant={post.published ? "default" : "secondary"}
+                            className="text-xs"
+                          >
                             {post.published ? "Published" : "Draft"}
                           </Badge>
                           {post.category && (
                             <Badge
                               variant="outline"
+                              className="text-xs"
                               style={{
                                 borderColor: post.category.color,
                                 color: post.category.color
@@ -272,22 +273,27 @@ export default function AdminBlogPage() {
                               {post.category.name}
                             </Badge>
                           )}
-                          {post.featured && <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>}
-                          <div className="flex space-x-1">
-                            {post.tags.slice(0, 3).map((tag: string) => (
+                          {post.featured && (
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Featured</Badge>
+                          )}
+                          <div className="flex flex-wrap gap-1">
+                            {post.tags.slice(0, 2).map((tag: string) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 {tag}
                               </Badge>
                             ))}
+                            {post.tags.length > 2 && (
+                              <Badge variant="outline" className="text-xs">+{post.tags.length - 2}</Badge>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2 ml-4">
+                      <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                           onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
                           title="Preview Post"
                         >
@@ -296,7 +302,7 @@ export default function AdminBlogPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-green-600 hover:text-green-700"
+                          className="text-green-600 hover:text-green-700 h-8 w-8 sm:h-9 sm:w-9 p-0"
                           onClick={() => router.push(`/admin/blog/${post.id}/edit`)}
                         >
                           <Edit className="w-4 h-4" />
@@ -306,7 +312,7 @@ export default function AdminBlogPage() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-red-600 hover:text-red-700"
+                              className="text-red-600 hover:text-red-700 h-8 w-8 sm:h-9 sm:w-9 p-0"
                               disabled={deletingId === post.id}
                             >
                               {deletingId === post.id ? (

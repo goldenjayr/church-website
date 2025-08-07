@@ -151,30 +151,26 @@ export default function MembersPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Members</h1>
-              <p className="text-slate-600 mt-2">Manage church members and their information</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Members</h1>
+              <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage church members and their information</p>
             </div>
             <Button
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-sm sm:text-base justify-center"
               onClick={() => router.push("/admin/members/new")}
             >
-              <div className="flex items-center space-x-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-semibold">New Member</span>
-              </div>
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="font-semibold">New Member</span>
             </Button>
           </div>
 
-          {/* Filters */}
-          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
+          {/* Filters - Mobile optimized */}
+          <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 mb-6 sm:mb-8 sm:hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col gap-4">
                 {/* Search */}
                 <div>
@@ -234,31 +230,31 @@ export default function MembersPage() {
             </CardContent>
           </Card>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card className="border-none shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-blue-600 rounded-full">
-                    <Users className="w-6 h-6 text-white" />
+          {/* Stats Cards - Mobile optimized */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <Card className="border-none shadow-md sm:shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-blue-600 rounded-full">
+                    <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-blue-600 font-medium">Total Members</p>
-                    <p className="text-2xl font-bold text-blue-900">{members.length}</p>
+                    <p className="text-xs sm:text-sm text-blue-600 font-medium">Total</p>
+                    <p className="text-xl sm:text-2xl font-bold text-blue-900">{members.length}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg bg-gradient-to-br from-green-50 to-green-100">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-green-600 rounded-full">
-                    <Users className="w-6 h-6 text-white" />
+            <Card className="border-none shadow-md sm:shadow-lg bg-gradient-to-br from-green-50 to-green-100">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-green-600 rounded-full">
+                    <Users className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-green-600 font-medium">Active Members</p>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="text-xs sm:text-sm text-green-600 font-medium">Active</p>
+                    <p className="text-xl sm:text-2xl font-bold text-green-900">
                       {members.filter(m => m.active).length}
                     </p>
                   </div>
@@ -266,15 +262,15 @@ export default function MembersPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-yellow-600 rounded-full">
-                    <Star className="w-6 h-6 text-white" />
+            <Card className="border-none shadow-md sm:shadow-lg bg-gradient-to-br from-yellow-50 to-yellow-100">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-yellow-600 rounded-full">
+                    <Star className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-yellow-600 font-medium">Featured</p>
-                    <p className="text-2xl font-bold text-yellow-900">
+                    <p className="text-xs sm:text-sm text-yellow-600 font-medium">Featured</p>
+                    <p className="text-xl sm:text-2xl font-bold text-yellow-900">
                       {members.filter(m => m.featured).length}
                     </p>
                   </div>
@@ -282,15 +278,15 @@ export default function MembersPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-3 bg-purple-600 rounded-full">
-                    <Crown className="w-6 h-6 text-white" />
+            <Card className="border-none shadow-md sm:shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                  <div className="p-2 sm:p-3 bg-purple-600 rounded-full">
+                    <Crown className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-purple-600 font-medium">With Positions</p>
-                    <p className="text-2xl font-bold text-purple-900">
+                    <p className="text-xs sm:text-sm text-purple-600 font-medium">Positions</p>
+                    <p className="text-xl sm:text-2xl font-bold text-purple-900">
                       {members.filter(m => m.position).length}
                     </p>
                   </div>
@@ -299,8 +295,8 @@ export default function MembersPage() {
             </Card>
           </div>
 
-          {/* Members Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Members Grid - Mobile optimized */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredMembers.map((member, index) => (
               <motion.div
                 key={member.id}
@@ -308,32 +304,32 @@ export default function MembersPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group overflow-hidden">
+                <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:scale-[1.02] group overflow-hidden">
                   <CardContent className="p-0">
                     {/* Header Section */}
-                    <div className="relative p-6 bg-gradient-to-br from-slate-50 to-slate-100">
+                    <div className="relative p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-slate-100">
                       {member.featured && (
                         <div className="absolute top-4 right-4">
                           <Star className="w-5 h-5 text-yellow-500 fill-current" />
                         </div>
                       )}
 
-                      <div className="flex items-start space-x-4">
-                        <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 sm:border-4 border-white shadow-lg">
                           <AvatarImage src={member.imageUrl} />
-                          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold text-lg">
+                          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold text-sm sm:text-lg">
                             {getInitials(member.firstName, member.lastName)}
                           </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-slate-900 truncate">
+                          <h3 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                             {member.firstName} {member.lastName}
                           </h3>
 
                           {member.position && (
                             <Badge
-                              className="mt-1 text-white border-0"
+                              className="mt-1 text-white border-0 text-xs"
                               style={{ backgroundColor: member.position.color }}
                             >
                               <Crown className="w-3 h-3 mr-1" />
@@ -341,14 +337,17 @@ export default function MembersPage() {
                             </Badge>
                           )}
 
-                          <div className="flex items-center space-x-2 mt-2">
-                            <Badge variant={member.active ? "default" : "secondary"}>
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <Badge 
+                              variant={member.active ? "default" : "secondary"}
+                              className="text-xs"
+                            >
                               {member.active ? "Active" : "Inactive"}
                             </Badge>
                             {member._count.authoredPosts > 0 && (
-                              <Badge variant="outline" className="flex items-center gap-1">
+                              <Badge variant="outline" className="flex items-center gap-1 text-xs">
                                 <FileText className="w-3 h-3" />
-                                {member._count.authoredPosts} posts
+                                {member._count.authoredPosts}
                               </Badge>
                             )}
                           </div>
@@ -357,7 +356,7 @@ export default function MembersPage() {
                     </div>
 
                     {/* Content Section */}
-                    <div className="p-6 space-y-4">
+                    <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                       {member.bio && (
                         <p className="text-slate-600 text-sm line-clamp-3 leading-relaxed">
                           {member.bio}
@@ -386,28 +385,28 @@ export default function MembersPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                      <div className="flex justify-between items-center pt-3 sm:pt-4 border-t border-slate-100">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleToggleStatus(member.id)}
-                          className="text-xs"
+                          className="text-xs h-8"
                         >
                           {member.active ? "Deactivate" : "Activate"}
                         </Button>
 
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50 h-8 w-8 p-0"
                             onClick={() => router.push(`/admin/members/${member.id}/edit`)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                              <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -455,15 +454,11 @@ export default function MembersPage() {
               </p>
               {!searchTerm && statusFilter === "all" && positionFilter === "all" && (
                 <Button
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
                   onClick={() => router.push("/admin/members/new")}
                 >
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-white/20 rounded-full p-1">
-                      <Plus className="w-4 h-4" />
-                    </div>
-                    <span className="font-semibold">Add First Member</span>
-                  </div>
+                  <Plus className="w-5 h-5 mr-2" />
+                  <span className="font-semibold">Add First Member</span>
                 </Button>
               )}
             </div>

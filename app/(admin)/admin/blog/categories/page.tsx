@@ -80,64 +80,69 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
-      <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-4 flex-1">
-              <div className="flex items-center space-x-2">
+      <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:scale-[1.02] group">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-start gap-2 sm:gap-4 flex-1">
+              <div className="flex items-center gap-2">
                 <div
                   {...attributes}
                   {...listeners}
-                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
+                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-1.5 sm:p-2 rounded-md transition-all duration-200 sm:hover:scale-110 active:scale-95"
                   title="Drag to reorder"
                 >
-                  <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                  <GripVertical className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 hover:text-slate-600" />
                 </div>
                 <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: category.color || '#3b82f6' }}
                 >
-                  <Tag className="w-5 h-5 text-white" />
+                  <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{category.name}</h3>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 line-clamp-2">{category.name}</h3>
                 {category.description && (
-                  <p className="text-slate-600 mb-3">{category.description}</p>
+                  <p className="text-sm sm:text-base text-slate-600 mb-3 line-clamp-2">{category.description}</p>
                 )}
-                <div className="flex items-center space-x-3">
-                  <Badge variant={category.active ? "default" : "secondary"}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge 
+                    variant={category.active ? "default" : "secondary"}
+                    className="text-xs"
+                  >
                     {category.active ? "Active" : "Inactive"}
                   </Badge>
-                  <Badge variant="outline">{category._count.blogPosts} posts</Badge>
-                  <span className="text-sm text-slate-500">Order: {category.order}</span>
-                  <span className="text-sm text-slate-500">
+                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                    {category._count.blogPosts} posts
+                  </Badge>
+                  <span className="text-xs sm:text-sm text-slate-500">Order: {category.order}</span>
+                  <span className="text-xs sm:text-sm text-slate-500 hidden sm:inline">
                     {new Date(category.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                 onClick={() => router.push(`/admin/blog/categories/${category.id}/edit`)}
               >
                 <Edit className="w-4 h-4" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200">
+                  <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="max-w-[95vw] sm:max-w-lg">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete the category "{category.name}".
+                      This action cannot be undone. This will permanently delete the category \"{category.name}\".
                       {category._count.blogPosts > 0 && (
                         <span className="block mt-2 text-red-600 font-medium">
                           Warning: This category has {category._count.blogPosts} blog post(s) using it.
@@ -145,12 +150,12 @@ function SortableCategoryItem({ category, index, router, deletingId, handleDelet
                       )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                    <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       onClick={() => handleDelete(category.id)}
                       disabled={deletingId === category.id}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                     >
                       {deletingId === category.id ? "Deleting..." : "Delete"}
                     </AlertDialogAction>
@@ -271,47 +276,45 @@ export default function BlogCategoriesPage() {
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            {/* Header */}
-            <div className="flex justify-between items-center mb-8">
+            {/* Mobile-optimized header */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-slate-900">Blog Categories</h1>
-                <p className="text-slate-600 mt-2">Manage your blog post categories</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Blog Categories</h1>
+                <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage your blog post categories</p>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  className="border-slate-200 text-slate-700 hover:bg-slate-50 transition-all duration-200"
+                  className="w-full sm:w-auto justify-center border-slate-200 text-slate-700 hover:bg-slate-50 transition-all duration-200 text-xs sm:text-sm"
                   onClick={() => router.push("/admin/blog")}
+                  size="sm"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Blog
                 </Button>
                 <Button
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                  className="w-full sm:w-auto justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-xs sm:text-sm"
                   onClick={() => router.push("/admin/blog/categories/new")}
+                  size="sm"
                 >
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-white/20 rounded-full p-1">
-                      <Plus className="w-4 h-4" />
-                    </div>
-                    <span className="font-semibold">New Category</span>
-                  </div>
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <span className="font-semibold">New Category</span>
                 </Button>
               </div>
             </div>
 
             {/* Search */}
-            <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-              <CardContent className="p-6">
+            <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 mb-6 sm:mb-8 sm:hover:shadow-2xl transition-all duration-300">
+              <CardContent className="p-4 sm:p-6">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                   <Input
                     placeholder="Search categories..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-slate-200 focus:border-purple-400 focus:ring-purple-400 transition-all duration-200"
+                    className="pl-10 border-slate-200 focus:border-blue-400 focus:ring-blue-400 transition-all duration-200"
                   />
                 </div>
               </CardContent>
@@ -328,7 +331,7 @@ export default function BlogCategoriesPage() {
                 items={filteredCategories.map(category => category.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid gap-6">
+                <div className="grid gap-4 sm:gap-6">
                   {filteredCategories.map((category, index) => (
                     <SortableCategoryItem
                       key={category.id}
@@ -358,22 +361,19 @@ export default function BlogCategoriesPage() {
 
             {filteredCategories.length === 0 && (
               <div className="text-center py-12">
-                <Tag className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-slate-600 mb-2">No categories found</h3>
-                <p className="text-slate-500 mb-4">
+                <Tag className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400 mx-auto mb-4" />
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-600 mb-2">No categories found</h3>
+                <p className="text-sm sm:text-base text-slate-500 mb-4">
                   {searchTerm ? "Try adjusting your search" : "Start by creating your first category"}
                 </p>
                 {!searchTerm && (
                   <Button
-                    className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-xs sm:text-sm"
                     onClick={() => router.push("/admin/blog/categories/new")}
+                    size="sm"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div className="bg-white/20 rounded-full p-1">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                      <span className="font-semibold">Create First Category</span>
-                    </div>
+                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    <span className="font-semibold">Create First Category</span>
                   </Button>
                 )}
               </div>

@@ -80,46 +80,49 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
     >
-      <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-4 flex-1">
-              <div className="flex items-center space-x-2">
+      <Card className="border-none shadow-md sm:shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:scale-[1.02] group">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-start gap-2 sm:gap-4 flex-1">
+              <div className="flex items-center gap-2">
                 <div
                   {...attributes}
                   {...listeners}
-                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-2 rounded-md transition-all duration-200 hover:scale-110 active:scale-95"
+                  className="cursor-grab active:cursor-grabbing hover:bg-slate-100 p-1.5 sm:p-2 rounded-md transition-all duration-200 sm:hover:scale-110 active:scale-95"
                   title="Drag to reorder"
                 >
-                  <GripVertical className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+                  <GripVertical className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 hover:text-slate-600" />
                 </div>
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-blue-600" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{doctrine.title}</h3>
-                <p className="text-slate-600 mb-4 line-clamp-3"
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 line-clamp-2">{doctrine.title}</h3>
+                <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4 line-clamp-2 sm:line-clamp-3"
                    dangerouslySetInnerHTML={{ __html: doctrine.content.substring(0, 200) + "..." }}
                 />
-                <div className="flex items-center space-x-3">
-                  <Badge variant={doctrine.published ? "default" : "secondary"}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge 
+                    variant={doctrine.published ? "default" : "secondary"}
+                    className="text-xs"
+                  >
                     {doctrine.published ? "Published" : "Draft"}
                   </Badge>
-                  <Badge variant="outline">{doctrine.category}</Badge>
-                  <span className="text-sm text-slate-500">Order: {doctrine.order}</span>
-                  <span className="text-sm text-slate-500">
+                  <Badge variant="outline" className="text-xs">{doctrine.category}</Badge>
+                  <span className="text-xs sm:text-sm text-slate-500">Order: {doctrine.order}</span>
+                  <span className="text-xs sm:text-sm text-slate-500">
                     {new Date(doctrine.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                 onClick={() => window.open(`/doctrines`, '_blank')}
               >
                 <Eye className="w-4 h-4" />
@@ -127,14 +130,14 @@ function SortableDoctrineItem({ doctrine, index, router, deletingId, handleDelet
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200"
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0"
                 onClick={() => router.push(`/admin/doctrines/${doctrine.id}/edit`)}
               >
                 <Edit className="w-4 h-4" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200">
+                  <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 transition-all duration-200 h-8 w-8 sm:h-9 sm:w-9 p-0">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </AlertDialogTrigger>
@@ -272,30 +275,26 @@ export default function AdminDoctrinesPage() {
 
   return (
     <AdminPageLayout user={user} onLogout={handleLogout}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Doctrines</h1>
-              <p className="text-slate-600 mt-2">Manage your church doctrines and beliefs</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Doctrines</h1>
+              <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">Manage your church doctrines and beliefs</p>
             </div>
             <Button
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 sm:transform sm:hover:scale-105 border-0 text-sm sm:text-base justify-center"
               onClick={() => router.push("/admin/doctrines/new")}
             >
-              <div className="flex items-center space-x-2">
-                <div className="bg-white/20 rounded-full p-1">
-                  <Plus className="w-4 h-4" />
-                </div>
-                <span className="font-semibold">New Doctrine</span>
-              </div>
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="font-semibold">New Doctrine</span>
             </Button>
           </div>
 
-          {/* Search */}
-          <Card className="border-none shadow-xl bg-gradient-to-r from-white to-slate-50 mb-8 hover:shadow-2xl transition-all duration-300">
-            <CardContent className="p-6">
+          {/* Search - Mobile optimized */}
+          <Card className="border-none shadow-md sm:shadow-xl bg-gradient-to-r from-white to-slate-50 mb-6 sm:mb-8 sm:hover:shadow-2xl transition-all duration-300">
+            <CardContent className="p-4 sm:p-6">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                 <Input
@@ -319,7 +318,7 @@ export default function AdminDoctrinesPage() {
               items={filteredDoctrines.map(doctrine => doctrine.id)}
               strategy={verticalListSortingStrategy}
             >
-              <div className="grid gap-6">
+              <div className="grid gap-4 sm:gap-6">
                 {filteredDoctrines.map((doctrine, index) => (
                   <SortableDoctrineItem
                     key={doctrine.id}
@@ -356,15 +355,11 @@ export default function AdminDoctrinesPage() {
               </p>
               {!searchTerm && (
                 <Button
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0"
                   onClick={() => router.push("/admin/doctrines/new")}
                 >
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-white/20 rounded-full p-1">
-                      <Plus className="w-4 h-4" />
-                    </div>
-                    <span className="font-semibold">Create First Doctrine</span>
-                  </div>
+                  <Plus className="w-5 h-5 mr-2" />
+                  <span className="font-semibold">Create First Doctrine</span>
                 </Button>
               )}
             </div>

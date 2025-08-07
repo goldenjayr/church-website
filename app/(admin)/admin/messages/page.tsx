@@ -367,32 +367,32 @@ Blessings!`
 
   return (
     <AdminPageLayout user={user} onLogout={() => setUser(null)}>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Messages</h1>
-            <p className="text-slate-600 mt-2">
+          {/* Header - Mobile optimized */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Messages</h1>
+            <p className="text-sm sm:text-base text-slate-600 mt-1 sm:mt-2">
               Manage and respond to messages from your website visitors
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          {/* Stats - Mobile optimized */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="border-none shadow-md sm:shadow-lg">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-600">Total Messages</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
+                      <p className="text-xs sm:text-sm font-medium text-slate-600">Total</p>
+                      <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stats.total}</p>
                     </div>
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Inbox className="w-5 h-5 text-blue-600" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Inbox className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -404,15 +404,15 @@ Blessings!`
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="border-none shadow-md sm:shadow-lg">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-600">Unread</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">{stats.unread}</p>
+                      <p className="text-xs sm:text-sm font-medium text-slate-600">Unread</p>
+                      <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stats.unread}</p>
                     </div>
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <AlertCircle className="w-5 h-5 text-green-600" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -424,15 +424,15 @@ Blessings!`
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="border-none shadow-md sm:shadow-lg">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-600">Starred</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">{stats.starred}</p>
+                      <p className="text-xs sm:text-sm font-medium text-slate-600">Starred</p>
+                      <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stats.starred}</p>
                     </div>
-                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <Star className="w-5 h-5 text-yellow-600" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -444,15 +444,15 @@ Blessings!`
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <Card className="border-none shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="border-none shadow-md sm:shadow-lg">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                      <p className="text-sm font-medium text-slate-600">Archived</p>
-                      <p className="text-2xl font-bold text-slate-900 mt-1">{stats.archived}</p>
+                      <p className="text-xs sm:text-sm font-medium text-slate-600">Archived</p>
+                      <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stats.archived}</p>
                     </div>
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Archive className="w-5 h-5 text-purple-600" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                      <Archive className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -460,15 +460,15 @@ Blessings!`
             </motion.div>
           </div>
 
-          {/* Main Content */}
-          <Card className="border-none shadow-lg">
+          {/* Main Content - Mobile optimized */}
+          <Card className="border-none shadow-md sm:shadow-lg">
             <CardContent className="p-0">
-              <div className="grid lg:grid-cols-3 h-[600px]">
-                {/* Messages List */}
-                <div className="border-r border-slate-200 overflow-hidden flex flex-col">
-                  {/* Filters */}
-                  <div className="p-4 border-b border-slate-200">
-                    <div className="flex items-center space-x-2 mb-3">
+              <div className="flex flex-col lg:grid lg:grid-cols-3 h-screen lg:h-[600px]">
+                {/* Messages List - Mobile optimized */}
+                <div className={`${selectedMessage ? 'hidden lg:flex' : 'flex'} lg:border-r border-slate-200 overflow-hidden flex-col flex-1 lg:flex-initial`}>
+                  {/* Filters - Mobile optimized */}
+                  <div className="p-3 sm:p-4 border-b border-slate-200">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                         <Input
@@ -479,7 +479,7 @@ Blessings!`
                         />
                       </div>
                       <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-full sm:w-32">
                           <SelectValue placeholder="All Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -493,18 +493,18 @@ Blessings!`
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                      <TabsList className="w-full">
-                        <TabsTrigger value="inbox" className="flex-1">
-                          <Inbox className="w-4 h-4 mr-2" />
-                          Inbox
+                      <TabsList className="w-full grid grid-cols-3">
+                        <TabsTrigger value="inbox" className="text-xs sm:text-sm">
+                          <Inbox className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Inbox</span>
                         </TabsTrigger>
-                        <TabsTrigger value="starred" className="flex-1">
-                          <Star className="w-4 h-4 mr-2" />
-                          Starred
+                        <TabsTrigger value="starred" className="text-xs sm:text-sm">
+                          <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Starred</span>
                         </TabsTrigger>
-                        <TabsTrigger value="archived" className="flex-1">
-                          <Archive className="w-4 h-4 mr-2" />
-                          Archived
+                        <TabsTrigger value="archived" className="text-xs sm:text-sm">
+                          <Archive className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Archived</span>
                         </TabsTrigger>
                       </TabsList>
                     </Tabs>
@@ -552,7 +552,7 @@ Blessings!`
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             className={`
-                              border-b border-slate-200 p-4 cursor-pointer
+                              border-b border-slate-200 p-3 sm:p-4 cursor-pointer
                               hover:bg-slate-50 transition-colors
                               ${selectedMessage?.id === message.id ? "bg-blue-50" : ""}
                               ${message.status === "UNREAD" ? "font-semibold" : ""}
@@ -613,24 +613,32 @@ Blessings!`
                   </div>
                 </div>
 
-                {/* Message Detail */}
-                <div className="lg:col-span-2 overflow-hidden flex flex-col">
+                {/* Message Detail - Mobile optimized */}
+                <div className={`${selectedMessage ? 'flex' : 'hidden lg:flex'} lg:col-span-2 overflow-hidden flex-col flex-1`}>
                   {selectedMessage ? (
                     <>
-                      {/* Message Header */}
-                      <div className="p-4 border-b border-slate-200">
+                      {/* Message Header - Mobile optimized */}
+                      <div className="p-3 sm:p-4 border-b border-slate-200">
                         <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="w-10 h-10">
-                              <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="lg:hidden h-8 w-8"
+                              onClick={() => setSelectedMessage(null)}
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
+                              <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs sm:text-base">
                                 {getInitials(selectedMessage.firstName, selectedMessage.lastName)}
                               </AvatarFallback>
                             </Avatar>
-                            <div>
-                              <h3 className="font-semibold text-slate-900">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
                                 {selectedMessage.firstName} {selectedMessage.lastName}
                               </h3>
-                              <p className="text-sm text-slate-600">{selectedMessage.email}</p>
+                              <p className="text-xs sm:text-sm text-slate-600 truncate">{selectedMessage.email}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -694,30 +702,31 @@ Blessings!`
                           </div>
                         </div>
 
-                        <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                        <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2">
                           {selectedMessage.subject}
                         </h2>
 
-                        <div className="flex items-center space-x-4 text-sm text-slate-600">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600">
                           <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {format(new Date(selectedMessage.createdAt), "PPP")}
+                            <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                            <span className="hidden sm:inline">{format(new Date(selectedMessage.createdAt), "PPP")}</span>
+                            <span className="sm:hidden">{format(new Date(selectedMessage.createdAt), "MMM d")}</span>
                           </div>
                           <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
+                            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             {format(new Date(selectedMessage.createdAt), "p")}
                           </div>
                           {selectedMessage.phone && (
                             <div className="flex items-center">
-                              <Phone className="w-4 h-4 mr-1" />
+                              <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               {selectedMessage.phone}
                             </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Message Content */}
-                      <div className="flex-1 overflow-y-auto p-6">
+                      {/* Message Content - Mobile optimized */}
+                      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                         <div className="prose max-w-none">
                           <p className="whitespace-pre-wrap text-slate-700">
                             {selectedMessage.message}
@@ -781,12 +790,13 @@ Blessings!`
                         )}
                       </div>
 
-                      {/* Actions */}
-                      <div className="p-4 border-t border-slate-200">
-                        <div className="flex items-center justify-between">
+                      {/* Actions - Mobile optimized */}
+                      <div className="p-3 sm:p-4 border-t border-slate-200">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
                           <Button
                             variant="outline"
                             onClick={() => handleToggleArchive(selectedMessage.id)}
+                            className="text-xs sm:text-sm"
                           >
                             {selectedMessage.archived ? (
                               <>
@@ -800,20 +810,21 @@ Blessings!`
                               </>
                             )}
                           </Button>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               onClick={() => setShowDeleteDialog(true)}
+                              className="text-xs sm:text-sm flex-1 sm:flex-initial"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              <span className="hidden sm:inline">Delete</span>
                             </Button>
                             <Button
                               onClick={() => setShowReplyDialog(true)}
-                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-xs sm:text-sm flex-1 sm:flex-initial"
                             >
-                              <Reply className="w-4 h-4 mr-2" />
-                              Reply via Email
+                              <Reply className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                              Reply<span className="hidden sm:inline"> via Email</span>
                             </Button>
                           </div>
                         </div>
