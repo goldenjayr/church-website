@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin, User, LogOut, LayoutDashboard } from "lucide-react"
+import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin, User, LogOut, LayoutDashboard, LogIn, Sparkles } from "lucide-react"
 import { logout } from "@/lib/auth-actions"
 import { useRouter } from "next/navigation"
 import type { User as UserType } from "@prisma/client"
@@ -252,13 +252,13 @@ export function NavigationOptimized() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex-1 flex items-center space-x-2">
-              <Image 
-                src="https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/official-logo.png" 
-                alt="Logo" 
-                width={40} 
-                height={40} 
+              <Image
+                src="https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/official-logo.png"
+                alt="Logo"
+                width={40}
+                height={40}
                 className="sm:w-12 sm:h-12"
-                priority 
+                priority
               />
               <span className="font-bold text-base sm:text-xl text-slate-800 truncate">Divine Jesus Church</span>
             </Link>
@@ -274,15 +274,15 @@ export function NavigationOptimized() {
                   {item.name}
                 </Link>
               ))}
-              
+
               <AuthSection />
             </div>
 
             {/* Mobile menu button */}
             <div className="md:hidden">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsOpen(!isOpen)}
                 className="h-10 w-10"
               >
@@ -310,7 +310,7 @@ export function NavigationOptimized() {
               className="fixed inset-0 bg-black/50 z-40 md:hidden"
               onClick={() => setIsOpen(false)}
             />
-            
+
             {/* Slide-in Menu */}
             <motion.div
               initial={{ x: '100%' }}
@@ -322,17 +322,17 @@ export function NavigationOptimized() {
               {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex items-center gap-2">
-                  <Image 
-                    src="https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/official-logo.png" 
-                    alt="Logo" 
-                    width={32} 
-                    height={32} 
+                  <Image
+                    src="https://cdn.jsdelivr.net/gh/goldenjayr/divinejesus-files/official-logo.png"
+                    alt="Logo"
+                    width={32}
+                    height={32}
                   />
                   <span className="font-bold text-lg text-slate-800">Menu</span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setIsOpen(false)}
                   className="h-8 w-8"
                 >
@@ -355,9 +355,9 @@ export function NavigationOptimized() {
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Button 
-                      asChild 
-                      size="sm" 
+                    <Button
+                      asChild
+                      size="sm"
                       className="flex-1 bg-white hover:bg-slate-50"
                       variant="outline"
                       onClick={() => setIsOpen(false)}
@@ -404,9 +404,9 @@ export function NavigationOptimized() {
                   user ? (
                     <div className="space-y-2">
                       {user.role === "USER" && (
-                        <Button 
-                          asChild 
-                          variant="outline" 
+                        <Button
+                          asChild
+                          variant="outline"
                           className="w-full justify-start"
                           onClick={() => setIsOpen(false)}
                         >
@@ -432,27 +432,37 @@ export function NavigationOptimized() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <p className="text-sm text-slate-600 text-center mb-3">
-                        Join our community
-                      </p>
+                      <div className="text-center pb-2">
+                        <p className="text-sm text-slate-600 text-center">
+                          Join our community
+                        </p>
+                      </div>
                       <Button
                         asChild
                         variant="outline"
-                        className="w-full"
+                        className="w-full justify-center hover:bg-slate-50 transition-all duration-200 border-slate-200"
                         onClick={() => setIsOpen(false)}
                       >
-                        <Link href="/login">
-                          <User className="w-4 h-4 mr-2" />
-                          Sign In
+                        <Link href="/login" className="flex items-center">
+                          <LogIn className="w-4 h-4 mr-2" />
+                          <span>Sign In</span>
                         </Link>
                       </Button>
-                      <Button
-                        asChild
-                        className="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <Link href="/signup">Create Account</Link>
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          asChild
+                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Link href="/signup" className="flex items-center justify-center">
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            <span className="font-medium">Join Our Community</span>
+                          </Link>
+                        </Button>
+                      </div>
+                      <p className="text-xs text-center text-slate-500 pt-1">
+                        Get access to member features
+                      </p>
                     </div>
                   )
                 ) : (

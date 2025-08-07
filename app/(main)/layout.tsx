@@ -1,8 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import Script from "next/script"
-import Head from "next/head"
 import "../globals.css"
 import { NavigationOptimized } from "@/components/navigation-optimized"
 import { Footer } from "@/components/footer"
