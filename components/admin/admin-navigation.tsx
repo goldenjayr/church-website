@@ -35,11 +35,12 @@ interface AdminNavigationProps {
 
 const navItems = [
   { name: "Dashboard", href: "/admin", icon: Home },
+  { name: "Users", href: "/admin/users", icon: Users },
   { name: "Blog Posts", href: "/admin/blog", icon: FileText },
   { name: "Events", href: "/admin/events", icon: Calendar },
   // { name: "Gallery", href: "/admin/gallery", icon: ImageIcon },
   { name: "Doctrines", href: "/admin/doctrines", icon: BookOpen },
-  { name: "Members", href: "/admin/members", icon: Users },
+  { name: "Members", href: "/admin/members", icon: Crown },
   { name: "Positions", href: "/admin/positions", icon: Crown },
   { name: "Messages", href: "/admin/messages", icon: MessageSquare },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },

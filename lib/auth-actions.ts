@@ -3,7 +3,11 @@
 import { prisma } from "@/lib/prisma-client"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { User } from "@prisma/client"
+import { User, Role } from "@prisma/client"
+import * as bcrypt from "bcryptjs"
+import * as jwt from "jsonwebtoken"
+
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production"
 
 export async function authenticateUser(email: string, password: string): Promise<User | null> {
   try {
@@ -11,15 +15,67 @@ export async function authenticateUser(email: string, password: string): Promise
       where: { email },
     })
 
-    if (user && user.password === password) {
-      // In production, you would properly hash and compare passwords
-      return user
+    if (!user) {
+      return null
     }
 
-    return null
+    // Compare the password with the hashed password
+    const isValidPassword = await bcrypt.compare(password, user.password)
+    
+    if (!isValidPassword) {
+      return null
+    }
+
+    return user
   } catch (error) {
     console.error("Authentication error:", error)
     return null
+  }
+}
+
+export async function registerUser(
+  email: string, 
+  password: string, 
+  name: string,
+  role: Role = "USER"
+): Promise<{ success: boolean; message: string; user?: User }> {
+  try {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    })
+
+    if (existingUser) {
+      return { 
+        success: false, 
+        message: "User with this email already exists" 
+      }
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Create the user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role,
+      },
+    })
+
+    return {
+      success: true,
+      message: "User registered successfully",
+      user,
+    }
+  } catch (error) {
+    console.error("Registration error:", error)
+    return {
+      success: false,
+      message: "Failed to register user",
+    }
   }
 }
 
