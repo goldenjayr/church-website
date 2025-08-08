@@ -8,6 +8,11 @@ const prisma = new PrismaClient()
 export async function getPublicEvents() {
   return await prisma.event.findMany({
     where: { published: true },
+    include: {
+      _count: {
+        select: { rsvps: true }
+      }
+    },
     orderBy: {
       date: "asc",
     },
