@@ -26,7 +26,7 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
         >
-          Welcome to
+          {`Welcome to `}
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
             Divine Jesus Church
           </span>
