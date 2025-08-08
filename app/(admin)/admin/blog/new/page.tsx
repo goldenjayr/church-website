@@ -165,20 +165,22 @@ export default function NewBlogPostPage() {
                   type="submit"
                   form="blog-post-form"
                   disabled={saving || !formData.title.trim() || !formData.content.trim() || (!formData.authorName.trim() && !formData.memberId.trim())}
-                  className={`w-full sm:w-auto justify-center transition-all duration-300 ${formData.title.trim() && formData.content.trim()
-                    ? "bg-blue-600 hover:bg-blue-700 sm:scale-105 shadow-lg"
-                    : "bg-gray-400 cursor-not-allowed"
+                  className={`w-full sm:w-auto justify-center text-white font-medium transition-all duration-300 ${formData.title.trim() && formData.content.trim()
+                    ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    : "bg-gray-400 cursor-not-allowed opacity-60"
                   }`}
                   size="sm"
                 >
-                  <Save className={`w-4 h-4 mr-2 transition-transform duration-300 ${formData.title.trim() && formData.content.trim() ? "rotate-0" : "rotate-12"
+                  <Save className={`w-4 h-4 mr-2 text-white transition-transform duration-300 ${formData.title.trim() && formData.content.trim() ? "rotate-0" : "rotate-12"
                     }`} />
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                      Saving...
+                      <span className="text-white">Saving...</span>
                     </>
-                  ) : "Save Post"}
+                  ) : (
+                    <span className="text-white">Save Post</span>
+                  )}
                 </Button>
               </div>
             </div>

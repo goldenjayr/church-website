@@ -270,20 +270,24 @@ export default function EditBlogPostPage() {
                   type="submit"
                   form="blog-post-form"
                   disabled={saving || !hasChanges()}
-                  className={`col-span-2 sm:col-span-1 justify-center text-xs sm:text-sm transition-all duration-300 ${hasChanges()
-                    ? "bg-green-600 hover:bg-green-700 sm:scale-105 shadow-lg"
-                    : "bg-gray-400 cursor-not-allowed"
+                  className={`col-span-2 sm:col-span-1 justify-center text-white font-medium text-xs sm:text-sm transition-all duration-300 ${hasChanges()
+                    ? "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    : "bg-gray-400 cursor-not-allowed opacity-60"
                   }`}
                   size="sm"
                 >
-                  <Save className={`w-4 h-4 mr-1 sm:mr-2 transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
+                  <Save className={`w-4 h-4 mr-1 sm:mr-2 text-white transition-transform duration-300 ${hasChanges() ? "rotate-0" : "rotate-12"
                     }`} />
                   {saving ? (
                     <>
                       <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent mr-1 sm:mr-2" />
-                      Saving...
+                      <span className="text-white">Saving...</span>
                     </>
-                  ) : hasChanges() ? "Update Post" : "No Changes"}
+                  ) : hasChanges() ? (
+                    <span className="text-white">Update Post</span>
+                  ) : (
+                    <span className="text-white/90">No Changes</span>
+                  )}
                 </Button>
               </div>
             </div>
