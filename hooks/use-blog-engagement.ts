@@ -355,6 +355,25 @@ export function useBlogEngagement(slug: string) {
           likes: result.likeCount,
           hasLiked: result.liked,
         }));
+        
+        // Fetch fresh stats to ensure consistency
+        // Small delay to allow cache invalidation to propagate
+        setTimeout(async () => {
+          try {
+            const statsResponse = await fetch(`/api/blog/${slug}/stats`);
+            if (statsResponse.ok) {
+              const stats = await statsResponse.json();
+              setData({
+                views: stats.totalViews || 0,
+                likes: stats.totalLikes || 0,
+                hasLiked: stats.hasLiked || false,
+                isLoading: false,
+              });
+            }
+          } catch (error) {
+            console.error('Error refreshing stats:', error);
+          }
+        }, 500);
       } else {
         // Revert on error
         setData(previousData);

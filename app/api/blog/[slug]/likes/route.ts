@@ -1,13 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { z } from 'zod';
+import { prisma } from '@/lib/prisma-client';
+import { revalidateTag } from 'next/cache';
 import { getCurrentUser } from '@/lib/auth-actions';
-
-const prisma = new PrismaClient();
-
-const schema = z.object({
-  slug: z.string(),
-});
 
 export async function POST(
   request: Request,
@@ -57,6 +51,31 @@ export async function POST(
     const likeCount = await prisma.blogPostLike.count({
       where: { blogPostId: blogPost.id },
     });
+
+    // Update the stats record immediately to reflect the new like
+    await prisma.blogPostStats.update({
+      where: { blogPostId: blogPost.id },
+      data: { 
+        totalLikes: likeCount,
+        updatedAt: new Date()
+      },
+    }).catch(() => {
+      // If stats don't exist yet, create them
+      return prisma.blogPostStats.create({
+        data: {
+          blogPostId: blogPost.id,
+          totalLikes: likeCount,
+          totalViews: 0,
+          uniqueViews: 0,
+          registeredViews: 0,
+          anonymousViews: 0,
+          updatedAt: new Date(),
+        },
+      });
+    });
+
+    // Invalidate the cache so next request gets fresh data
+    revalidateTag('blog-stats');
 
     return NextResponse.json({ 
       success: true, 
@@ -108,6 +127,31 @@ export async function DELETE(
     const likeCount = await prisma.blogPostLike.count({
       where: { blogPostId: blogPost.id },
     });
+
+    // Update the stats record immediately to reflect the removed like
+    await prisma.blogPostStats.update({
+      where: { blogPostId: blogPost.id },
+      data: { 
+        totalLikes: likeCount,
+        updatedAt: new Date()
+      },
+    }).catch(() => {
+      // If stats don't exist yet, create them
+      return prisma.blogPostStats.create({
+        data: {
+          blogPostId: blogPost.id,
+          totalLikes: likeCount,
+          totalViews: 0,
+          uniqueViews: 0,
+          registeredViews: 0,
+          anonymousViews: 0,
+          updatedAt: new Date(),
+        },
+      });
+    });
+
+    // Invalidate the cache so next request gets fresh data
+    revalidateTag('blog-stats');
 
     return NextResponse.json({ 
       success: true,

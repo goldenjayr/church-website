@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma-client';
 import { getCurrentUser } from '@/lib/auth-actions';
 import { unstable_cache } from 'next/cache';
 
-// Cache stats for 60 seconds to reduce database load
+// Cache stats for 10 seconds to reduce database load while keeping likes relatively fresh
 const getCachedStats = unstable_cache(
   async (blogPostId: string) => {
     // Use a single optimized query with aggregations
@@ -20,7 +20,7 @@ const getCachedStats = unstable_cache(
         avg_duration: number | null;
         last_viewed: Date | null;
       }>>`
-        SELECT 
+        SELECT
           COUNT(*) as total_views,
           COUNT(DISTINCT "sessionId") as unique_views,
           COUNT(CASE WHEN "userId" IS NOT NULL THEN 1 END) as registered_views,
@@ -32,9 +32,9 @@ const getCachedStats = unstable_cache(
     ]);
 
     const viewStats = viewAggregates[0] || {
-      total_views: 0n,
-      unique_views: 0n,
-      registered_views: 0n,
+      total_views: 0,
+      unique_views: 0,
+      registered_views: 0,
       avg_duration: null,
       last_viewed: null,
     };
@@ -52,7 +52,7 @@ const getCachedStats = unstable_cache(
     const lastViewedAt = viewStats.last_viewed;
 
     // Only update stats if they don't exist or are significantly outdated
-    const shouldUpdate = !statsData || 
+    const shouldUpdate = !statsData ||
       Math.abs(statsData.totalViews - totalViews) > 10 ||
       Math.abs(statsData.totalLikes - totalLikes) > 5 ||
       (statsData.updatedAt && Date.now() - statsData.updatedAt.getTime() > 300000); // 5 minutes
@@ -100,7 +100,7 @@ const getCachedStats = unstable_cache(
   },
   ['blog-stats'],
   {
-    revalidate: 60, // Cache for 60 seconds
+    revalidate: 10, // Cache for 10 seconds for more real-time updates
     tags: ['blog-stats'],
   }
 );
@@ -110,21 +110,21 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  
+
   if (!slug) {
     return NextResponse.json({ error: 'Invalid slug' }, { status: 400 });
   }
-  
+
   try {
     // Parallel fetch: blog post and current user
     const [blogPost, user] = await Promise.all([
-      prisma.blogPost.findUnique({ 
+      prisma.blogPost.findUnique({
         where: { slug },
         select: { id: true }
       }),
       getCurrentUser(),
     ]);
-    
+
     if (!blogPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
