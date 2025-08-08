@@ -112,14 +112,14 @@ export const CommentItem = memo(function CommentItem({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`${isReply ? "ml-12" : ""}`}
+      className={`${isReply ? "ml-4 sm:ml-8 md:ml-12" : ""}`}
     >
-      <div className={`flex gap-3 ${comment.isPinned && !isReply ? "bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg" : ""}`}>
-        <Avatar className="w-10 h-10 flex-shrink-0">
+      <div className={`flex gap-2 sm:gap-3 ${comment.isPinned && !isReply ? "bg-blue-50 dark:bg-blue-950/20 p-3 sm:p-4 rounded-lg" : ""}`}>
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
           <AvatarImage 
             src={comment.user.profileImage ? getOptimizedImageUrl(comment.user.profileImage, { width: 40, height: 40 }) : undefined} 
           />
-          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white">
+          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs sm:text-sm">
             {comment.user.name
               ? comment.user.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
               : comment.user.email[0].toUpperCase()}
@@ -128,23 +128,27 @@ export const CommentItem = memo(function CommentItem({
 
         <div className="flex-1 space-y-2">
           <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <span className="font-semibold text-sm truncate">
                   {comment.user.name || "Anonymous"}
                 </span>
                 {comment.user.role === "ADMIN" && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">
                     <Shield className="w-3 h-3 mr-1" />
-                    Admin
+                    <span className="hidden sm:inline">Admin</span>
+                    <span className="sm:hidden">A</span>
                   </Badge>
                 )}
                 {comment.isPinned && !isReply && (
-                  <Badge variant="default" className="text-xs bg-blue-600">
+                  <Badge variant="default" className="text-xs bg-blue-600 flex-shrink-0">
                     <Pin className="w-3 h-3 mr-1" />
-                    Pinned
+                    <span className="hidden sm:inline">Pinned</span>
+                    <span className="sm:hidden">P</span>
                   </Badge>
                 )}
+              </div>
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
                 <span className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </span>
@@ -156,8 +160,8 @@ export const CommentItem = memo(function CommentItem({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-6 w-6 sm:h-8 sm:w-8 p-0 flex-shrink-0 ml-2">
+                  <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -216,7 +220,7 @@ export const CommentItem = memo(function CommentItem({
               <Textarea
                 value={editContent}
                 onChange={(e) => onEditContentChange(e.target.value)}
-                className="min-h-[80px]"
+                className="min-h-[60px] sm:min-h-[80px] text-sm"
                 placeholder="Edit your comment..."
               />
               <div className="flex gap-2">
@@ -224,6 +228,7 @@ export const CommentItem = memo(function CommentItem({
                   size="sm"
                   onClick={() => onEditSubmit(comment.id)}
                   disabled={submitting}
+                  className="text-xs px-2 py-1 h-7 sm:h-8"
                 >
                   Save
                 </Button>
@@ -231,6 +236,7 @@ export const CommentItem = memo(function CommentItem({
                   size="sm"
                   variant="outline"
                   onClick={onEditCancel}
+                  className="text-xs px-2 py-1 h-7 sm:h-8"
                 >
                   Cancel
                 </Button>
@@ -242,15 +248,15 @@ export const CommentItem = memo(function CommentItem({
             </p>
           )}
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4 flex-wrap">
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground hover:text-foreground"
+              className="h-7 px-2 sm:h-8 text-muted-foreground hover:text-foreground flex-shrink-0"
               onClick={() => onLikeClick(comment.id)}
             >
               <Heart
-                className={`h-4 w-4 mr-1 ${
+                className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${
                   isLiked ? "fill-red-500 text-red-500" : ""
                 }`}
               />
@@ -261,11 +267,11 @@ export const CommentItem = memo(function CommentItem({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 sm:h-8 text-muted-foreground hover:text-foreground flex-shrink-0"
                 onClick={() => onReplyClick(comment.id)}
               >
-                <Reply className="h-4 w-4 mr-1" />
-                <span className="text-xs">Reply</span>
+                <Reply className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span className="text-xs hidden sm:inline">Reply</span>
               </Button>
             )}
 
@@ -273,16 +279,19 @@ export const CommentItem = memo(function CommentItem({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 sm:h-8 text-muted-foreground hover:text-foreground flex-shrink-0"
                 onClick={() => onToggleReplies(comment.id)}
               >
                 {areRepliesExpanded ? (
-                  <ChevronUp className="h-4 w-4 mr-1" />
+                  <ChevronUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 ) : (
-                  <ChevronDown className="h-4 w-4 mr-1" />
+                  <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 )}
                 <span className="text-xs">
-                  {comment.replies!.length} {comment.replies!.length === 1 ? "reply" : "replies"}
+                  <span className="sm:hidden">{comment.replies!.length}</span>
+                  <span className="hidden sm:inline">
+                    {comment.replies!.length} {comment.replies!.length === 1 ? "reply" : "replies"}
+                  </span>
                 </span>
               </Button>
             )}
@@ -299,21 +308,24 @@ export const CommentItem = memo(function CommentItem({
                 value={replyContent}
                 onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder="Write a reply..."
-                className="min-h-[80px]"
+                className="min-h-[60px] sm:min-h-[80px] text-sm"
               />
               <div className="flex gap-2">
                 <Button
                   size="sm"
                   onClick={() => onReplySubmit(comment.id)}
                   disabled={submitting}
+                  className="text-xs px-2 py-1 h-7 sm:h-8"
                 >
-                  <Send className="w-4 h-4 mr-1" />
-                  Reply
+                  <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  <span className="hidden sm:inline">Reply</span>
+                  <span className="sm:hidden">Send</span>
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={onReplyCancel}
+                  className="text-xs px-2 py-1 h-7 sm:h-8"
                 >
                   Cancel
                 </Button>

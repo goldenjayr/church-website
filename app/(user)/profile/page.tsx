@@ -105,6 +105,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('personal');
+  const [profileCompletion, setProfileCompletion] = useState(0);
   
   // Date helper states - must be before any conditional returns
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
@@ -155,6 +157,8 @@ export default function ProfilePage() {
           if (userData.profileImage) {
             setImagePreview(getOptimizedImageUrl(userData.profileImage, { width: 128, height: 128 }));
           }
+          // Calculate profile completion
+          calculateProfileCompletion(userData);
         }
       } catch (error) {
         toast.error('Failed to load profile.');
@@ -164,6 +168,24 @@ export default function ProfilePage() {
     };
     fetchProfile();
   }, [reset]);
+
+  const calculateProfileCompletion = (userData: any) => {
+    const fields = [
+      userData.name,
+      userData.profileImage,
+      userData.phone,
+      userData.bio,
+      userData.occupation,
+      userData.dateOfBirth,
+      userData.address,
+      userData.city,
+      userData.church,
+      (userData.facebookUrl || userData.twitterUrl || userData.instagramUrl || userData.linkedinUrl)
+    ];
+    const completed = fields.filter(field => field && field !== '').length;
+    const percentage = Math.round((completed / fields.length) * 100);
+    setProfileCompletion(percentage);
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -248,10 +270,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4"/>
-          <p className="text-slate-600">Loading your profile...</p>
-        </div>
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -303,8 +322,12 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="mb-4 sm:mb-8 border-none shadow-xl bg-gradient-to-r from-blue-600 to-green-600 text-white overflow-hidden relative">
+          <Card className="mb-4 sm:mb-8 border-none shadow-xl bg-gradient-to-r from-blue-600 to-green-600 text-white overflow-hidden relative group">
             <div className="absolute inset-0 bg-black opacity-10 pointer-events-none"></div>
+            {/* Animated background pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer" />
+            </div>
             <CardContent className="relative p-4 sm:p-8">
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <div {...getRootProps()} className="relative group cursor-pointer">
@@ -368,33 +391,56 @@ export default function ProfilePage() {
                   )}
                 </div>
               </div>
+              
+              {/* Profile Completion Progress */}
+              <div className="mt-6 pt-6 border-t border-white/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-white/90">Profile Completion</span>
+                  <span className="text-sm font-bold text-white">{profileCompletion}%</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-white to-yellow-300 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${profileCompletion}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                  />
+                </div>
+                {profileCompletion < 100 && (
+                  <p className="text-xs text-white/80 mt-2">
+                    Complete your profile to help us serve you better
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </motion.div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Tabs for organized sections */}
-          <Tabs defaultValue="personal" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-[500px]">
-              <TabsTrigger value="personal" className="text-xs sm:text-sm">
-                <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Personal</span>
-                <span className="sm:hidden">Info</span>
-              </TabsTrigger>
-              <TabsTrigger value="contact" className="text-xs sm:text-sm">
-                <MapPin className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Contact
-              </TabsTrigger>
-              <TabsTrigger value="social" className="text-xs sm:text-sm">
-                <Globe className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Social
-              </TabsTrigger>
-              <TabsTrigger value="preferences" className="text-xs sm:text-sm">
-                <Bell className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Preferences</span>
-                <span className="sm:hidden">Prefs</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="personal" className="space-y-4" onValueChange={setActiveTab}>
+            <div className="overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
+              <TabsList className="grid w-full min-w-[320px] grid-cols-4 sm:w-auto sm:inline-grid">
+                <TabsTrigger value="personal" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-0.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Personal</span>
+                  <span className="sm:hidden">Info</span>
+                </TabsTrigger>
+                <TabsTrigger value="contact" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <MapPin className="w-3 sm:w-4 h-3 sm:h-4 mr-0.5 sm:mr-2" />
+                  <span>Contact</span>
+                </TabsTrigger>
+                <TabsTrigger value="social" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <Globe className="w-3 sm:w-4 h-3 sm:h-4 mr-0.5 sm:mr-2" />
+                  <span>Social</span>
+                </TabsTrigger>
+                <TabsTrigger value="preferences" className="text-xs sm:text-sm px-1 sm:px-3 py-1.5 sm:py-2">
+                  <Bell className="w-3 sm:w-4 h-3 sm:h-4 mr-0.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Preferences</span>
+                  <span className="sm:hidden">Prefs</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Personal Information Tab */}
             <TabsContent value="personal" className="space-y-6">
@@ -403,19 +449,24 @@ export default function ProfilePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="border-none shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-yellow-500" />
+                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="px-4 sm:px-6 bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                      >
+                        <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-yellow-500" />
+                      </motion.div>
                       Personal Information
                     </CardTitle>
-                    <CardDescription>Tell us about yourself</CardDescription>
+                    <CardDescription className="text-sm">Tell us about yourself</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-6">
+                  <CardContent className="space-y-6 px-3 sm:px-6 py-4 sm:py-6">
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name" className="flex items-center gap-2">
-                          <UserIcon className="w-4 h-4 text-slate-500" />
+                        <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
+                          <UserIcon className="w-3.5 h-3.5 text-slate-500" />
                           Full Name
                         </Label>
                         <Controller
@@ -427,10 +478,10 @@ export default function ProfilePage() {
                                 id="name" 
                                 {...field} 
                                 placeholder="John Doe"
-                                className={fieldState.error ? 'border-red-500' : ''}
+                                className={`h-11 text-base ${fieldState.error ? 'border-red-500' : ''}`}
                               />
                               {fieldState.error && (
-                                <p className="text-xs text-red-500">{fieldState.error.message}</p>
+                                <p className="text-xs text-red-500 mt-1">{fieldState.error.message}</p>
                               )}
                             </>
                           )}
@@ -438,9 +489,9 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="occupation" className="flex items-center gap-2">
-                          <Briefcase className="w-4 h-4 text-slate-500" />
-                          Occupation <span className="text-xs text-slate-400">(optional)</span>
+                        <Label htmlFor="occupation" className="text-sm font-medium flex items-center gap-2">
+                          <Briefcase className="w-3.5 h-3.5 text-slate-500" />
+                          Occupation <span className="text-xs text-slate-400 ml-1">(optional)</span>
                         </Label>
                         <Controller
                           name="occupation"
@@ -449,16 +500,17 @@ export default function ProfilePage() {
                             <Input 
                               id="occupation" 
                               {...field} 
-                              placeholder="Software Engineer (optional)"
+                              placeholder="e.g., Teacher, Engineer, etc."
+                              className="h-11 text-base"
                             />
                           )}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth" className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4 text-slate-500" />
-                          Date of Birth
+                        <Label htmlFor="dateOfBirth" className="text-sm font-medium flex items-center gap-2">
+                          <CalendarIcon className="w-3.5 h-3.5 text-slate-500" />
+                          Date of Birth <span className="text-xs text-slate-400 ml-1">(optional)</span>
                         </Label>
                         <Controller
                           name="dateOfBirth"
@@ -474,7 +526,7 @@ export default function ProfilePage() {
                                   field.onChange(newDate);
                                 }}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 text-base">
                                   <SelectValue placeholder="Month" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -495,7 +547,7 @@ export default function ProfilePage() {
                                   field.onChange(newDate);
                                 }}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 text-base">
                                   <SelectValue placeholder="Day" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -516,7 +568,7 @@ export default function ProfilePage() {
                                   field.onChange(newDate);
                                 }}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="h-11 text-base">
                                   <SelectValue placeholder="Year" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -533,8 +585,8 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="church" className="flex items-center gap-2">
-                          <Church className="w-4 h-4 text-slate-500" />
+                        <Label htmlFor="church" className="text-sm font-medium flex items-center gap-2">
+                          <Church className="w-3.5 h-3.5 text-slate-500" />
                           Home Church
                         </Label>
                         <Controller
@@ -545,6 +597,7 @@ export default function ProfilePage() {
                               id="church" 
                               {...field} 
                               placeholder="Divine Jesus Church"
+                              className="h-11 text-base"
                             />
                           )}
                         />
@@ -552,8 +605,8 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="bio" className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-slate-500" />
+                      <Label htmlFor="bio" className="text-sm font-medium flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-slate-500" />
                         Bio
                       </Label>
                       <Controller
@@ -566,7 +619,7 @@ export default function ProfilePage() {
                               {...field} 
                               placeholder="Share a little about yourself, your faith journey, or what brings you joy..."
                               rows={4}
-                              className="resize-none"
+                              className="resize-none text-base leading-relaxed"
                             />
                             <div className="flex justify-between">
                               <p className="text-xs text-slate-500">
@@ -592,19 +645,24 @@ export default function ProfilePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="border-none shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-blue-500" />
+                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="px-4 sm:px-6 bg-gradient-to-r from-blue-50 to-cyan-50 border-b">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <motion.div
+                        animate={{ y: [0, -2, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+                      >
+                        <MapPin className="w-4 sm:w-5 h-4 sm:h-5 text-blue-500" />
+                      </motion.div>
                       Contact Information
                     </CardTitle>
-                    <CardDescription>How can we reach you?</CardDescription>
+                    <CardDescription className="text-sm">How can we reach you?</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-6">
+                  <CardContent className="space-y-5 px-3 sm:px-6 py-4 sm:py-6">
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="phone" className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-slate-500" />
+                        <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
+                          <Phone className="w-3.5 h-3.5 text-slate-500" />
                           Phone Number
                         </Label>
                         <Controller
@@ -616,14 +674,15 @@ export default function ProfilePage() {
                               {...field} 
                               placeholder="+1 (555) 555-5555"
                               type="tel"
+                              className="h-11 text-base"
                             />
                           )}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-slate-500" />
+                        <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                          <Mail className="w-3.5 h-3.5 text-slate-500" />
                           Email Address
                         </Label>
                         <Input 
@@ -631,7 +690,7 @@ export default function ProfilePage() {
                           type="email" 
                           value={user.email || ''} 
                           disabled 
-                          className="bg-slate-50"
+                          className="bg-slate-50 h-11 text-base"
                         />
                       </div>
                     </div>
@@ -639,10 +698,13 @@ export default function ProfilePage() {
                     <Separator />
 
                     <div className="space-y-4">
-                      <h3 className="font-medium text-sm text-slate-700">Address</h3>
+                      <h3 className="font-semibold text-sm text-slate-700 flex items-center gap-2">
+                        <Home className="w-3.5 h-3.5" />
+                        Address
+                      </h3>
                       
                       <div className="space-y-2">
-                        <Label htmlFor="address">Street Address</Label>
+                        <Label htmlFor="address" className="text-sm font-medium">Street Address</Label>
                         <Controller
                           name="address"
                           control={control}
@@ -651,14 +713,15 @@ export default function ProfilePage() {
                               id="address" 
                               {...field} 
                               placeholder="123 Main Street"
+                              className="h-11 text-base"
                             />
                           )}
                         />
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <Label htmlFor="city">City</Label>
+                          <Label htmlFor="city" className="text-sm font-medium">City</Label>
                           <Controller
                             name="city"
                             control={control}
@@ -667,13 +730,14 @@ export default function ProfilePage() {
                                 id="city" 
                                 {...field} 
                                 placeholder="New York"
+                                className="h-11 text-base"
                               />
-                            )}
+                          )}
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="state">State / Province</Label>
+                          <Label htmlFor="state" className="text-sm font-medium">State</Label>
                           <Controller
                             name="state"
                             control={control}
@@ -682,15 +746,16 @@ export default function ProfilePage() {
                                 id="state" 
                                 {...field} 
                                 placeholder="NY"
+                                className="h-11 text-base"
                               />
                             )}
                           />
                         </div>
                       </div>
 
-                      <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
-                          <Label htmlFor="zipCode">ZIP / Postal Code</Label>
+                          <Label htmlFor="zipCode" className="text-sm font-medium">ZIP Code</Label>
                           <Controller
                             name="zipCode"
                             control={control}
@@ -699,13 +764,14 @@ export default function ProfilePage() {
                                 id="zipCode" 
                                 {...field} 
                                 placeholder="10001"
+                                className="h-11 text-base"
                               />
                             )}
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="country">Country</Label>
+                          <Label htmlFor="country" className="text-sm font-medium">Country</Label>
                           <Controller
                             name="country"
                             control={control}
@@ -714,6 +780,7 @@ export default function ProfilePage() {
                                 id="country" 
                                 {...field} 
                                 placeholder="United States"
+                                className="h-11 text-base"
                               />
                             )}
                           />
@@ -732,17 +799,22 @@ export default function ProfilePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="border-none shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Globe className="w-5 h-5 text-green-500" />
+                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="px-4 sm:px-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <motion.div
+                        animate={{ rotate: [0, 360] }}
+                        transition={{ duration: 4, repeat: Infinity, repeatDelay: 2, ease: "linear" }}
+                      >
+                        <Globe className="w-4 sm:w-5 h-4 sm:h-5 text-green-500" />
+                      </motion.div>
                       Social Profiles
                     </CardTitle>
-                    <CardDescription>Connect your social media accounts (optional)</CardDescription>
+                    <CardDescription className="text-sm">Connect your social media accounts (optional)</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 px-3 sm:px-6 py-4 sm:py-6">
                     <div className="space-y-2">
-                      <Label htmlFor="facebook" className="flex items-center gap-2">
+                      <Label htmlFor="facebook" className="text-sm font-medium flex items-center gap-2">
                         <Facebook className="w-4 h-4 text-blue-600" />
                         Facebook
                       </Label>
@@ -753,15 +825,16 @@ export default function ProfilePage() {
                           <Input 
                             id="facebook"
                             {...field} 
-                            placeholder="https://facebook.com/yourprofile (optional)"
+                            placeholder="facebook.com/yourprofile"
                             type="url"
+                            className="h-11 text-base"
                           />
                         )}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="twitter" className="flex items-center gap-2">
+                      <Label htmlFor="twitter" className="text-sm font-medium flex items-center gap-2">
                         <Twitter className="w-4 h-4 text-sky-500" />
                         Twitter / X
                       </Label>
@@ -772,15 +845,16 @@ export default function ProfilePage() {
                           <Input 
                             id="twitter"
                             {...field} 
-                            placeholder="https://twitter.com/yourhandle (optional)"
+                            placeholder="twitter.com/yourhandle"
                             type="url"
+                            className="h-11 text-base"
                           />
                         )}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="instagram" className="flex items-center gap-2">
+                      <Label htmlFor="instagram" className="text-sm font-medium flex items-center gap-2">
                         <Instagram className="w-4 h-4 text-pink-600" />
                         Instagram
                       </Label>
@@ -791,15 +865,16 @@ export default function ProfilePage() {
                           <Input 
                             id="instagram"
                             {...field} 
-                            placeholder="https://instagram.com/yourprofile (optional)"
+                            placeholder="instagram.com/yourprofile"
                             type="url"
+                            className="h-11 text-base"
                           />
                         )}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="linkedin" className="flex items-center gap-2">
+                      <Label htmlFor="linkedin" className="text-sm font-medium flex items-center gap-2">
                         <Linkedin className="w-4 h-4 text-blue-700" />
                         LinkedIn
                       </Label>
@@ -810,15 +885,16 @@ export default function ProfilePage() {
                           <Input 
                             id="linkedin"
                             {...field} 
-                            placeholder="https://linkedin.com/in/yourprofile (optional)"
+                            placeholder="linkedin.com/in/yourprofile"
                             type="url"
+                            className="h-11 text-base"
                           />
                         )}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="website" className="flex items-center gap-2">
+                      <Label htmlFor="website" className="text-sm font-medium flex items-center gap-2">
                         <Globe className="w-4 h-4 text-slate-600" />
                         Personal Website
                       </Label>
@@ -829,8 +905,9 @@ export default function ProfilePage() {
                           <Input 
                             id="website"
                             {...field} 
-                            placeholder="https://yourwebsite.com (optional)"
+                            placeholder="yourwebsite.com"
                             type="url"
+                            className="h-11 text-base"
                           />
                         )}
                       />
@@ -854,33 +931,39 @@ export default function ProfilePage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="border-none shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Bell className="w-5 h-5 text-purple-500" />
+                <Card className="border-none shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  <CardHeader className="px-4 sm:px-6 bg-gradient-to-r from-purple-50 to-pink-50 border-b">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <motion.div
+                        animate={{ rotate: [0, -15, 15, -15, 0] }}
+                        transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+                      >
+                        <Bell className="w-4 sm:w-5 h-4 sm:h-5 text-purple-500" />
+                      </motion.div>
                       Notification Preferences
                     </CardTitle>
-                    <CardDescription>Choose how you want to receive updates</CardDescription>
+                    <CardDescription className="text-sm">Choose how you want to receive updates</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 px-3 sm:px-6 py-4 sm:py-6">
                     <Controller
                       name="emailNotifications"
                       control={control}
                       render={({ field }) => (
-                        <div className="flex items-center justify-between rounded-lg border p-4 hover:bg-slate-50 transition-colors">
-                          <div className="space-y-0.5">
+                        <div className="flex items-start sm:items-center justify-between rounded-lg border p-3 sm:p-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => field.onChange(!field.value)}>
+                          <div className="space-y-0.5 flex-1 mr-3">
                             <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-slate-500" />
-                              <Label className="text-base">Email Notifications</Label>
+                              <Mail className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                              <Label className="text-sm sm:text-base cursor-pointer">Email Notifications</Label>
                             </div>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                               Receive church updates, event reminders, and newsletters via email
                             </p>
                           </div>
                           <Switch 
                             checked={field.value} 
                             onCheckedChange={field.onChange}
-                            className="data-[state=checked]:bg-blue-600"
+                            className="data-[state=checked]:bg-blue-600 flex-shrink-0"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                       )}
@@ -890,20 +973,21 @@ export default function ProfilePage() {
                       name="smsNotifications"
                       control={control}
                       render={({ field }) => (
-                        <div className="flex items-center justify-between rounded-lg border p-4 hover:bg-slate-50 transition-colors">
-                          <div className="space-y-0.5">
+                        <div className="flex items-start sm:items-center justify-between rounded-lg border p-3 sm:p-4 hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => field.onChange(!field.value)}>
+                          <div className="space-y-0.5 flex-1 mr-3">
                             <div className="flex items-center gap-2">
-                              <Phone className="w-4 h-4 text-slate-500" />
-                              <Label className="text-base">SMS Notifications</Label>
+                              <Phone className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                              <Label className="text-sm sm:text-base cursor-pointer">SMS Notifications</Label>
                             </div>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
                               Get urgent updates and reminders via text message
                             </p>
                           </div>
                           <Switch 
                             checked={field.value} 
                             onCheckedChange={field.onChange}
-                            className="data-[state=checked]:bg-blue-600"
+                            className="data-[state=checked]:bg-blue-600 flex-shrink-0"
+                            onClick={(e) => e.stopPropagation()}
                           />
                         </div>
                       )}

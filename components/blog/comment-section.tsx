@@ -419,7 +419,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
         <Card>
           <CardContent className="pt-6">
             <div className="flex gap-3">
-              <Avatar className="w-10 h-10">
+              <Avatar className="w-10 h-10 flex-shrink-0 hidden sm:flex">
                 {currentUser.profileImage && (
                   <AvatarImage 
                     src={getOptimizedImageUrl(currentUser.profileImage, {
@@ -444,13 +444,39 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
                   placeholder="Share your thoughts..."
                   className="min-h-[100px] resize-none"
                 />
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 sm:hidden">
+                    <Avatar className="w-6 h-6">
+                      {currentUser.profileImage && (
+                        <AvatarImage 
+                          src={getOptimizedImageUrl(currentUser.profileImage, {
+                            width: 24,
+                            height: 24,
+                            crop: 'fill',
+                            gravity: 'face'
+                          })}
+                          alt={currentUser.name || 'User'}
+                        />
+                      )}
+                      <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs">
+                        {currentUser.name
+                          ? currentUser.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
+                          : currentUser.email[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-gray-600 truncate max-w-[120px]">
+                      {currentUser.name || currentUser.email}
+                    </span>
+                  </div>
                   <Button
                     onClick={handleSubmitComment}
                     disabled={!newComment.trim() || submitting}
+                    className="flex-shrink-0"
+                    size="sm"
                   >
-                    <Send className="w-4 h-4 mr-2" />
-                    Post Comment
+                    <Send className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Post Comment</span>
+                    <span className="sm:hidden">Post</span>
                   </Button>
                 </div>
               </div>
@@ -462,14 +488,14 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
           <CardContent className="py-8">
             <div className="text-center space-y-3">
               <User className="w-12 h-12 mx-auto text-muted-foreground" />
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Please log in to join the discussion
               </p>
-              <div className="flex gap-2 justify-center">
-                <Button asChild>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center max-w-xs mx-auto">
+                <Button asChild className="flex-1">
                   <Link href="/login">Log In</Link>
                 </Button>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="flex-1">
                   <Link href="/signup">Sign Up</Link>
                 </Button>
               </div>
@@ -529,20 +555,21 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Comment</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[425px] max-w-[350px] mx-4">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-lg">Delete Comment</DialogTitle>
+            <DialogDescription className="text-sm">
               Are you sure you want to delete this comment? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => {
                 setDeleteDialogOpen(false)
                 setCommentToDelete(null)
               }}
+              className="order-2 sm:order-1 w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -550,6 +577,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
               variant="destructive"
               onClick={handleDeleteComment}
               disabled={submitting}
+              className="order-1 sm:order-2 w-full sm:w-auto"
             >
               Delete
             </Button>
@@ -559,29 +587,29 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
       {/* Report Dialog */}
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Report Comment</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[425px] max-w-[350px] mx-4">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-lg">Report Comment</DialogTitle>
+            <DialogDescription className="text-sm">
               Why are you reporting this comment?
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-4">
+          <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
             {["Spam", "Inappropriate", "Offensive", "Misleading", "Other"].map((reason) => (
-              <label key={reason} className="flex items-center space-x-2 cursor-pointer">
+              <label key={reason} className="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
                 <input
                   type="radio"
                   name="reportReason"
                   value={reason.toLowerCase()}
                   checked={reportReason === reason.toLowerCase()}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="text-blue-600"
+                  className="text-blue-600 flex-shrink-0"
                 />
-                <span>{reason}</span>
+                <span className="text-sm flex-1">{reason}</span>
               </label>
             ))}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => {
@@ -589,12 +617,14 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
                 setCommentToReport(null)
                 setReportReason("")
               }}
+              className="order-2 sm:order-1 w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={handleReportComment}
               disabled={!reportReason || submitting}
+              className="order-1 sm:order-2 w-full sm:w-auto"
             >
               Report
             </Button>

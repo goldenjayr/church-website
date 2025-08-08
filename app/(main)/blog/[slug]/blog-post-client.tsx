@@ -180,7 +180,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
 
             {/* Comments Section */}
             <Card className="border-none shadow-lg mb-8">
-              <CardContent className="p-6">
+              <CardContent className="p-3 sm:p-6">
                 <CommentSection blogPostId={post.id} blogPostSlug={post.slug} />
               </CardContent>
             </Card>
