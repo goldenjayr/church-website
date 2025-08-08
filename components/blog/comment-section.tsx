@@ -468,16 +468,18 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
                       {currentUser.name || currentUser.email}
                     </span>
                   </div>
-                  <Button
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || submitting}
-                    className="flex-shrink-0"
-                    size="sm"
-                  >
-                    <Send className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Post Comment</span>
-                    <span className="sm:hidden">Post</span>
-                  </Button>
+                  <div className="sm:ml-auto">
+                    <Button
+                      onClick={handleSubmitComment}
+                      disabled={!newComment.trim() || submitting}
+                      className="flex-shrink-0 hover:shadow-md hover:scale-105 transition-all duration-200 group"
+                      size="sm"
+                    >
+                      <Send className="w-4 h-4 sm:mr-2 transition-transform duration-200 group-hover:rotate-12" />
+                      <span className="hidden sm:inline">Post Comment</span>
+                      <span className="sm:hidden">Post</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
