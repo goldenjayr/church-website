@@ -219,7 +219,9 @@ export async function deleteComment(commentId: string) {
       where: { id: commentId }
     })
 
+    // Revalidate both the blog post page and admin comments page
     revalidatePath(`/blog/${comment.blogPost.slug}`)
+    revalidatePath('/admin/comments')
     
     return { success: true }
   } catch (error) {
@@ -420,7 +422,9 @@ export async function moderateComment(
       data: { status }
     })
 
+    // Revalidate both the blog post page and admin comments page
     revalidatePath(`/blog/${comment.blogPost.slug}`)
+    revalidatePath('/admin/comments')
     
     return { success: true }
   } catch (error) {
