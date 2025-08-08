@@ -43,6 +43,7 @@ const navItems = [
   { name: "Members", href: "/admin/members", icon: Crown },
   { name: "Positions", href: "/admin/positions", icon: Crown },
   { name: "Messages", href: "/admin/messages", icon: MessageSquare },
+  { name: "Comments", href: "/admin/comments", icon: MessageSquare },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ]

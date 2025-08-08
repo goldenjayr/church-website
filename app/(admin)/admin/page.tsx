@@ -77,6 +77,7 @@ export default function AdminDashboard() {
   const handleLogout = async () => {
     await setCurrentUser(null)
     setUser(null)
+    router.push('/login')
   }
 
   if (loading) {
@@ -126,8 +127,8 @@ export default function AdminDashboard() {
                 {
                   title: "Total Members",
                   value: dashboardData.stats.totalMembers,
-                  change: dashboardData.stats.monthlyMembers > 0 
-                    ? `+${dashboardData.stats.monthlyMembers} this month` 
+                  change: dashboardData.stats.monthlyMembers > 0
+                    ? `+${dashboardData.stats.monthlyMembers} this month`
                     : "No new this month",
                   icon: Users,
                   color: "text-blue-600",
@@ -154,8 +155,8 @@ export default function AdminDashboard() {
                 {
                   title: "Unread Messages",
                   value: dashboardData.stats.unreadMessages,
-                  change: dashboardData.stats.todayMessages > 0 
-                    ? `${dashboardData.stats.todayMessages} today` 
+                  change: dashboardData.stats.todayMessages > 0
+                    ? `${dashboardData.stats.todayMessages} today`
                     : "None today",
                   icon: MessageSquare,
                   color: "text-orange-600",
@@ -208,8 +209,8 @@ export default function AdminDashboard() {
                       <Activity className="w-5 h-5 text-slate-700" />
                       <span className="text-slate-900">Content Overview</span>
                     </span>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
                       onClick={() => router.push('/admin/blog/new')}
                     >
@@ -353,16 +354,16 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-colors p-2"
                     onClick={() => router.push('/admin/blog/new')}
                   >
                     <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     <span className="text-xs font-medium">New Post</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-purple-50 hover:border-purple-300 transition-colors p-2"
                     onClick={() => router.push('/admin/events/new')}
                   >
@@ -370,9 +371,9 @@ export default function AdminDashboard() {
                     <span className="text-xs font-medium">Add Event</span>
                   </Button>
                   <Link href="/admin/messages" className="relative">
-                    <Button 
-                      variant="outline" 
-                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors w-full relative p-2" 
+                    <Button
+                      variant="outline"
+                      className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-orange-50 hover:border-orange-300 transition-colors w-full relative p-2"
                     >
                       <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
                       <span className="text-xs font-medium">Messages</span>
@@ -383,16 +384,16 @@ export default function AdminDashboard() {
                       )}
                     </Button>
                   </Link>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-indigo-50 hover:border-indigo-300 transition-colors p-2"
                     onClick={() => router.push('/admin/members/new')}
                   >
                     <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
                     <span className="text-xs font-medium">Add Member</span>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-slate-50 hover:border-slate-300 transition-colors p-2"
                     asChild
                   >
@@ -401,8 +402,8 @@ export default function AdminDashboard() {
                       <span className="text-xs font-medium">Settings</span>
                     </Link>
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 hover:bg-green-50 hover:border-green-300 transition-colors p-2"
                     onClick={() => router.push('/admin/doctrines')}
                   >
@@ -481,8 +482,8 @@ export default function AdminDashboard() {
                   <div className="pt-2 border-t">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="w-full justify-center gap-2"
                         >
                           <Download className="w-4 h-4" />
@@ -492,7 +493,7 @@ export default function AdminDashboard() {
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel>Export Format</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => {
                             if (dashboardData) {
                               exportToCSV(dashboardData, 'church-dashboard');
@@ -506,7 +507,7 @@ export default function AdminDashboard() {
                           <FileText className="w-4 h-4 mr-2" />
                           Export as CSV
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => {
                             if (dashboardData) {
                               exportToJSON(dashboardData, 'church-dashboard');
@@ -520,7 +521,7 @@ export default function AdminDashboard() {
                           <FileText className="w-4 h-4 mr-2" />
                           Export as JSON
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => {
                             if (dashboardData) {
                               const report = generateDashboardReport(dashboardData);

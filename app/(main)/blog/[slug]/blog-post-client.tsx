@@ -16,6 +16,7 @@ import { FacebookIcon, TwitterIcon, FacebookMessengerIcon } from "react-share"
 import { useState } from "react"
 import { useBlogEngagement, useBlogShare } from "@/hooks/use-blog-engagement"
 import { BlogEngagement, BlogEngagementCompact, BlogEngagementStats } from "@/components/blog/blog-engagement"
+import { CommentSection } from "@/components/blog/comment-section-optimized"
 
 type BlogPostWithAuthor = BlogPost & {
   author: UserType
@@ -174,6 +175,13 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                     </Badge>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Comments Section */}
+            <Card className="border-none shadow-lg mb-8">
+              <CardContent className="p-6">
+                <CommentSection blogPostId={post.id} blogPostSlug={post.slug} />
               </CardContent>
             </Card>
           </motion.div>
