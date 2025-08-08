@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.divinejesus.org'),
+  alternates: {
+    canonical: '/',
+  },
   title: "Divine Jesus Church",
   description: "A welcoming community of faith, hope, and love",
   icons: {
