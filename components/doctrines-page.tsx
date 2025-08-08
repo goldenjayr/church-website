@@ -107,7 +107,7 @@ export function DoctrinesPage(props: IProps) {
   // Handle scroll spy for active section
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 100
+      const scrollPosition = window.scrollY + 110 // Adjusted to match the offset used in scrollToSection
       
       for (const category of doctrineCategories) {
         for (const doctrine of category.doctrines) {
@@ -128,7 +128,12 @@ export function DoctrinesPage(props: IProps) {
   }, [doctrineCategories])
 
   const scrollToSection = (id: string) => {
-    contentRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const element = contentRefs.current[id]
+    if (element) {
+      const yOffset = -100 // Negative value to account for sticky headers (main nav + doctrine controls)
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset
+      window.scrollTo({ top: y, behavior: 'smooth' })
+    }
     setShowMobileSidebar(false)
   }
 
@@ -271,37 +276,6 @@ export function DoctrinesPage(props: IProps) {
                 })}
               </div>
             </div>
-            
-            {/* Results and Actions - Only show in accordion mode */}
-            {viewMode === "accordion" && (
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-slate-600">
-                  <span className="font-semibold">{totalDoctrines}</span>
-                  <span className="hidden sm:inline"> doctrine{totalDoctrines !== 1 ? 's' : ''}</span>
-                  <span className="sm:hidden"> found</span>
-                </span>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={expandAll}
-                    className="text-xs h-6 px-2"
-                  >
-                    <ChevronDown className="w-3 h-3 mr-0.5" />
-                    <span className="hidden sm:inline">Expand</span> All
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={collapseAll}
-                    className="text-xs h-6 px-2"
-                  >
-                    <ChevronUp className="w-3 h-3 mr-0.5" />
-                    <span className="hidden sm:inline">Collapse</span> All
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
