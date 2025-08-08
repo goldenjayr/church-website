@@ -89,27 +89,52 @@ export function AdminNavigation({ user, onLogout, isCollapsed, setIsCollapsed }:
       <motion.aside
         initial={false}
         animate={{ width: isCollapsed ? 80 : 280 }}
-        className="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 z-40"
-      >
+        transition={{ 
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+          duration: 0.3
+        }}
+        className="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white border-r border-slate-200 z-40">
         {/* Sidebar Header */}
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center justify-between">
-            {!isCollapsed && (
-              <Link href="/admin" className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              {!isCollapsed ? (
+                <motion.div
+                  key="expanded"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link href="/admin" className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
+                      <Heart className="w-5 h-5 text-white" />
+                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1, duration: 0.2 }}
+                    >
+                      <h1 className="font-bold text-lg text-slate-800">Divine Jesus</h1>
+                      <p className="text-xs text-slate-500">Admin Panel</p>
+                    </motion.div>
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="collapsed"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center mx-auto"
+                >
                   <Heart className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-lg text-slate-800">Divine Jesus</h1>
-                  <p className="text-xs text-slate-500">Admin Panel</p>
-                </div>
-              </Link>
-            )}
-            {isCollapsed && (
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center mx-auto">
-                <Heart className="w-5 h-5 text-white" />
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <Button
               variant="ghost"
               size="icon"
@@ -212,15 +237,21 @@ export function AdminNavigation({ user, onLogout, isCollapsed, setIsCollapsed }:
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
               className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
               onClick={() => setIsMobileOpen(false)}
             />
             <motion.aside
-              initial={{ x: -300 }}
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              className="lg:hidden fixed left-0 top-0 h-full w-80 bg-white z-50 shadow-xl"
-            >
+              exit={{ x: -320 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 260,
+                damping: 25,
+                duration: 0.35
+              }}
+              className="lg:hidden fixed left-0 top-0 h-full w-80 bg-white z-50 shadow-xl">
               <div className="p-6 border-b border-slate-200">
                 <Link href="/admin" className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center">
