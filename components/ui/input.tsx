@@ -2,8 +2,17 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
+    // Convert null values to empty strings to prevent React warning
+    const sanitizedProps = {
+      ...props,
+      value: props.value === null ? '' : props.value
+    };
+    
     return (
       <input
         type={type}
@@ -12,7 +21,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        {...props}
+        {...sanitizedProps}
       />
     )
   }

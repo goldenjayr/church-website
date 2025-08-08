@@ -15,6 +15,7 @@ export async function GET() {
       email: user.email,
       name: user.name,
       role: user.role,
+      profileImage: user.profileImage,
     })
   } catch (error) {
     return NextResponse.json(

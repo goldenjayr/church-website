@@ -5,7 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import Image from 'next/image'
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin, User, LogOut, Layout
 import { logout } from "@/lib/auth-actions"
 import { useRouter } from "next/navigation"
 import type { User as UserType } from "@prisma/client"
+import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 
 const navItems = [
   { name: "Home", href: "/", icon: Heart },
@@ -178,6 +179,7 @@ export function NavigationOptimized() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
+                      <AvatarImage src={user.profileImage ? getOptimizedImageUrl(user.profileImage, { width: 36, height: 36 }) : undefined} />
                       <AvatarFallback className="bg-gradient-to-br from-slate-600 to-slate-700 text-white text-sm">
                         {user.name?.[0] || user.email[0].toUpperCase()}
                       </AvatarFallback>

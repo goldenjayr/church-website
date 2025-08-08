@@ -2,7 +2,7 @@
 
 import { memo } from "react"
 import { motion } from "motion/react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +29,7 @@ import {
   ChevronUp,
 } from "lucide-react"
 import { User as UserType } from "@prisma/client"
+import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 
 interface Comment {
   id: string
@@ -45,6 +46,7 @@ interface Comment {
     name: string | null
     email: string
     role: string
+    profileImage?: string | null
   }
   replies?: Comment[]
   commentLikes?: Array<{ userId: string }>
@@ -114,6 +116,9 @@ export const CommentItem = memo(function CommentItem({
     >
       <div className={`flex gap-3 ${comment.isPinned && !isReply ? "bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg" : ""}`}>
         <Avatar className="w-10 h-10 flex-shrink-0">
+          <AvatarImage 
+            src={comment.user.profileImage ? getOptimizedImageUrl(comment.user.profileImage, { width: 40, height: 40 }) : undefined} 
+          />
           <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white">
             {comment.user.name
               ? comment.user.name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)

@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils"
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentProps<"textarea">
->(({ className, ...props }, ref) => {
+>(({ className, value, ...props }, ref) => {
+  // Sanitize the value prop to prevent null values
+  const sanitizedValue = value === null ? '' : value;
+  
   return (
     <textarea
       className={cn(
@@ -13,6 +16,7 @@ const Textarea = React.forwardRef<
         className
       )}
       ref={ref}
+      value={sanitizedValue}
       {...props}
     />
   )

@@ -16,6 +16,29 @@ model User {
   password  String
   name      String?
   role      Role     @default(USER)
+  
+  // Profile fields - all optional to preserve existing data
+  profileImage     String?
+  bio              String?
+  phone            String?
+  address          String?
+  city             String?
+  state            String?
+  country          String?
+  zipCode          String?
+  dateOfBirth      DateTime?
+  occupation       String?
+  church           String?
+  memberSince      DateTime?
+  facebookUrl      String?
+  twitterUrl       String?
+  instagramUrl     String?
+  linkedinUrl      String?
+  website          String?
+  preferredContact String?  @default("email")
+  emailNotifications Boolean @default(true)
+  smsNotifications   Boolean @default(false)
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

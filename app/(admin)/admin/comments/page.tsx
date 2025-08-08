@@ -18,6 +18,7 @@ export default async function AdminCommentsPage() {
           id: true,
           name: true,
           email: true,
+          profileImage: true,
         },
       },
       blogPost: {

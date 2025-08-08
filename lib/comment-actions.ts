@@ -20,7 +20,8 @@ export async function getComments(blogPostId: string) {
             id: true,
             name: true,
             email: true,
-            role: true
+            role: true,
+            profileImage: true
           }
         },
         replies: {
@@ -33,7 +34,8 @@ export async function getComments(blogPostId: string) {
                 id: true,
                 name: true,
                 email: true,
-                role: true
+                role: true,
+                profileImage: true
               }
             },
             commentLikes: true
@@ -102,7 +104,8 @@ export async function createComment(
             id: true,
             name: true,
             email: true,
-            role: true
+            role: true,
+            profileImage: true
           }
         }
       }
@@ -176,7 +179,8 @@ export async function editComment(commentId: string, content: string) {
             id: true,
             name: true,
             email: true,
-            role: true
+            role: true,
+            profileImage: true
           }
         }
       }

@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { getCurrentUser, logout } from "@/lib/auth-actions"
 import type { User as UserType } from "@prisma/client"
+import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 
 export default function UserDashboard() {
   const [user, setUser] = useState<UserType | null>(null)
@@ -160,7 +161,7 @@ export default function UserDashboard() {
               
               <div className="flex items-center gap-3">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
+                  <AvatarImage src={user.profileImage ? getOptimizedImageUrl(user.profileImage, { width: 32, height: 32 }) : undefined} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white">
                     {user.name?.[0] || user.email[0].toUpperCase()}
                   </AvatarFallback>
