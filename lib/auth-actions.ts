@@ -117,7 +117,7 @@ export async function setCurrentUser(user: User | null) {
 export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('userId')
-  redirect('/')
+  redirect('/login')
 }
 
 export async function requestPasswordReset(email: string): Promise<{
@@ -141,7 +141,7 @@ export async function requestPasswordReset(email: string): Promise<{
     // Generate a secure random token
     const crypto = await import('crypto')
     const token = crypto.randomBytes(32).toString('hex')
-    
+
     // Set expiration to 1 hour from now
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
 
@@ -162,7 +162,7 @@ export async function requestPasswordReset(email: string): Promise<{
     // Send password reset email
     const { sendPasswordResetEmail } = await import('@/lib/email-service')
     const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password/${token}`
-    
+
     await sendPasswordResetEmail({
       to: user.email,
       name: user.name || undefined,
