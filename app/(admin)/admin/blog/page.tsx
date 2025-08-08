@@ -256,7 +256,7 @@ export default function AdminBlogPage() {
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg sm:text-xl font-bold text-slate-900 line-clamp-2">{post.title}</h3>
                             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                              By {post.authorName || post.author?.name || 'Unknown Author'} • {new Date(post.createdAt).toLocaleDateString()}
+                              By {post.member ? `${post.member.firstName} ${post.member.lastName}` : (post.authorName || post.author?.name || 'Unknown Author')} • {new Date(post.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
