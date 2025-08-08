@@ -62,23 +62,37 @@ export function useBlogEngagement(slug: string) {
   const pendingEngagement = useRef<boolean>(false);
 
   // Memoize session ID to avoid repeated storage access
-  const sessionId = useMemo(() => getOrCreateSessionId(), []);
+  const [sessionId, setSessionId] = useState<string>(() => {
+    if (typeof window === 'undefined') {
+      return generateSessionId();
+    }
+    return getOrCreateSessionId();
+  });
+  
+  // Set the proper session ID once mounted
+  useEffect(() => {
+    const id = getOrCreateSessionId();
+    setSessionId(id);
+  }, []);
 
   // Load current user with caching
   useEffect(() => {
     let cancelled = false;
     const loadUser = async () => {
-      const cachedUser = sessionStorage.getItem('cached_user');
-      if (cachedUser) {
-        try {
-          setUser(JSON.parse(cachedUser));
-        } catch {}
+      // Check if we're in the browser before using sessionStorage
+      if (typeof window !== 'undefined') {
+        const cachedUser = sessionStorage.getItem('cached_user');
+        if (cachedUser) {
+          try {
+            setUser(JSON.parse(cachedUser));
+          } catch {}
+        }
       }
       
       const freshUser = await getCurrentUser();
       if (!cancelled) {
         setUser(freshUser);
-        if (freshUser) {
+        if (freshUser && typeof window !== 'undefined') {
           sessionStorage.setItem('cached_user', JSON.stringify(freshUser));
         }
       }
@@ -394,6 +408,11 @@ export function useBlogEngagement(slug: string) {
 
 // Helper function to get or create session ID
 function getOrCreateSessionId(): string {
+  // Check if we're in the browser
+  if (typeof window === 'undefined') {
+    return generateSessionId(); // Return a temporary ID for SSR
+  }
+  
   const SESSION_KEY = 'blog_session_id';
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   
