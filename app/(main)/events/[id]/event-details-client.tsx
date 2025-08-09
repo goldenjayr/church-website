@@ -4,19 +4,15 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { 
   Calendar, 
   Clock, 
   MapPin, 
   Users, 
   ArrowLeft, 
-  Share2, 
   Heart, 
   CalendarPlus,
   CalendarCheck,
-  Copy,
-  Check,
   Info,
   Sparkles
 } from "lucide-react"
@@ -24,9 +20,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { MotionDiv } from "@/components/motion-div"
 import { EventRSVPModal } from "@/components/event-rsvp-modal"
+import { EventShare } from "@/components/event-share"
 import { toast } from "sonner"
-import { FacebookShareButton, TwitterShareButton, FacebookMessengerShareButton } from "react-share"
-import { FacebookIcon, TwitterIcon, FacebookMessengerIcon } from "react-share"
 import type { Event } from "@prisma/client"
 
 interface EventDetailsClientProps {
@@ -39,22 +34,10 @@ interface EventDetailsClientProps {
 
 export function EventDetailsClient({ event }: EventDetailsClientProps) {
   const [isRSVPModalOpen, setIsRSVPModalOpen] = useState(false)
-  const [isCopied, setIsCopied] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
   const currentAttendees = event._count?.rsvps || 0
   const spotsRemaining = event.maxAttendees ? event.maxAttendees - currentAttendees : null
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      toast.success("Link copied to clipboard!")
-      setIsCopied(true)
-      setTimeout(() => setIsCopied(false), 2000)
-    }).catch(() => {
-      toast.error("Failed to copy link.")
-    })
-  }
 
   const handleLike = () => {
     setIsLiked(!isLiked)
@@ -172,57 +155,10 @@ export function EventDetailsClient({ event }: EventDetailsClientProps) {
                   
                   {/* Action Buttons */}
                   <div className="px-6 pb-6 md:px-10 md:pb-10 flex flex-wrap items-center gap-3 border-t border-gray-100 dark:border-gray-800 pt-6">
-                    <Popover onOpenChange={(open) => !open && setIsCopied(false)}>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="lg" 
-                          className="hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors duration-200"
-                        >
-                          <Share2 className="mr-2 h-4 w-4" />
-                          Share Event
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 p-4">
-                        <div className="space-y-3">
-                          <h4 className="font-semibold text-center text-sm text-gray-700 dark:text-gray-300 mb-3">
-                            Share this Event
-                          </h4>
-                          <FacebookShareButton url={shareUrl} quote={event.title} className="w-full">
-                            <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                              <FacebookIcon size={28} round />
-                              <span className="text-sm font-medium">Share on Facebook</span>
-                            </div>
-                          </FacebookShareButton>
-                          <TwitterShareButton url={shareUrl} title={event.title} className="w-full">
-                            <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                              <TwitterIcon size={28} round />
-                              <span className="text-sm font-medium">Share on X</span>
-                            </div>
-                          </TwitterShareButton>
-                          <FacebookMessengerShareButton url={shareUrl} appId="your-facebook-app-id" className="w-full">
-                            <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                              <FacebookMessengerIcon size={28} round />
-                              <span className="text-sm font-medium">Share on Messenger</span>
-                            </div>
-                          </FacebookMessengerShareButton>
-                          <Button 
-                            variant="ghost" 
-                            onClick={copyToClipboard} 
-                            className="w-full justify-start p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          >
-                            {isCopied ? (
-                              <Check className="w-5 h-5 mr-3 text-green-600" />
-                            ) : (
-                              <Copy className="w-5 h-5 mr-3" />
-                            )}
-                            <span className="text-sm font-medium">
-                              {isCopied ? 'Link Copied!' : 'Copy Link'}
-                            </span>
-                          </Button>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+                    <EventShare 
+                      eventId={event.id}
+                      eventTitle={event.title}
+                    />
 
                     <Button 
                       variant="outline" 

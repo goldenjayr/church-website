@@ -396,7 +396,7 @@ export function EventsPage(props: IProps) {
                   <Badge 
                     className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 ${
                       selectedTimeFilter === "all" 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                     }`}
                     onClick={() => setSelectedTimeFilter("all")}
@@ -406,7 +406,7 @@ export function EventsPage(props: IProps) {
                   <Badge 
                     className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 ${
                       selectedTimeFilter === "upcoming" 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                     }`}
                     onClick={() => setSelectedTimeFilter("upcoming")}
@@ -417,7 +417,7 @@ export function EventsPage(props: IProps) {
                   <Badge 
                     className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 whitespace-nowrap ${
                       selectedTimeFilter === "this-week" 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                     }`}
                     onClick={() => setSelectedTimeFilter("this-week")}
@@ -427,7 +427,7 @@ export function EventsPage(props: IProps) {
                   <Badge 
                     className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 whitespace-nowrap ${
                       selectedTimeFilter === "this-month" 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                     }`}
                     onClick={() => setSelectedTimeFilter("this-month")}
@@ -437,7 +437,7 @@ export function EventsPage(props: IProps) {
                   <Badge 
                     className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 ${
                       selectedTimeFilter === "past" 
-                        ? "bg-blue-600 text-white border-blue-600" 
+                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                     }`}
                     onClick={() => setSelectedTimeFilter("past")}
@@ -453,7 +453,7 @@ export function EventsPage(props: IProps) {
                       key={category}
                       className={`cursor-pointer transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 whitespace-nowrap ${
                         selectedCategory === category 
-                          ? "bg-green-600 text-white border-green-600" 
+                          ? "bg-green-600 text-white border-green-600 hover:bg-green-700" 
                           : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                       }`}
                       onClick={() => setSelectedCategory(category)}

@@ -93,16 +93,16 @@ export function EventRSVPModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[95vw] max-w-md mx-auto sm:w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <CalendarCheck className="h-5 w-5 text-blue-600" />
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <CalendarCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
             RSVP for Event
           </DialogTitle>
-          <DialogDescription className="text-base">
-            Register your attendance for <span className="font-semibold">{eventTitle}</span>
+          <DialogDescription className="text-sm sm:text-base mt-2">
+            Register your attendance for <span className="font-semibold block sm:inline">{eventTitle}</span>
             {spotsRemaining !== null && (
-              <span className="block mt-1 text-sm">
+              <span className="block mt-2 text-xs sm:text-sm">
                 {spotsRemaining > 0 ? (
                   <span className="text-green-600 font-medium">
                     {spotsRemaining} {spotsRemaining === 1 ? 'spot' : 'spots'} remaining
@@ -117,10 +117,10 @@ export function EventRSVPModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="name" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="name" className="flex items-center gap-2 text-sm sm:text-base">
+              <User className="h-3 w-3 sm:h-4 sm:w-4" />
               Full Name *
             </Label>
             <Input
@@ -131,12 +131,13 @@ export function EventRSVPModal({
               placeholder="John Doe"
               required
               disabled={isSubmitting}
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="email" className="flex items-center gap-2 text-sm sm:text-base">
+              <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
               Email Address *
             </Label>
             <Input
@@ -148,12 +149,13 @@ export function EventRSVPModal({
               placeholder="john@example.com"
               required
               disabled={isSubmitting}
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="phone" className="flex items-center gap-2 text-sm sm:text-base">
+              <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
               Phone Number
             </Label>
             <Input
@@ -164,12 +166,13 @@ export function EventRSVPModal({
               onChange={handleChange}
               placeholder="+1 (555) 123-4567"
               disabled={isSubmitting}
+              className="text-sm sm:text-base h-9 sm:h-10"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="message" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="message" className="flex items-center gap-2 text-sm sm:text-base">
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
               Additional Message
             </Label>
             <Textarea
@@ -180,27 +183,28 @@ export function EventRSVPModal({
               placeholder="Any special requirements or questions..."
               rows={3}
               disabled={isSubmitting}
+              className="text-sm sm:text-base min-h-[80px] resize-none"
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-11 text-sm sm:text-base"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || (spotsRemaining !== null && spotsRemaining <= 0)}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                   Submitting...
                 </>
               ) : (
