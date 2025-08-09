@@ -393,6 +393,8 @@ model SiteSettings {
   twitterUrl      String?
   youtubeUrl      String?
   tiktokUrl       String?
+  liveStreamUrl   String?  // URL for live streaming (Facebook Live, YouTube, etc.)
+  liveStreamActive Boolean @default(false) // Whether live stream is currently active
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

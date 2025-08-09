@@ -13,7 +13,7 @@ import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
-import { getSiteSettings, updateSiteSettings } from "@/lib/settings-actions"
+import { getSiteSettingsNoCache, updateSiteSettings } from "@/lib/settings-actions"
 import {
   Building,
   Globe,
@@ -32,10 +32,13 @@ import {
   Bell,
   Mail,
   Plus,
-  X
+  X,
+  Video,
+  Radio
 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 
-type SettingsCategory = "general" | "contact" | "social" | "appearance" | "metadata" | "notifications"
+type SettingsCategory = "general" | "contact" | "social" | "livestream" | "appearance" | "metadata" | "notifications"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -53,7 +56,7 @@ export default function SettingsPage() {
       setUser(currentUser)
 
       if (currentUser && currentUser.role === "ADMIN") {
-        const currentSettings = await getSiteSettings()
+        const currentSettings = await getSiteSettingsNoCache()
         setSettings(currentSettings)
         setOriginalSettings(currentSettings)
       }
@@ -164,6 +167,66 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         )
+      case "livestream":
+        return (
+          <Card className="border-none shadow-xl bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Video className="w-5 h-5 text-red-600" /> Live Stream Settings</CardTitle>
+              <CardDescription>Configure your church's live streaming options.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="liveStreamUrl" className="flex items-center gap-1">
+                  <Radio className="w-4 h-4" /> Live Stream URL
+                </Label>
+                <Input 
+                  id="liveStreamUrl" 
+                  name="liveStreamUrl" 
+                  value={settings.liveStreamUrl || ""} 
+                  onChange={handleInputChange} 
+                  placeholder="https://facebook.com/yourchurch/live or YouTube live URL" 
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  Enter your Facebook Live URL. To get this:
+                  <br />1. Go to your Facebook page
+                  <br />2. Click on "Live" or start a live video
+                  <br />3. Copy the URL from the browser
+                  <br />Or use: https://facebook.com/YourPageName/live
+                </p>
+              </div>
+              
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex-1">
+                  <Label htmlFor="liveStreamActive" className="flex items-center gap-1">
+                    <Radio className="w-4 h-4" /> Live Stream Active
+                  </Label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Toggle this ON when you're live to enable the Watch Live button
+                  </p>
+                </div>
+                <Switch
+                  id="liveStreamActive"
+                  checked={settings.liveStreamActive || false}
+                  onCheckedChange={(checked) => 
+                    setSettings((prev: any) => ({ ...prev, liveStreamActive: checked }))
+                  }
+                />
+              </div>
+
+              {settings.liveStreamActive && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-medium flex items-center gap-2">
+                    <Radio className="w-4 h-4 animate-pulse" />
+                    Live stream is currently active
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    The Watch Live button on your homepage is now enabled and will redirect to your live stream.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
       case "notifications":
         return (
           <Card className="border-none shadow-xl bg-white">
@@ -270,6 +333,7 @@ export default function SettingsPage() {
     { id: "general", label: "General", icon: Building },
     { id: "contact", label: "Contact", icon: Phone },
     { id: "social", label: "Social Media", icon: LinkIcon },
+    { id: "livestream", label: "Live Stream", icon: Video },
     { id: "notifications", label: "Notifications", icon: Bell },
   ]
 
