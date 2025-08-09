@@ -370,7 +370,8 @@ function CommunityBlogsContent() {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set())
   const [savedPosts, setSavedPosts] = useState<any[]>([])
   const [loadingBookmarks, setLoadingBookmarks] = useState(false)
-
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [searchButtonClicked, setSearchButtonClicked] = useState(false)
   // Pagination states
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -709,19 +710,31 @@ function CommunityBlogsContent() {
             <div className="flex-1 max-w-2xl mx-auto px-4">
               <form onSubmit={handleSearch} className="relative group">
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                    <Search className="w-5 h-5" />
-                  </div>
+                  {/* Icon container vertically centered via inset-y-0 + flex */}
+                  <motion.div
+                    className="absolute inset-y-0 left-4 flex items-center"
+                    animate={{
+                      rotate: isSearchFocused ? [0, -10, 10, -10, 10, 0] : 0,
+                    }}
+                    transition={{ 
+                      rotate: { duration: 0.5, ease: "easeInOut" },
+                    }}
+                  >
+                    <Search className={`w-5 h-5 transition-colors ${isSearchFocused ? 'text-blue-500' : 'text-slate-400'}`} />
+                  </motion.div>
                   <Input
                     placeholder="Search blogs..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyPress={handleKeyPress}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
                     className="w-full pl-12 pr-32 h-11 rounded-full border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm placeholder:text-slate-400"
                   />
                   {searchInput && (
-                    <button
-                      type="button"
+                    <div className="absolute inset-y-0 right-24 flex items-center">
+                      <button
+                        type="button"
                         onClick={() => {
                           setSearchInput('')
                           if (searchQuery) {
@@ -729,26 +742,73 @@ function CommunityBlogsContent() {
                             resetAndSearch("", activeTab, selectedTags)
                           }
                         }}
-                      className="absolute right-24 top-1/2 transform -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                        className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="absolute right-1.5 top-1/2 transform -translate-y-1/2 h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm"
-                    disabled={isSearching}
-                  >
-                    {isSearching ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                    ) : (
-                      <span className="hidden sm:inline">Search</span>
-                    )}
-                    {!isSearching && (
-                      <Search className="w-4 h-4 sm:hidden" />
-                    )}
-                  </Button>
+                  <div className="absolute inset-y-0 right-1.5 flex items-center">
+                    <motion.button
+                      type="submit"
+                      className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm overflow-hidden"
+                      disabled={isSearching}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        setSearchButtonClicked(true)
+                        setTimeout(() => setSearchButtonClicked(false), 600)
+                      }}
+                    >
+                      {/* Ripple effect */}
+                      <AnimatePresence>
+                        {searchButtonClicked && (
+                          <motion.div
+                            className="absolute inset-0 bg-white/30"
+                            initial={{ scale: 0, opacity: 1 }}
+                            animate={{ scale: 4, opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
+                            style={{ borderRadius: '50%', transformOrigin: 'center' }}
+                          />
+                        )}
+                      </AnimatePresence>
+                      
+                      {/* Button content */}
+                      <motion.div 
+                        className="relative z-10 flex items-center justify-center"
+                        animate={searchButtonClicked ? {
+                          rotate: [0, 10, -10, 10, -10, 0],
+                        } : {}}
+                        transition={{ duration: 0.4 }}
+                      >
+                        {isSearching ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                        ) : (
+                          <>
+                            <motion.span 
+                              className="hidden sm:inline"
+                              animate={searchButtonClicked ? {
+                                scale: [1, 0.9, 1.1, 1],
+                              } : {}}
+                              transition={{ duration: 0.3 }}
+                            >
+                              Search
+                            </motion.span>
+                            <motion.div
+                              className="sm:hidden"
+                              animate={searchButtonClicked ? {
+                                rotate: [0, 360],
+                                scale: [1, 1.2, 1],
+                              } : {}}
+                              transition={{ duration: 0.5 }}
+                            >
+                              <Search className="w-4 h-4" />
+                            </motion.div>
+                          </>
+                        )}
+                      </motion.div>
+                    </motion.button>
+                  </div>
                 </div>
               </form>
             </div>
