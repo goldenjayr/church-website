@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, memo, useMemo, Suspense } from "react"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { format } from "date-fns"
@@ -253,23 +253,73 @@ const BlogCard = memo(({
               </Link>
               <div className="flex items-center gap-1">
                 {/* Bookmark button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`h-7 w-7 p-0 ${isBookmarked ? 'text-blue-600' : 'text-slate-500'} hover:text-blue-700`}
+                <motion.button
+                  className={`h-7 w-7 p-0 rounded-md hover:bg-slate-50 flex items-center justify-center relative ${isBookmarked ? 'text-blue-600' : 'text-slate-500'} hover:text-blue-700 transition-colors`}
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     onToggleBookmark?.(post.id, post.postType)
                   }}
                   title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                 >
-                  {isBookmarked ? (
-                    <BookmarkCheck className="w-3.5 h-3.5 fill-current" />
-                  ) : (
-                    <Bookmark className="w-3.5 h-3.5" />
-                  )}
-                </Button>
+                  <AnimatePresence mode="wait">
+                    {isBookmarked ? (
+                      <motion.div
+                        key="bookmarked"
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 180 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <BookmarkCheck className="w-3.5 h-3.5 fill-current" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="not-bookmarked"
+                        initial={{ scale: 0, rotate: 180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: -180 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {/* Sparkle effect when bookmarking */}
+                  <AnimatePresence>
+                    {isBookmarked && (
+                      <>
+                        {[...Array(6)].map((_, i) => (
+                          <motion.div
+                            key={`sparkle-${i}`}
+                            className="absolute w-1 h-1 bg-yellow-400 rounded-full"
+                            initial={{ 
+                              scale: 0,
+                              x: 0,
+                              y: 0,
+                              opacity: 1
+                            }}
+                            animate={{ 
+                              scale: [0, 1.5, 0],
+                              x: [0, (Math.cos(i * 60 * Math.PI / 180) * 20)],
+                              y: [0, (Math.sin(i * 60 * Math.PI / 180) * 20)],
+                              opacity: [1, 0.8, 0]
+                            }}
+                            exit={{ opacity: 0 }}
+                            transition={{ 
+                              duration: 0.6,
+                              ease: "easeOut",
+                              delay: i * 0.05
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </AnimatePresence>
+                </motion.button>
                 {isOwner && post.postType === 'community' && (
                   <>
                     <Button
