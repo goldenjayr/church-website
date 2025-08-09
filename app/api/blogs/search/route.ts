@@ -240,17 +240,59 @@ export async function GET(req: NextRequest) {
       totalCount = communityCount
     }
 
+    // Get bookmarked post IDs for the current user
+    let bookmarkedPostIds: Set<string> = new Set()
+    if (currentUser) {
+      try {
+        // Get church blog bookmarks
+        const churchBookmarks = await prisma.blogBookmark.findMany({
+          where: { userId: currentUser.id },
+          select: { blogPostId: true }
+        })
+
+        // Get community/user blog bookmarks
+        const userBookmarks = await prisma.userBlogBookmark.findMany({
+          where: { userId: currentUser.id },
+          select: { userBlogPostId: true }
+        })
+
+        console.log(`Found ${churchBookmarks.length} church bookmarks and ${userBookmarks.length} user bookmarks for user ${currentUser.id}`)
+
+        // Add church blog bookmarks
+        churchBookmarks.forEach(bookmark => {
+          bookmarkedPostIds.add(bookmark.blogPostId)
+          console.log('Added church blog bookmark:', bookmark.blogPostId)
+        })
+
+        // Add user/community blog bookmarks
+        userBookmarks.forEach(bookmark => {
+          bookmarkedPostIds.add(bookmark.userBlogPostId)
+          console.log('Added user blog bookmark:', bookmark.userBlogPostId)
+        })
+
+      } catch (error) {
+        console.error("Error fetching bookmarks:", error)
+      }
+    }
+
+    // Add isBookmarked flag to each post
+    const postsWithBookmarks = finalPosts.map(post => ({
+      ...post,
+      isBookmarked: bookmarkedPostIds.has(post.id)
+    }))
+
     const hasMore = skip + finalPosts.length < totalCount
 
     return NextResponse.json({
-      posts: finalPosts,
+      posts: postsWithBookmarks,
       pagination: {
         page,
         limit,
         totalCount,
         totalPages: Math.ceil(totalCount / limit),
         hasMore
-      }
+      },
+      bookmarkedIds: Array.from(bookmarkedPostIds) // Also send the list of bookmarked IDs
     })
   } catch (error) {
     console.error("Error searching blogs:", error)

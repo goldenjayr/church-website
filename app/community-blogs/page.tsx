@@ -33,14 +33,26 @@ import {
   Home,
   Newspaper,
   X,
+  LogOut,
+  LayoutDashboard,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react"
 import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 import { deleteUserBlogPost } from "@/lib/user-blog-actions"
 import { getCombinedPopularTags } from "@/lib/combined-blog-actions"
 import { getBlogPostUrl } from "@/lib/combined-blog-utils"
-import { getCurrentUser } from "@/lib/auth-actions"
+import { getCurrentUser, logout } from "@/lib/auth-actions"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { toast } from "sonner"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,24 +67,43 @@ import {
 const POSTS_PER_PAGE = 20
 
 // Move BlogCard outside of the main component to prevent recreation
-const BlogCard = memo(({ 
-  post, 
-  isOwner = false, 
+const BlogCard = memo(({
+  post,
+  isOwner = false,
   index = 0,
   onTagClick,
   onEdit,
-  onDelete 
-}: { 
-  post: any; 
-  isOwner?: boolean; 
+  onDelete,
+  isBookmarked = false,
+  onToggleBookmark
+}: {
+  post: any;
+  isOwner?: boolean;
   index?: number;
   onTagClick?: (tag: string) => void;
   onEdit?: (slug: string) => void;
   onDelete?: (id: string) => void;
+  isBookmarked?: boolean;
+  onToggleBookmark?: (postId: string, postType: string) => void;
 }) => {
+  const router = useRouter()
   const postUrl = getBlogPostUrl(post)
   const formatPostDate = (date: string) => {
     return format(new Date(date), "MMM d, yyyy")
+  }
+  
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Check if the click is on an interactive element
+    const target = e.target as HTMLElement
+    const isInteractive = 
+      target.closest('button') || 
+      target.closest('a') || 
+      target.closest('[role="button"]')
+    
+    // If not clicking on an interactive element, navigate to the post
+    if (!isInteractive) {
+      router.push(postUrl)
+    }
   }
 
   return (
@@ -83,8 +114,10 @@ const BlogCard = memo(({
       transition={{ duration: 0.6, delay: index * 0.1 }}
       viewport={{ once: true }}
     >
-      <Link href={postUrl} className="block h-full">
-        <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border-none bg-white overflow-hidden group cursor-pointer">
+      <Card 
+        className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border-none bg-white overflow-hidden group cursor-pointer relative"
+        onClick={handleCardClick}
+      >
           {/* Image Section */}
           <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-50 to-green-50 flex-shrink-0">
             {(post.coverImage || post.imageUrl) ? (
@@ -203,8 +236,8 @@ const BlogCard = memo(({
             )}
 
             {/* Stats and Actions */}
-            <div className="flex items-center justify-between pt-3 border-t mt-auto">
-              <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="flex items-center justify-between pt-1 border-t mt-auto">
+              <Link href={postUrl} className="flex items-center gap-3 text-xs text-slate-500">
                 <span className="flex items-center gap-1">
                   <Eye className="w-3.5 h-3.5" />
                   <span>{post.viewCount || 0}</span>
@@ -217,39 +250,58 @@ const BlogCard = memo(({
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>{post._count?.comments || 0}</span>
                 </span>
+              </Link>
+              <div className="flex items-center gap-1">
+                {/* Bookmark button */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={`h-7 w-7 p-0 ${isBookmarked ? 'text-blue-600' : 'text-slate-500'} hover:text-blue-700`}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onToggleBookmark?.(post.id, post.postType)
+                  }}
+                  title={isBookmarked ? "Remove from bookmarks" : "Add to bookmarks"}
+                >
+                  {isBookmarked ? (
+                    <BookmarkCheck className="w-3.5 h-3.5 fill-current" />
+                  ) : (
+                    <Bookmark className="w-3.5 h-3.5" />
+                  )}
+                </Button>
+                {isOwner && post.postType === 'community' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onEdit?.(post.slug)
+                      }}
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onDelete?.(post.id)
+                      }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </>
+                )}
               </div>
-              {isOwner && post.postType === 'community' && (
-                <div className="flex items-center gap-1 relative z-10">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      onEdit?.(post.slug)
-                    }}
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      onDelete?.(post.id)
-                    }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
-        </Card>
-      </Link>
+      </Card>
     </motion.div>
   )
 })
@@ -265,14 +317,17 @@ function CommunityBlogsContent() {
   const [popularTags, setPopularTags] = useState<string[]>([])
   const [deletePostId, setDeletePostId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
-  
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set())
+  const [savedPosts, setSavedPosts] = useState<any[]>([])
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false)
+
   // Pagination states
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
-  
+
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -305,12 +360,17 @@ function CommunityBlogsContent() {
         getCurrentUser(),
         getCombinedPopularTags()
       ])
-      
+
       setUser(currentUser)
       setPopularTags(tags)
+
+      // Load initial posts, passing the current user to ensure bookmarks are loaded
+      await loadPosts(1, true, undefined, undefined, undefined, currentUser)
       
-      // Load initial posts
-      await loadPosts(1, true)
+      // Then load bookmarks separately for the sidebar, passing the user explicitly
+      if (currentUser) {
+        await loadBookmarks(currentUser)
+      }
     } catch (error) {
       console.error("Error initializing:", error)
       toast.error("Failed to load initial data")
@@ -320,25 +380,26 @@ function CommunityBlogsContent() {
   }
 
   const loadPosts = async (
-    pageNum: number, 
+    pageNum: number,
     reset: boolean = false,
     query?: string,
     tab?: string,
-    tags?: string[]
+    tags?: string[],
+    currentUser?: any // Pass user explicitly to avoid timing issues
   ) => {
     if (loadingMore && !reset) return
-    
+
     setLoadingMore(true)
     if (reset) {
       setIsSearching(true)
     }
-    
+
     try {
       // Use passed parameters or current state
       const searchParams = query !== undefined ? query : searchQuery
       const activeType = tab !== undefined ? tab : activeTab
       const activeTags = tags !== undefined ? tags : selectedTags
-      
+
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: POSTS_PER_PAGE.toString(),
@@ -346,22 +407,30 @@ function CommunityBlogsContent() {
         ...(searchParams && { q: searchParams }),
         ...(activeTags.length > 0 && { tags: activeTags.join(',') })
       })
-      
+
       const response = await fetch(`/api/blogs/search?${params}`)
       const data = await response.json()
-      
+
       if (!response.ok) throw new Error(data.error)
-      
+
       if (reset) {
         setPosts(data.posts)
         setPage(1)
       } else {
         setPosts(prev => [...prev, ...data.posts])
       }
-      
+
+      // Update bookmarked posts if the API provides bookmark info
+      // Use the passed user or the state user
+      const activeUser = currentUser || user
+      if (activeUser && data.bookmarkedIds !== undefined) {
+        // Always update bookmarks from the API since it's the source of truth
+        setBookmarkedPosts(new Set(data.bookmarkedIds))
+      }
+
       setHasMore(data.pagination.hasMore)
       setTotalCount(data.pagination.totalCount)
-      
+
       if (!reset) {
         setPage(pageNum)
       }
@@ -447,6 +516,121 @@ function CommunityBlogsContent() {
     setDeletePostId(id)
   }, [])
 
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
+  }
+
+  const getDashboardLink = () => {
+    if (!user) return "/login"
+    return user.role === "ADMIN" ? "/admin" : "/dashboard"
+  }
+
+  const getDashboardLabel = () => {
+    if (!user) return "Dashboard"
+    return user.role === "ADMIN" ? "Admin Panel" : "My Dashboard"
+  }
+
+  // Load user's bookmarks
+  const loadBookmarks = async (currentUser?: any) => {
+    const activeUser = currentUser || user
+    if (!activeUser) {
+      return
+    }
+
+    setLoadingBookmarks(true)
+    try {
+      const response = await fetch('/api/bookmarks?limit=100', {
+        credentials: 'include' // Ensure cookies are sent
+      })
+      const data = await response.json()
+
+      if (response.ok && data.bookmarks && Array.isArray(data.bookmarks)) {
+        // Create a set of bookmarked post IDs for quick lookup
+        const bookmarkedIds = new Set<string>()
+        const savedPostsList: any[] = []
+        
+        data.bookmarks.forEach((bookmark: any) => {
+          // The API returns bookmarks with all necessary fields
+          if (bookmark && bookmark.id) {
+            bookmarkedIds.add(bookmark.id)
+            // Ensure all required fields are present
+            const processedBookmark = {
+              ...bookmark,
+              title: bookmark.title || 'Untitled',
+              postType: bookmark.postType || 'community',
+              slug: bookmark.slug || bookmark.id // Fallback to ID if no slug
+            }
+            savedPostsList.push(processedBookmark)
+          }
+        })
+        
+        setBookmarkedPosts(bookmarkedIds)
+        setSavedPosts(savedPostsList)
+      } else {
+        setBookmarkedPosts(new Set())
+        setSavedPosts([])
+      }
+    } catch (error) {
+      console.error('Error loading bookmarks:', error)
+      setBookmarkedPosts(new Set())
+      setSavedPosts([])
+    } finally {
+      setLoadingBookmarks(false)
+    }
+  }
+
+  // Toggle bookmark for a post
+  const handleToggleBookmark = useCallback(async (postId: string, postType: string) => {
+    if (!user) {
+      toast.error('Please sign in to bookmark posts')
+      return
+    }
+
+    try {
+      const requestBody = {
+        postId,
+        postType: postType,
+      }
+      
+      const response = await fetch('/api/bookmarks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        if (data.isBookmarked) {
+          // Add to bookmarks
+          setBookmarkedPosts(prev => new Set([...prev, postId]))
+          toast.success('Added to bookmarks')
+        } else {
+          // Remove from bookmarks
+          setBookmarkedPosts(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(postId)
+            return newSet
+          })
+          toast.success('Removed from bookmarks')
+        }
+
+        // Reload saved posts for sidebar
+        if (user) {
+          await loadBookmarks(user)
+        }
+      } else {
+        toast.error(data.error || 'Failed to update bookmark')
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error)
+      toast.error('Failed to update bookmark')
+    }
+  }, [user, bookmarkedPosts])
+
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
@@ -463,7 +647,7 @@ function CommunityBlogsContent() {
           <div className="flex items-center justify-between h-16 gap-4">
             {/* Left section - Logo */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2 group">
+              <Link href="/community-blogs" className="flex items-center gap-2 group">
                 <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200">
                   <Newspaper className="w-5 h-5 text-blue-600" />
                 </div>
@@ -521,41 +705,89 @@ function CommunityBlogsContent() {
 
             {/* Right section - Actions */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-all duration-200"
                 title="Home"
               >
                 <Home className="w-5 h-5" />
               </Link>
-              
+
               {user ? (
                 <>
                   <Button
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm rounded-full px-4 py-2 flex items-center gap-2"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
                     asChild
                   >
                     <Link href="/community-blogs/new">
-                      <Plus className="w-4 h-4" />
-                      <span className="hidden md:inline">Write</span>
+                      <motion.div
+                        className="flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <motion.div
+                          animate={{ rotate: [0, 90, 0] }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </motion.div>
+                        <span className="hidden md:inline">Write</span>
+                      </motion.div>
                     </Link>
                   </Button>
-                  
-                  <Avatar className="w-9 h-9 cursor-pointer ring-2 ring-slate-100 hover:ring-blue-200 transition-all duration-200">
-                    <AvatarImage
-                      src={user.profileImage ? getOptimizedImageUrl(user.profileImage, {
-                        width: 72,
-                        height: 72,
-                        quality: "auto",
-                        crop: "fill",
-                        gravity: "face"
-                      }) : undefined}
-                      alt={user.name || 'User'}
-                    />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-semibold">
-                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                        <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-slate-100 hover:ring-blue-200 transition-all duration-200">
+                          <AvatarImage
+                            src={user.profileImage ? getOptimizedImageUrl(user.profileImage, {
+                              width: 72,
+                              height: 72,
+                              quality: "auto",
+                              crop: "fill",
+                              gravity: "face"
+                            }) : undefined}
+                            alt={user.name || 'User'}
+                          />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-semibold">
+                            {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium">{user.name || "Member"}</p>
+                          <p className="text-xs text-slate-500">{user.email}</p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href={getDashboardLink()} className="flex items-center cursor-pointer">
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          {getDashboardLabel()}
+                        </Link>
+                      </DropdownMenuItem>
+                      {user.role === "USER" && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/profile" className="flex items-center cursor-pointer">
+                            <User className="w-4 h-4 mr-2" />
+                            My Profile
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="text-red-600 cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </>
               ) : (
                 <Button
@@ -630,38 +862,103 @@ function CommunityBlogsContent() {
                 </div>
               </div>
 
-              {/* Popular Tags */}
-              {popularTags.length > 0 && (
+
+              {/* Saved Posts */}
+              {user && (
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <Tag className="w-4 h-4" />
-                    Popular Tags
+                    <BookmarkCheck className="w-4 h-4 text-blue-600" />
+                    Saved Posts
+                    {savedPosts.length > 0 && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                        {savedPosts.length}
+                      </span>
+                    )}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {popularTags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant={selectedTags.includes(tag) ? "default" : "secondary"}
-                        className={`cursor-pointer text-xs transition-all ${
-                          selectedTags.includes(tag)
-                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                            : "bg-blue-50 hover:bg-blue-100 text-blue-700"
-                        }`}
-                        onClick={() => toggleTag(tag)}
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
+                  <style jsx>{`
+                    /* Custom scrollbar styles */
+                    .custom-scrollbar::-webkit-scrollbar {
+                      width: 6px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                      background: #f1f5f9;
+                      border-radius: 3px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                      background: #cbd5e1;
+                      border-radius: 3px;
+                      transition: background 0.2s;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                      background: #94a3b8;
+                    }
+                    /* Firefox */
+                    .custom-scrollbar {
+                      scrollbar-width: thin;
+                      scrollbar-color: #cbd5e1 #f1f5f9;
+                    }
+                  `}</style>
+                  <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar pr-1">
+                    {loadingBookmarks ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-600"></div>
+                      </div>
+                    ) : savedPosts.length > 0 ? (
+                      savedPosts.map((post: any) => {
+                        if (!post) return null
+                        return (
+                          <Link
+                            key={post.id}
+                            href={getBlogPostUrl(post)}
+                            className="block group"
+                          >
+                            <div className="px-2.5 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 border border-transparent hover:border-blue-100 group">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-slate-700 group-hover:text-blue-700 line-clamp-2 leading-relaxed">
+                                    {post.title}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 mt-0.5">
+                                    by {post.author?.name || 'Anonymous'}
+                                  </p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 flex-shrink-0"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    handleToggleBookmark(post.id, post.postType)
+                                  }}
+                                  title="Remove from bookmarks"
+                                >
+                                  <X className="w-3 h-3 text-slate-400 hover:text-red-500 transition-colors" />
+                                </Button>
+                              </div>
+                            </div>
+                          </Link>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center py-8">
+                        <Bookmark className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                        <p className="text-sm font-medium text-slate-600">
+                          No saved posts yet
+                        </p>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          Click the bookmark icon on any post to save it for later
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {(selectedTags.length > 0 || searchQuery) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-3 w-full text-xs"
-                      onClick={clearFilters}
+                  {savedPosts.length > 10 && (
+                    <Link
+                      href="/community-blogs/bookmarks"
+                      className="block text-center pt-3 mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium border-t border-slate-100 transition-colors"
                     >
-                      Clear All Filters
-                    </Button>
+                      View all {savedPosts.length} saved posts →
+                    </Link>
                   )}
                 </div>
               )}
@@ -670,15 +967,48 @@ function CommunityBlogsContent() {
               {user && (
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <h3 className="font-semibold text-sm mb-3">Quick Actions</h3>
-                  <Button
-                    asChild
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <Link href="/community-blogs/new">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Write New Blog
-                    </Link>
-                  </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
+                    >
+                      <Link href="/community-blogs/new" className="flex items-center justify-center">
+                        <motion.div
+                          className="flex items-center"
+                          initial={{ x: 0 }}
+                          whileHover={{ x: 3 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          <motion.div
+                            className="mr-2"
+                            animate={{ 
+                              rotate: 0,
+                              scale: 1
+                            }}
+                            whileHover={{ 
+                              rotate: 180,
+                              scale: 1.2
+                            }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </motion.div>
+                          <span className="font-medium">Write New Blog</span>
+                        </motion.div>
+                        <motion.div
+                          className="ml-2 opacity-0 group-hover:opacity-100"
+                          initial={{ x: -10 }}
+                          animate={{ x: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <PenTool className="w-3.5 h-3.5" />
+                        </motion.div>
+                      </Link>
+                    </Button>
+                  </motion.div>
                 </div>
               )}
             </div>
@@ -707,7 +1037,7 @@ function CommunityBlogsContent() {
                   >
                     ✨ All
                   </button>
-                  
+
                   {/* Left scroll arrow */}
                   <button
                     onClick={() => {
@@ -721,14 +1051,14 @@ function CommunityBlogsContent() {
                   >
                     <ChevronLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </button>
-                  
+
                   {/* Scrollable tags container with gradient fade edges */}
                   <div className="relative flex-1 overflow-hidden">
                     {/* Left gradient fade */}
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
                     {/* Right gradient fade */}
                     <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
-                    
+
                     <div
                       id="tag-scroll-container"
                       className="overflow-x-auto scrollbar-hide scroll-smooth"
@@ -758,7 +1088,7 @@ function CommunityBlogsContent() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Right scroll arrow */}
                   <button
                     onClick={() => {
@@ -772,7 +1102,7 @@ function CommunityBlogsContent() {
                   >
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors" />
                   </button>
-                  
+
                   {/* Clear filters button (only show when filters active) */}
                   {(selectedTags.length > 0 || searchQuery) && (
                     <button
@@ -785,7 +1115,7 @@ function CommunityBlogsContent() {
                   )}
                 </div>
               </div>
-              
+
               {/* Show active search query if exists */}
               {searchQuery && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 bg-blue-50 rounded-lg px-3 py-2">
@@ -812,12 +1142,51 @@ function CommunityBlogsContent() {
                       : "Be the first to share your story with the community!"}
                   </p>
                   {user && !searchQuery && selectedTags.length === 0 && (
-                    <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                      <Link href="/community-blogs/new">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Your First Blog
-                      </Link>
-                    </Button>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button 
+                        asChild 
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 group"
+                      >
+                        <Link href="/community-blogs/new" className="flex items-center">
+                          <motion.div
+                            animate={{ 
+                              rotate: [0, 0, 360, 360],
+                              scale: [1, 1.2, 1.2, 1]
+                            }}
+                            transition={{ 
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 3,
+                              times: [0, 0.2, 0.8, 1]
+                            }}
+                            className="mr-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </motion.div>
+                          <span className="font-medium">Create Your First Blog</span>
+                          <motion.div
+                            className="ml-2"
+                            animate={{ 
+                              opacity: [0.5, 1, 0.5],
+                              x: [0, 3, 0]
+                            }}
+                            transition={{ 
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </motion.div>
+                        </Link>
+                      </Button>
+                    </motion.div>
                   )}
                 </CardContent>
               </Card>
@@ -825,14 +1194,16 @@ function CommunityBlogsContent() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
                   {posts.map((post, index) => (
-                    <BlogCard 
-                      key={post.id} 
-                      post={post} 
+                    <BlogCard
+                      key={post.id}
+                      post={post}
                       index={index % POSTS_PER_PAGE}
                       isOwner={user?.id === post.authorId}
+                      isBookmarked={bookmarkedPosts.has(post.id)}
                       onTagClick={toggleTag}
                       onEdit={handleEditPost}
                       onDelete={handleDeletePost}
+                      onToggleBookmark={handleToggleBookmark}
                     />
                   ))}
                 </div>

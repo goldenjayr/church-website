@@ -1,8 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { createHash } from 'crypto';
-import UAParser from 'ua-parser-js';
 import { Redis } from '@upstash/redis';
-import requestIp from 'request-ip';
 
 const prisma = new PrismaClient();
 const redis = new Redis({
@@ -42,7 +40,7 @@ export class BlogEngagementService {
       // Rate limiting check
       const rateLimitKey = `view:${data.ipAddress}:${data.blogPostId}`;
       const viewCount = await redis.incr(rateLimitKey);
-      
+
       if (viewCount === 1) {
         // Set expiry for 1 hour
         await redis.expire(rateLimitKey, 3600);
@@ -54,7 +52,7 @@ export class BlogEngagementService {
       // Check for duplicate view in the last 30 minutes
       const duplicateKey = `duplicate:${data.sessionId}:${data.blogPostId}`;
       const isDuplicate = await redis.get(duplicateKey);
-      
+
       if (isDuplicate) {
         return { success: false, reason: 'Duplicate view' };
       }
@@ -62,11 +60,6 @@ export class BlogEngagementService {
       // Mark this view to prevent duplicates
       await redis.set(duplicateKey, '1', { ex: 1800 }); // 30 minutes
 
-      // Parse user agent for analytics
-      const parser = new UAParser(data.userAgent);
-      const browser = parser.getBrowser();
-      const os = parser.getOS();
-      const device = parser.getDevice();
 
       // Record the view
       await prisma.blogPostView.create({
@@ -204,7 +197,7 @@ export class BlogEngagementService {
       // Check cache first
       const cacheKey = `blog:stats:${blogPostId}`;
       const cached = await redis.get(cacheKey);
-      
+
       if (cached) {
         return cached;
       }
@@ -256,7 +249,7 @@ export class BlogEngagementService {
     try {
       const cacheKey = 'blog:trending';
       const cached = await redis.get(cacheKey);
-      
+
       if (cached) {
         return JSON.parse(cached as string);
       }
@@ -266,7 +259,7 @@ export class BlogEngagementService {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       const trending = await prisma.$queryRaw`
-        SELECT 
+        SELECT
           bp.id,
           bp.title,
           bp.slug,
@@ -275,7 +268,7 @@ export class BlogEngagementService {
           COUNT(DISTINCT bpv."sessionId") as "uniqueViews",
           COUNT(bpl.id) as "likeCount"
         FROM "BlogPost" bp
-        LEFT JOIN "BlogPostView" bpv ON bp.id = bpv."blogPostId" 
+        LEFT JOIN "BlogPostView" bpv ON bp.id = bpv."blogPostId"
           AND bpv."createdAt" > ${sevenDaysAgo}
         LEFT JOIN "BlogPostLike" bpl ON bp.id = bpl."blogPostId"
         WHERE bp.published = true
@@ -333,11 +326,11 @@ export class BlogEngagementService {
           where: { blogPostId },
           _count: true,
         }).then(groups => groups.length),
-        prisma.blogPostView.count({ 
-          where: { 
+        prisma.blogPostView.count({
+          where: {
             blogPostId,
             userId: { not: null }
-          } 
+          }
         }),
         prisma.blogPostLike.count({ where: { blogPostId } }),
       ]);
@@ -346,7 +339,7 @@ export class BlogEngagementService {
 
       // Calculate average view duration
       const avgDuration = await prisma.blogPostView.aggregate({
-        where: { 
+        where: {
           blogPostId,
           viewDuration: { not: null }
         },
@@ -407,7 +400,7 @@ export class BlogEngagementService {
       // Rate limiting check
       const rateLimitKey = `community-view:${data.ipAddress}:${data.blogPostId}`;
       const viewCount = await redis.incr(rateLimitKey);
-      
+
       if (viewCount === 1) {
         // Set expiry for 1 hour
         await redis.expire(rateLimitKey, 3600);
@@ -419,7 +412,7 @@ export class BlogEngagementService {
       // Check for duplicate view in the last 30 minutes
       const duplicateKey = `community-duplicate:${data.sessionId}:${data.blogPostId}`;
       const isDuplicate = await redis.get(duplicateKey);
-      
+
       if (isDuplicate) {
         return { success: false, reason: 'Duplicate view' };
       }
