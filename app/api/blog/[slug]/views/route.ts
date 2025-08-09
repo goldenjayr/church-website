@@ -46,14 +46,36 @@ export async function POST(
   const userId = user?.id || null;
 
   try {
-    const blogPost = await prisma.blogPost.findUnique({ where: { slug } });
-    if (!blogPost) {
-      return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
-    }
-
+    // Check both church and community blog posts
+    const [churchPost, communityPost] = await Promise.all([
+      prisma.blogPost.findUnique({ where: { slug } }),
+      prisma.userBlogPost.findUnique({ where: { slug } })
+    ]);
+    
     // Generate a proper session ID from the request body or create one
     const body = await request.json().catch(() => ({}));
     const sessionId = body.sessionId || `${ipAddress}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Handle community blog post
+    if (communityPost) {
+      // Increment view count for community post
+      await prisma.userBlogPost.update({
+        where: { id: communityPost.id },
+        data: { viewCount: { increment: 1 } }
+      });
+      
+      return NextResponse.json({ 
+        success: true, 
+        sessionId,
+        postType: 'community'
+      }, { status: 201 });
+    }
+    
+    // Handle church blog post
+    const blogPost = churchPost;
+    if (!blogPost) {
+      return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
+    }
     
     // Check for duplicate view in the last 30 minutes
     const duplicateKey = `duplicate:${sessionId}:${blogPost.id}`;
@@ -85,7 +107,7 @@ export async function POST(
     // Mark this view to prevent duplicates for 30 minutes
     await redis.set(duplicateKey, '1', { ex: 1800 });
 
-    // Record the view
+    // Record the view for church blog
     const view = await prisma.blogPostView.create({
       data: {
         blogPostId: blogPost.id,

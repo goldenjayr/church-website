@@ -62,12 +62,29 @@ export async function POST(
 
     const { sessionId, scrollDepth, timeOnPage, clicks } = bodyValidation.data;
 
-    // Get the blog post
-    const blogPost = await prisma.blogPost.findUnique({ 
-      where: { slug },
-      select: { id: true }
-    });
+    // Check both church and community blog posts
+    const [churchPost, communityPost] = await Promise.all([
+      prisma.blogPost.findUnique({ 
+        where: { slug },
+        select: { id: true }
+      }),
+      prisma.userBlogPost.findUnique({ 
+        where: { slug },
+        select: { id: true }
+      })
+    ]);
     
+    // Handle community blog post engagement (simpler - just return success)
+    if (communityPost) {
+      // Community posts don't track detailed engagement yet
+      return NextResponse.json({ 
+        success: true, 
+        postType: 'community'
+      });
+    }
+    
+    // Handle church blog post engagement
+    const blogPost = churchPost;
     if (!blogPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }

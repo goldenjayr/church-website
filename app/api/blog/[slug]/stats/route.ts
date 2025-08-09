@@ -116,18 +116,59 @@ export async function GET(
   }
 
   try {
-    // Parallel fetch: blog post and current user
-    const [blogPost, user] = await Promise.all([
+    // Parallel fetch: check both church and community blog posts
+    const [churchPost, communityPost, user] = await Promise.all([
       prisma.blogPost.findUnique({
         where: { slug },
         select: { id: true }
       }),
+      prisma.userBlogPost.findUnique({
+        where: { slug },
+        select: { 
+          id: true, 
+          viewCount: true, 
+          likeCount: true,
+          _count: {
+            select: {
+              likes: true,
+              comments: true,
+            }
+          }
+        }
+      }),
       getCurrentUser(),
     ]);
 
-    if (!blogPost) {
+    // Handle community blog post
+    if (communityPost) {
+      const hasLiked = user ? await prisma.userBlogLike.findUnique({
+        where: {
+          userBlogPostId_userId: {
+            userBlogPostId: communityPost.id,
+            userId: user.id,
+          },
+        },
+        select: { id: true },
+      }).then(like => !!like) : false;
+
+      return NextResponse.json({
+        totalViews: communityPost.viewCount,
+        uniqueViews: communityPost.viewCount, // Community posts don't track unique views separately
+        totalLikes: communityPost.likeCount || communityPost._count.likes,
+        hasLiked,
+        registeredViews: 0,
+        anonymousViews: 0,
+        avgViewDuration: null,
+        lastViewedAt: null,
+      });
+    }
+
+    // Handle church blog post
+    if (!churchPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
+
+    const blogPost = churchPost
 
     // Parallel fetch: stats and user like status
     const [stats, hasLiked] = await Promise.all([

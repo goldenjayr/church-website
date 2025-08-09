@@ -21,7 +21,53 @@ export async function POST(
   }
 
   try {
-    const blogPost = await prisma.blogPost.findUnique({ where: { slug } });
+    // Check both church and community blog posts
+    const [churchPost, communityPost] = await Promise.all([
+      prisma.blogPost.findUnique({ where: { slug } }),
+      prisma.userBlogPost.findUnique({ where: { slug } })
+    ]);
+    
+    // Handle community blog post likes
+    if (communityPost) {
+      // Check if the user has already liked the post
+      const existingLike = await prisma.userBlogLike.findUnique({
+        where: {
+          userBlogPostId_userId: {
+            userBlogPostId: communityPost.id,
+            userId,
+          },
+        },
+      });
+
+      if (existingLike) {
+        return NextResponse.json({ error: 'Already liked' }, { status: 409 });
+      }
+
+      const like = await prisma.userBlogLike.create({
+        data: {
+          userBlogPostId: communityPost.id,
+          userId,
+        },
+      });
+
+      // Update the like count on the post
+      const updatedPost = await prisma.userBlogPost.update({
+        where: { id: communityPost.id },
+        data: { likeCount: { increment: 1 } },
+        select: { likeCount: true }
+      });
+
+      return NextResponse.json({ 
+        success: true, 
+        likeId: like.id,
+        liked: true,
+        likeCount: updatedPost.likeCount,
+        postType: 'community'
+      }, { status: 201 });
+    }
+    
+    // Handle church blog post likes
+    const blogPost = churchPost;
     if (!blogPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
@@ -107,7 +153,42 @@ export async function DELETE(
   }
 
   try {
-    const blogPost = await prisma.blogPost.findUnique({ where: { slug } });
+    // Check both church and community blog posts
+    const [churchPost, communityPost] = await Promise.all([
+      prisma.blogPost.findUnique({ where: { slug } }),
+      prisma.userBlogPost.findUnique({ where: { slug } })
+    ]);
+    
+    // Handle community blog post unlike
+    if (communityPost) {
+      const deleted = await prisma.userBlogLike.deleteMany({
+        where: {
+          userBlogPostId: communityPost.id,
+          userId,
+        },
+      });
+
+      if (deleted.count === 0) {
+        return NextResponse.json({ error: 'Like not found' }, { status: 404 });
+      }
+
+      // Update the like count on the post
+      const updatedPost = await prisma.userBlogPost.update({
+        where: { id: communityPost.id },
+        data: { likeCount: { decrement: 1 } },
+        select: { likeCount: true }
+      });
+
+      return NextResponse.json({ 
+        success: true,
+        liked: false,
+        likeCount: Math.max(0, updatedPost.likeCount),
+        postType: 'community'
+      }, { status: 200 });
+    }
+    
+    // Handle church blog post unlike
+    const blogPost = churchPost;
     if (!blogPost) {
       return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
     }
