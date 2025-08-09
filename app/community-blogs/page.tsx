@@ -773,39 +773,45 @@ function CommunityBlogsContent() {
                         )}
                       </AnimatePresence>
                       
-                      {/* Button content */}
-                      <motion.div 
+                    				{/* Button content - keep size constant while loading */}
+                      				<motion.div 
                         className="relative z-10 flex items-center justify-center"
                         animate={searchButtonClicked ? {
                           rotate: [0, 10, -10, 10, -10, 0],
                         } : {}}
                         transition={{ duration: 0.4 }}
                       >
-                        {isSearching ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                        ) : (
-                          <>
-                            <motion.span 
-                              className="hidden sm:inline"
-                              animate={searchButtonClicked ? {
-                                scale: [1, 0.9, 1.1, 1],
-                              } : {}}
-                              transition={{ duration: 0.3 }}
-                            >
-                              Search
-                            </motion.span>
-                            <motion.div
-                              className="sm:hidden"
-                              animate={searchButtonClicked ? {
-                                rotate: [0, 360],
-                                scale: [1, 1.2, 1],
-                              } : {}}
-                              transition={{ duration: 0.5 }}
-                            >
-                              <Search className="w-4 h-4" />
-                            </motion.div>
-                          </>
+                        {/* Centered spinner overlay; does not affect layout */}
+                        {isSearching && (
+                          <motion.div
+                            className="absolute inset-0 flex items-center justify-center"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                          </motion.div>
                         )}
+                        {/* Keep the label/icon in DOM to preserve width/height */}
+                        <motion.span 
+                          className={`hidden sm:inline ${isSearching ? 'opacity-0' : 'opacity-100'}`}
+                          animate={searchButtonClicked ? {
+                            scale: [1, 0.9, 1.1, 1],
+                          } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          Search
+                        </motion.span>
+                        <motion.div
+                          className={`sm:hidden ${isSearching ? 'opacity-0' : 'opacity-100'}`}
+                          animate={searchButtonClicked ? {
+                            rotate: [0, 360],
+                            scale: [1, 1.2, 1],
+                          } : {}}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <Search className="w-4 h-4" />
+                        </motion.div>
                       </motion.div>
                     </motion.button>
                   </div>
