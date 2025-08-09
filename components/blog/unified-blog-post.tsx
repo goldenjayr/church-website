@@ -12,6 +12,8 @@ import { UnifiedBlogEngagement, UnifiedBlogEngagementCompact } from "@/component
 import { CommentSection } from "@/components/blog/comment-section"
 import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 import { getBlogPostUrl } from "@/lib/combined-blog-utils"
+import { useSearchParams, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import "@/styles/blog-content.css"
 
 interface UnifiedBlogPostProps {
@@ -22,6 +24,54 @@ interface UnifiedBlogPostProps {
 }
 
 export function UnifiedBlogPost({ post, relatedPosts = [], currentUser, postType }: UnifiedBlogPostProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [backUrl, setBackUrl] = useState(postType === 'church' ? '/blog' : '/community-blogs')
+  const [backLabel, setBackLabel] = useState(postType === 'church' ? 'Back to Blog' : 'Back to Community Blogs')
+  
+  useEffect(() => {
+    // Check for 'from' query parameter first
+    const fromParam = searchParams.get('from')
+    if (fromParam) {
+      setBackUrl(fromParam)
+      // Set label based on the from parameter
+      if (fromParam === '/community-blogs') {
+        setBackLabel('Back to Community Blogs')
+      } else if (fromParam === '/blog') {
+        setBackLabel('Back to Blog')
+      } else if (fromParam.includes('dashboard')) {
+        setBackLabel('Back to Dashboard')
+      } else if (fromParam.includes('admin')) {
+        setBackLabel('Back to Admin')
+      } else {
+        setBackLabel('Go Back')
+      }
+    } else if (typeof window !== 'undefined') {
+      // Fallback to checking referrer
+      const referrer = document.referrer
+      if (referrer) {
+        const url = new URL(referrer)
+        const path = url.pathname
+        
+        // Determine back URL based on referrer
+        if (path.includes('/community-blogs')) {
+          setBackUrl('/community-blogs')
+          setBackLabel('Back to Community Blogs')
+        } else if (path.includes('/blog')) {
+          setBackUrl('/blog')
+          setBackLabel('Back to Blog')
+        } else if (path.includes('dashboard')) {
+          setBackUrl(path)
+          setBackLabel('Back to Dashboard')
+        } else if (path.includes('admin')) {
+          setBackUrl(path)
+          setBackLabel('Back to Admin')
+        }
+        // Otherwise keep the default based on postType
+      }
+    }
+  }, [searchParams, postType])
+  
   const estimateReadingTime = (content: string) => {
     const wordsPerMinute = 200
     const textContent = content.replace(/<[^>]*>/g, '')
@@ -30,8 +80,6 @@ export function UnifiedBlogPost({ post, relatedPosts = [], currentUser, postType
   }
 
   const isOwner = currentUser?.id === post.authorId
-  const backUrl = postType === 'church' ? '/blog' : '/community-blogs'
-  const backLabel = postType === 'church' ? 'Back to Blog' : 'Back to Community Blogs'
 
   // Get appropriate author display info
   const getAuthorInfo = () => {
@@ -67,11 +115,21 @@ export function UnifiedBlogPost({ post, relatedPosts = [], currentUser, postType
       <section className="py-8 sm:py-12 bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <Button asChild variant="ghost" className="mb-6">
-              <Link href={backUrl}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                {backLabel}
-              </Link>
+            <Button 
+              variant="ghost" 
+              className="mb-6"
+              onClick={() => {
+                // Try to use browser's back functionality if we have history
+                if (window.history.length > 1 && document.referrer) {
+                  router.back()
+                } else {
+                  // Otherwise navigate to the determined URL
+                  router.push(backUrl)
+                }
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {backLabel}
             </Button>
 
             <div className="flex items-center space-x-3 mb-4">

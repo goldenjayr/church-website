@@ -1,10 +1,20 @@
 // Helper function to determine the URL for a blog post
-export function getBlogPostUrl(post: any) {
+export function getBlogPostUrl(post: any, fromPath?: string) {
+  let baseUrl: string
+  
   if (post.postType === 'church') {
-    return `/blog/${post.slug}`
+    baseUrl = `/blog/${post.slug}`
   } else {
-    return `/community-blogs/${post.slug}`
+    baseUrl = `/community-blogs/${post.slug}`
   }
+  
+  // Append the 'from' parameter if provided
+  if (fromPath) {
+    const separator = baseUrl.includes('?') ? '&' : '?'
+    return `${baseUrl}${separator}from=${encodeURIComponent(fromPath)}`
+  }
+  
+  return baseUrl
 }
 
 // Function to create a combined blog card component data

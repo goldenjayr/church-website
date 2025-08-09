@@ -87,7 +87,7 @@ const BlogCard = memo(({
   onToggleBookmark?: (postId: string, postType: string) => void;
 }) => {
   const router = useRouter()
-  const postUrl = getBlogPostUrl(post)
+  const postUrl = getBlogPostUrl(post, '/community-blogs')
   const formatPostDate = (date: string) => {
     return format(new Date(date), "MMM d, yyyy")
   }
@@ -109,10 +109,14 @@ const BlogCard = memo(({
   return (
     <motion.div
       className="h-full"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      viewport={{ once: true }}
+      transition={{ 
+        duration: 0.4,
+        delay: Math.min(index * 0.05, 0.2),
+        ease: "easeOut"
+      }}
+      viewport={{ once: true, margin: "-50px" }}
     >
       <Card 
         className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border-none bg-white overflow-hidden group cursor-pointer relative"
@@ -730,22 +734,22 @@ function CommunityBlogsContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Header */}
+      {/* Header - Mobile optimized */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 gap-4">
+        <div className="w-full px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
             {/* Left section - Logo */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <Link href="/community-blogs" className="flex items-center gap-2 group">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200">
-                  <Newspaper className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <Link href="/community-blogs" className="flex items-center gap-1.5 sm:gap-2 group">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200">
+                  <Newspaper className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                 </div>
-                <span className="font-bold text-lg text-slate-800 hidden sm:inline">Blogs</span>
+                <span className="font-bold text-base sm:text-lg text-slate-800 hidden sm:inline">Blogs</span>
               </Link>
             </div>
 
             {/* Center section - Search Bar */}
-            <div className="flex-1 max-w-2xl mx-auto px-4">
+            <div className="flex-1 max-w-2xl mx-auto px-0 sm:px-4">
               <form onSubmit={handleSearch} className="relative group">
                 <div className="relative">
                   {/* Icon container vertically centered via inset-y-0 + flex */}
@@ -767,10 +771,10 @@ function CommunityBlogsContent() {
                     onKeyPress={handleKeyPress}
                     onFocus={() => setIsSearchFocused(true)}
                     onBlur={() => setIsSearchFocused(false)}
-                    className="w-full pl-12 pr-32 h-11 rounded-full border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-sm placeholder:text-slate-400"
+                    className="w-full pl-10 sm:pl-12 pr-20 sm:pr-32 h-9 sm:h-11 rounded-full border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200 text-xs sm:text-sm placeholder:text-slate-400"
                   />
                   {searchInput && (
-                    <div className="absolute inset-y-0 right-24 flex items-center">
+                    <div className="absolute inset-y-0 right-16 sm:right-24 flex items-center">
                       <button
                         type="button"
                         onClick={() => {
@@ -782,14 +786,14 @@ function CommunityBlogsContent() {
                         }}
                         className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 sm:w-4 h-3 sm:h-4" />
                       </button>
                     </div>
                   )}
-                  <div className="absolute inset-y-0 right-1.5 flex items-center">
+                  <div className="absolute inset-y-0 right-1 sm:right-1.5 flex items-center">
                     <motion.button
                       type="submit"
-                      className="h-8 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm overflow-hidden"
+                      className="h-7 sm:h-8 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-sm overflow-hidden text-xs sm:text-sm"
                       disabled={isSearching}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
@@ -874,24 +878,24 @@ function CommunityBlogsContent() {
             </div>
 
             {/* Right section - Actions */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
               <Link
                 href="/"
-                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-all duration-200"
+                className="p-1.5 sm:p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-all duration-200"
                 title="Home"
               >
-                <Home className="w-5 h-5" />
+                <Home className="w-4 sm:w-5 h-4 sm:h-5" />
               </Link>
 
               {user ? (
                 <>
                   <Button
-                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm rounded-full px-4 py-2 flex items-center gap-2 transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm rounded-full px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1 sm:gap-2 transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95 text-xs sm:text-sm"
                     asChild
                   >
                     <Link href="/community-blogs/new">
                       <motion.div
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-1 sm:gap-2"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -899,7 +903,7 @@ function CommunityBlogsContent() {
                           animate={{ rotate: [0, 90, 0] }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3 sm:w-4 h-3 sm:h-4" />
                         </motion.div>
                         <span className="hidden md:inline">Write</span>
                       </motion.div>
@@ -908,8 +912,8 @@ function CommunityBlogsContent() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                        <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-slate-100 hover:ring-blue-200 transition-all duration-200">
+                      <Button variant="ghost" className="relative h-7 w-7 sm:h-9 sm:w-9 rounded-full p-0">
+                        <Avatar className="h-7 w-7 sm:h-9 sm:w-9 cursor-pointer ring-2 ring-slate-100 hover:ring-blue-200 transition-all duration-200">
                           <AvatarImage
                             src={user.profileImage ? getOptimizedImageUrl(user.profileImage, {
                               width: 72,
@@ -974,26 +978,36 @@ function CommunityBlogsContent() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-3">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Section - Mobile optimized */}
+      <motion.section 
+        className="bg-gradient-to-r from-blue-600 to-green-600 text-white py-2 sm:py-3"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold">Community & Church Blog Platform</h1>
-              <span className="text-sm opacity-90 hidden md:inline">Stories from our community and church family</span>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+              <h1 className="text-sm sm:text-xl font-semibold">Community & Church Blog Platform</h1>
+              <span className="text-xs sm:text-sm opacity-90 hidden md:inline">Stories from our community and church family</span>
             </div>
-            <div className="flex gap-3">
-              <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full text-sm">
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline">{totalCount} Blogs</span>
+            <motion.div 
+              className="flex gap-2 sm:gap-3"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <div className="flex items-center gap-1 sm:gap-2 bg-white/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm">
+                <Users className="w-3 sm:w-4 h-3 sm:h-4" />
+                <span>{totalCount} <span className="hidden sm:inline">Blogs</span></span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Main Content */}
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
         <div className="flex gap-6">
           {/* Sidebar */}
           <aside className="w-64 shrink-0 hidden lg:block">
@@ -1109,13 +1123,13 @@ function CommunityBlogsContent() {
                           return (
                             <motion.div
                               key={post.id}
-                              initial={{ opacity: 0, x: -20 }}
+                      initial={{ opacity: 0, x: -10 }}
                               animate={{ 
                                 opacity: 1, 
                                 x: 0,
                                 transition: {
-                                  duration: 0.2,
-                                  delay: index * 0.03,
+                                  duration: 0.15,
+                                  delay: Math.min(index * 0.02, 0.1),
                                   ease: "easeOut"
                                 }
                               }}
@@ -1128,7 +1142,7 @@ function CommunityBlogsContent() {
                               className="mb-1.5"
                             >
                               <Link
-                                href={getBlogPostUrl(post)}
+                                href={getBlogPostUrl(post, '/community-blogs')}
                                 className="block group"
                               >
                                 <div className="px-2.5 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 border border-transparent hover:border-blue-100 hover:translate-x-0.5">
@@ -1275,9 +1289,50 @@ function CommunityBlogsContent() {
 
           {/* Main Content Area */}
           <main className="flex-1 min-w-0">
+            {/* Mobile Filter Tabs */}
+            <div className="mb-4 lg:hidden">
+              <div className="bg-white rounded-lg shadow-sm p-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveTab("all")}
+                    className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === "all"
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 inline mr-1" />
+                    All
+                  </button>
+                  {user && (
+                    <button
+                      onClick={() => setActiveTab("my")}
+                      className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        activeTab === "my"
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      <User className="w-4 h-4 inline mr-1" />
+                      My Blogs
+                    </button>
+                  )}
+                  {user && (
+                    <Link
+                      href="/community-blogs/bookmarks"
+                      className="flex-1 px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors text-center"
+                    >
+                      <Bookmark className="w-4 h-4 inline mr-1" />
+                      Saved
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Improved Tag Filter Bar */}
-            <div className="mb-6">
-              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-3 relative">
+            <div className="mb-4 sm:mb-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-2 sm:p-3 relative">
                 <div className="flex items-center gap-3">
                   {/* All filter chip */}
                   <button
@@ -1451,7 +1506,7 @@ function CommunityBlogsContent() {
               </Card>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4">
                   {posts.map((post, index) => (
                     <BlogCard
                       key={post.id}
