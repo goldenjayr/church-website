@@ -179,7 +179,15 @@ export function NavigationOptimized() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.profileImage ? getOptimizedImageUrl(user.profileImage, { width: 36, height: 36 }) : undefined} />
+                      <AvatarImage 
+                        src={user.profileImage ? getOptimizedImageUrl(user.profileImage, { 
+                          width: 72, 
+                          height: 72, 
+                          quality: "100",
+                          crop: "fill",
+                          gravity: "face" 
+                        }) : undefined} 
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-slate-600 to-slate-700 text-white text-sm">
                         {user.name?.[0] || user.email[0].toUpperCase()}
                       </AvatarFallback>
@@ -347,6 +355,15 @@ export function NavigationOptimized() {
                 <div className="p-4 bg-gradient-to-br from-blue-50 to-green-50 border-b">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-12 h-12">
+                      <AvatarImage 
+                        src={user.profileImage ? getOptimizedImageUrl(user.profileImage, { 
+                          width: 96, 
+                          height: 96, 
+                          quality: "100",
+                          crop: "fill",
+                          gravity: "face" 
+                        }) : undefined} 
+                      />
                       <AvatarFallback className="bg-gradient-to-br from-blue-600 to-green-600 text-white text-sm font-medium">
                         {user.name?.[0] || user.email[0].toUpperCase()}
                       </AvatarFallback>

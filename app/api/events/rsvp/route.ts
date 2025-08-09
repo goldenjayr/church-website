@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma-client"
 import { z } from "zod"
+import { RedisService, CacheKeys, RateLimits } from '@/lib/services/redis.service'
 
 const rsvpSchema = z.object({
   eventId: z.string(),
@@ -25,6 +26,28 @@ export async function POST(request: Request) {
     }
 
     const { eventId, name, email, phone, message } = validationResult.data
+
+    // Rate limiting check
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+                     request.headers.get('x-real-ip') || 
+                     '127.0.0.1'
+    
+    const rateLimit = await RedisService.checkRateLimit(
+      ipAddress,
+      'rsvp',
+      RateLimits.rsvp.max,
+      RateLimits.rsvp.window
+    )
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { 
+          error: `Too many RSVP attempts. Please try again in ${Math.ceil(rateLimit.resetIn / 60)} minutes.`,
+          retryAfter: rateLimit.resetIn 
+        },
+        { status: 429 }
+      )
+    }
 
     // Check if event exists and is published
     const event = await prisma.event.findUnique({
@@ -58,7 +81,18 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user already RSVP'd
+    // Check Redis for duplicate RSVP (faster than DB)
+    const rsvpCacheKey = CacheKeys.eventRsvpCheck(eventId, email)
+    const alreadyRsvpd = await RedisService.exists(rsvpCacheKey)
+    
+    if (alreadyRsvpd) {
+      return NextResponse.json(
+        { error: "You have already registered for this event" },
+        { status: 400 }
+      )
+    }
+
+    // Double-check in database
     const existingRsvp = await prisma.eventRSVP.findUnique({
       where: {
         eventId_email: {
@@ -69,6 +103,8 @@ export async function POST(request: Request) {
     })
 
     if (existingRsvp) {
+      // Update Redis cache
+      await RedisService.set(rsvpCacheKey, '1', 86400) // 24 hours
       return NextResponse.json(
         { error: "You have already registered for this event" },
         { status: 400 }
@@ -85,6 +121,16 @@ export async function POST(request: Request) {
         message: message || null,
       }
     })
+
+    // Mark in Redis that this email has RSVP'd
+    await RedisService.set(rsvpCacheKey, '1', 86400) // 24 hours
+
+    // Invalidate event cache to update RSVP count
+    await RedisService.delete([
+      CacheKeys.event(eventId),
+      CacheKeys.eventList(),
+      CacheKeys.eventRsvps(eventId)
+    ])
 
     // TODO: Send confirmation email to the user
     // You can integrate with your email service here (e.g., SendGrid, Resend, etc.)

@@ -155,7 +155,13 @@ export default function ProfilePage() {
             memberSince: userData.memberSince ? new Date(userData.memberSince) : undefined
           });
           if (userData.profileImage) {
-            setImagePreview(getOptimizedImageUrl(userData.profileImage, { width: 128, height: 128 }));
+            setImagePreview(getOptimizedImageUrl(userData.profileImage, { 
+              width: 256, 
+              height: 256, 
+              quality: "100",
+              crop: "fill",
+              gravity: "face" 
+            }));
           }
           // Calculate profile completion
           calculateProfileCompletion(userData);
@@ -218,7 +224,13 @@ export default function ProfilePage() {
         toast.success('Profile updated successfully!');
         setUser(result.user);
         if (result.user.profileImage) {
-            setImagePreview(getOptimizedImageUrl(result.user.profileImage, { width: 128, height: 128 }));
+            setImagePreview(getOptimizedImageUrl(result.user.profileImage, { 
+              width: 256, 
+              height: 256, 
+              quality: "100",
+              crop: "fill",
+              gravity: "face" 
+            }));
         }
         // Reset the form with the new values to clear dirty state
         reset({

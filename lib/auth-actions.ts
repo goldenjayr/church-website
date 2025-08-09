@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { User, Role } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import * as jwt from 'jsonwebtoken'
+import { RedisService, CacheKeys, CacheTTL } from '@/lib/services/redis.service'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 
@@ -82,15 +83,39 @@ export async function registerUser(
 export async function getCurrentUser(): Promise<User | null> {
   try {
     const cookieStore = await cookies()
-    const userId = cookieStore.get('userId')?.value
+    const sessionId = cookieStore.get('sessionId')?.value
+    const userId = cookieStore.get('userId')?.value // Fallback for backward compatibility
 
+    // Try to get user from session first (Redis)
+    if (sessionId) {
+      const session = await RedisService.getSession<{ userId: string; user: User }>(sessionId)
+      if (session?.user) {
+        return session.user
+      }
+    }
+
+    // Fallback to userId cookie if no session
     if (!userId) {
       return null
     }
 
+    // Check Redis cache for user data
+    const cacheKey = CacheKeys.userAuth(userId)
+    const cachedUser = await RedisService.get<User>(cacheKey)
+    if (cachedUser) {
+      return cachedUser
+    }
+
+    // Get from database
     const user = await prisma.user.findUnique({
       where: { id: userId }
     })
+
+    if (user) {
+      // Cache user data (without password)
+      const { password, ...userWithoutPassword } = user
+      await RedisService.set(cacheKey, userWithoutPassword, CacheTTL.HOUR)
+    }
 
     return user
   } catch (error) {
@@ -103,19 +128,59 @@ export async function setCurrentUser(user: User | null) {
   const cookieStore = await cookies()
 
   if (user) {
+    // Create Redis session
+    const { password, ...userWithoutPassword } = user
+    const sessionId = await RedisService.setSession(
+      user.id,
+      { user: userWithoutPassword },
+      CacheTTL.DAY * 30 // 30 days
+    )
+
+    // Set session cookie
+    cookieStore.set('sessionId', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 // 30 days
+    })
+
+    // Keep userId for backward compatibility
     cookieStore.set('userId', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 // 30 days
     })
+
+    // Cache user auth data
+    await RedisService.set(CacheKeys.userAuth(user.id), userWithoutPassword, CacheTTL.HOUR)
   } else {
+    // Clear session and cookies
+    const sessionId = cookieStore.get('sessionId')?.value
+    if (sessionId) {
+      await RedisService.deleteSession(sessionId)
+    }
+    cookieStore.delete('sessionId')
     cookieStore.delete('userId')
   }
 }
 
 export async function logout() {
   const cookieStore = await cookies()
+  
+  // Delete Redis session
+  const sessionId = cookieStore.get('sessionId')?.value
+  if (sessionId) {
+    await RedisService.deleteSession(sessionId)
+  }
+  
+  // Clear user cache
+  const userId = cookieStore.get('userId')?.value
+  if (userId) {
+    await RedisService.delete(CacheKeys.userAuth(userId))
+  }
+  
+  cookieStore.delete('sessionId')
   cookieStore.delete('userId')
   redirect('/login')
 }

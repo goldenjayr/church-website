@@ -115,9 +115,15 @@ export const CommentItem = memo(function CommentItem({
       className={`${isReply ? "ml-4 sm:ml-8 md:ml-12" : ""}`}
     >
       <div className={`flex gap-2 sm:gap-3 ${comment.isPinned && !isReply ? "bg-blue-50 dark:bg-blue-950/20 p-3 sm:p-4 rounded-lg" : ""}`}>
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
+        <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
           <AvatarImage 
-            src={comment.user.profileImage ? getOptimizedImageUrl(comment.user.profileImage, { width: 40, height: 40 }) : undefined} 
+            src={comment.user.profileImage ? getOptimizedImageUrl(comment.user.profileImage, { 
+              width: 96, 
+              height: 96, 
+              quality: "100",
+              crop: "fill",
+              gravity: "face" 
+            }) : undefined}
           />
           <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-xs sm:text-sm">
             {comment.user.name

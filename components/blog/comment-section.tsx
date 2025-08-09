@@ -419,12 +419,13 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
         <Card>
           <CardContent className="pt-6">
             <div className="flex gap-3">
-              <Avatar className="w-10 h-10 flex-shrink-0 hidden sm:flex">
+              <Avatar className="w-12 h-12 flex-shrink-0 hidden sm:flex">
                 {currentUser.profileImage && (
                   <AvatarImage 
                     src={getOptimizedImageUrl(currentUser.profileImage, {
-                      width: 40,
-                      height: 40,
+                      width: 96,
+                      height: 96,
+                      quality: "100",
                       crop: 'fill',
                       gravity: 'face'
                     })}
@@ -446,12 +447,13 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
                 />
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 sm:hidden">
-                    <Avatar className="w-6 h-6">
+                    <Avatar className="w-8 h-8">
                       {currentUser.profileImage && (
                         <AvatarImage 
                           src={getOptimizedImageUrl(currentUser.profileImage, {
-                            width: 24,
-                            height: 24,
+                            width: 64,
+                            height: 64,
+                            quality: "100",
                             crop: 'fill',
                             gravity: 'face'
                           })}
