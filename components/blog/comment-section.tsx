@@ -55,9 +55,10 @@ interface Comment {
 interface CommentSectionProps {
   blogPostId: string
   blogPostSlug: string
+  postType?: 'church' | 'community'
 }
 
-export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps) {
+export function CommentSection({ blogPostId, blogPostSlug, postType = 'church' }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [currentUser, setCurrentUser] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,7 +83,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
       try {
         const [user, commentsResult] = await Promise.all([
           getCurrentUser(),
-          getComments(blogPostId),
+          getComments(blogPostId, postType),
         ])
         
         if (!mounted) return
@@ -108,7 +109,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     return () => {
       mounted = false
     }
-  }, [blogPostId])
+  }, [blogPostId, postType])
 
   // Memoized callbacks to prevent re-renders
   const handleSubmitComment = useCallback(async () => {
@@ -124,7 +125,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
     setSubmitting(true)
     try {
-      const result = await createComment(blogPostId, newComment)
+      const result = await createComment(blogPostId, newComment, undefined, postType)
       if (result.success && result.comment) {
         const newCommentWithDefaults = {
           ...result.comment,
@@ -142,7 +143,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     } finally {
       setSubmitting(false)
     }
-  }, [currentUser, newComment, blogPostId])
+  }, [currentUser, newComment, blogPostId, postType])
 
   const handleSubmitReply = useCallback(async (parentId: string) => {
     if (!currentUser) {
@@ -157,7 +158,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
     setSubmitting(true)
     try {
-      const result = await createComment(blogPostId, replyContent, parentId)
+      const result = await createComment(blogPostId, replyContent, parentId, postType)
       if (result.success && result.comment) {
         const newReply = {
           ...result.comment,
@@ -187,7 +188,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     } finally {
       setSubmitting(false)
     }
-  }, [currentUser, replyContent, blogPostId])
+  }, [currentUser, replyContent, blogPostId, postType])
 
   const handleEditSubmit = useCallback(async (commentId: string) => {
     if (!editContent.trim()) {
@@ -197,7 +198,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
     setSubmitting(true)
     try {
-      const result = await editComment(commentId, editContent)
+      const result = await editComment(commentId, editContent, postType)
       if (result.success) {
         const updateCommentInTree = (comments: Comment[]): Comment[] => {
           return comments.map(comment => {
@@ -231,14 +232,14 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     } finally {
       setSubmitting(false)
     }
-  }, [editContent])
+  }, [editContent, postType])
 
   const handleDeleteComment = useCallback(async () => {
     if (!commentToDelete) return
 
     setSubmitting(true)
     try {
-      const result = await deleteComment(commentToDelete)
+      const result = await deleteComment(commentToDelete, postType)
       if (result.success) {
         const removeCommentFromTree = (comments: Comment[]): Comment[] => {
           return comments
@@ -266,7 +267,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
       setDeleteDialogOpen(false)
       setCommentToDelete(null)
     }
-  }, [commentToDelete])
+  }, [commentToDelete, postType])
 
   const handleLikeComment = useCallback(async (commentId: string) => {
     if (!currentUser) {
@@ -275,7 +276,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     }
 
     try {
-      const result = await toggleCommentLike(commentId)
+      const result = await toggleCommentLike(commentId, postType)
       if (result.success) {
         const updateLikesInTree = (comments: Comment[]): Comment[] => {
           return comments.map(comment => {
@@ -306,7 +307,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     } catch (error) {
       toast.error("Failed to update like")
     }
-  }, [currentUser])
+  }, [currentUser, postType])
 
   const handleReportComment = useCallback(async () => {
     if (!commentToReport || !reportReason) {
@@ -316,7 +317,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
 
     setSubmitting(true)
     try {
-      const result = await reportComment(commentToReport, reportReason)
+      const result = await reportComment(commentToReport, reportReason, undefined, postType)
       if (result.success) {
         toast.success("Comment reported successfully")
       } else {
@@ -330,13 +331,13 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
       setCommentToReport(null)
       setReportReason("")
     }
-  }, [commentToReport, reportReason])
+  }, [commentToReport, reportReason, postType])
 
   const handlePinComment = useCallback(async (commentId: string) => {
     try {
-      const result = await togglePinComment(commentId)
+      const result = await togglePinComment(commentId, postType)
       if (result.success) {
-        const commentsResult = await getComments(blogPostId)
+        const commentsResult = await getComments(blogPostId, postType)
         if (commentsResult.success && commentsResult.comments) {
           setComments(commentsResult.comments as Comment[])
         }
@@ -347,7 +348,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
     } catch (error) {
       toast.error("Failed to update pin status")
     }
-  }, [blogPostId])
+  }, [blogPostId, postType])
 
   const toggleReplies = useCallback((commentId: string) => {
     setExpandedReplies(prev => {
@@ -523,6 +524,7 @@ export function CommentSection({ blogPostId, blogPostSlug }: CommentSectionProps
                   editingComment={editingComment}
                   editContent={editContent}
                   submitting={submitting}
+                  postType={postType}
                   onReplyClick={onReplyClick}
                   onReplySubmit={handleSubmitReply}
                   onReplyCancel={onReplyCancel}

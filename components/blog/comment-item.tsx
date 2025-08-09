@@ -62,6 +62,7 @@ interface CommentItemProps {
   editingComment: string | null
   editContent: string
   submitting: boolean
+  postType?: 'church' | 'community'
   onReplyClick: (commentId: string) => void
   onReplySubmit: (parentId: string) => void
   onReplyCancel: () => void
@@ -87,6 +88,7 @@ export const CommentItem = memo(function CommentItem({
   editingComment,
   editContent,
   submitting,
+  postType = 'church',
   onReplyClick,
   onReplySubmit,
   onReplyCancel,
@@ -353,6 +355,7 @@ export const CommentItem = memo(function CommentItem({
                   editingComment={editingComment}
                   editContent={editContent}
                   submitting={submitting}
+                  postType={postType}
                   onReplyClick={onReplyClick}
                   onReplySubmit={onReplySubmit}
                   onReplyCancel={onReplyCancel}

@@ -54,7 +54,9 @@ model User {
   comments BlogComment[]
   userBlogComments UserBlogComment[]  // Comments on user-created blogs
   commentLikes CommentLike[]
+  userBlogCommentLikes UserBlogCommentLike[]  // Likes on community blog comments
   commentReports CommentReport[]
+  userBlogCommentReports UserBlogCommentReport[]  // Reports on community blog comments
   blogBookmarks BlogBookmark[]  // Church blog bookmarks
   userBlogBookmarks UserBlogBookmark[]  // Community blog bookmarks
 }
@@ -717,7 +719,11 @@ model UserBlogComment {
   userBlogPostId String          // Which user blog post this comment belongs to
   userId         String          // Who wrote the comment
   parentId       String?         // For nested replies
+  status         CommentStatus   @default(APPROVED) // Moderation status
+  isEdited       Boolean         @default(false)
+  editedAt       DateTime?
   likes          Int             @default(0)
+  isPinned       Boolean         @default(false) // Admin can pin important comments
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
@@ -726,10 +732,13 @@ model UserBlogComment {
   user           User            @relation(fields: [userId], references: [id])
   parent         UserBlogComment?  @relation("UserBlogCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies        UserBlogComment[] @relation("UserBlogCommentReplies")
+  commentLikes   UserBlogCommentLike[]
+  reports        UserBlogCommentReport[]
 
   @@index([userBlogPostId])
   @@index([userId])
   @@index([parentId])
+  @@index([status])
   @@index([createdAt])
 }
 
@@ -764,4 +773,39 @@ model UserBlogBookmark {
   @@index([userId])
   @@index([userBlogPostId])
   @@index([createdAt])
+}
+
+model UserBlogCommentLike {
+  id         String      @id @default(cuid())
+  commentId  String
+  userId     String
+  createdAt  DateTime    @default(now())
+
+  // Relations
+  comment    UserBlogComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+model UserBlogCommentReport {
+  id          String          @id @default(cuid())
+  commentId   String
+  userId      String          // Who reported
+  reason      String          // spam, inappropriate, offensive, etc.
+  description String?         // Additional details
+  status      String          @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  resolvedAt  DateTime?
+  resolvedBy  String?         // Admin who resolved
+  createdAt   DateTime        @default(now())
+
+  // Relations
+  comment     UserBlogComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id])
+
+  @@index([commentId])
+  @@index([userId])
+  @@index([status])
 }

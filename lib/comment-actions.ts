@@ -6,53 +6,106 @@ import { CommentStatus } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 // Fetch comments for a blog post
-export async function getComments(blogPostId: string) {
+export async function getComments(blogPostId: string, postType: 'church' | 'community' = 'church') {
   try {
-    const comments = await prisma.blogComment.findMany({
-      where: {
-        blogPostId,
-        status: 'APPROVED',
-        parentId: null // Only get top-level comments
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            profileImage: true
-          }
+    if (postType === 'community') {
+      // Fetch comments for community blog posts
+      const comments = await prisma.userBlogComment.findMany({
+        where: {
+          userBlogPostId: blogPostId,
+          parentId: null // Only get top-level comments
         },
-        replies: {
-          where: {
-            status: 'APPROVED'
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
           },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                profileImage: true
+          replies: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  profileImage: true
+                }
               }
             },
-            commentLikes: true
-          },
-          orderBy: {
-            createdAt: 'asc'
+            orderBy: {
+              createdAt: 'asc'
+            }
           }
         },
-        commentLikes: true
-      },
-      orderBy: [
-        { isPinned: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
 
-    return { success: true, comments }
+      // Transform to match the expected format
+      const transformedComments = comments.map(comment => ({
+        ...comment,
+        isEdited: false,
+        editedAt: null,
+        isPinned: false,
+        status: 'APPROVED',
+        commentLikes: []
+      }))
+
+      return { success: true, comments: transformedComments }
+    } else {
+      // Fetch comments for church blog posts
+      const comments = await prisma.blogComment.findMany({
+        where: {
+          blogPostId,
+          status: 'APPROVED',
+          parentId: null // Only get top-level comments
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
+          },
+          replies: {
+            where: {
+              status: 'APPROVED'
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  profileImage: true
+                }
+              },
+              commentLikes: true
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
+          },
+          commentLikes: true
+        },
+        orderBy: [
+          { isPinned: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      })
+
+      return { success: true, comments }
+    }
   } catch (error) {
     console.error('Error fetching comments:', error)
     return { success: false, error: 'Failed to fetch comments' }
@@ -63,7 +116,8 @@ export async function getComments(blogPostId: string) {
 export async function createComment(
   blogPostId: string,
   content: string,
-  parentId?: string
+  parentId?: string,
+  postType: 'church' | 'community' = 'church'
 ) {
   try {
     const user = await getCurrentUser()
@@ -80,51 +134,97 @@ export async function createComment(
       return { success: false, error: 'Comment must be less than 1000 characters' }
     }
 
-    // Check if blog post exists
-    const blogPost = await prisma.blogPost.findUnique({
-      where: { id: blogPostId }
-    })
-
-    if (!blogPost) {
-      return { success: false, error: 'Blog post not found' }
+    // Check if blog post exists based on type
+    let postSlug: string
+    if (postType === 'community') {
+      const userBlogPost = await prisma.userBlogPost.findUnique({
+        where: { id: blogPostId }
+      })
+      if (!userBlogPost) {
+        return { success: false, error: 'Blog post not found' }
+      }
+      postSlug = userBlogPost.slug
+    } else {
+      const blogPost = await prisma.blogPost.findUnique({
+        where: { id: blogPostId }
+      })
+      if (!blogPost) {
+        return { success: false, error: 'Blog post not found' }
+      }
+      postSlug = blogPost.slug
     }
 
-    // Create comment
-    const comment = await prisma.blogComment.create({
-      data: {
-        content: content.trim(),
-        blogPostId,
-        userId: user.id,
-        parentId,
-        status: 'APPROVED' // Auto-approve for now, can add moderation later
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            profileImage: true
+    // Create comment based on post type
+    let comment: any
+    if (postType === 'community') {
+      comment = await prisma.userBlogComment.create({
+        data: {
+          content: content.trim(),
+          userBlogPostId: blogPostId,
+          userId: user.id,
+          parentId
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
           }
         }
+      })
+      // Add fields to match expected format
+      comment = {
+        ...comment,
+        isEdited: false,
+        editedAt: null,
+        isPinned: false,
+        status: 'APPROVED',
+        commentLikes: [],
+        replies: []
       }
-    })
-
-    // Update engagement stats
-    await prisma.userEngagement.updateMany({
-      where: {
-        blogPostId,
-        userId: user.id
-      },
-      data: {
-        comments: {
-          increment: 1
+    } else {
+      comment = await prisma.blogComment.create({
+        data: {
+          content: content.trim(),
+          blogPostId,
+          userId: user.id,
+          parentId,
+          status: 'APPROVED' // Auto-approve for now, can add moderation later
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
+          }
         }
-      }
-    })
+      })
+    }
 
-    revalidatePath(`/blog/${blogPost.slug}`)
+    // Update engagement stats for church posts only
+    if (postType === 'church') {
+      await prisma.userEngagement.updateMany({
+        where: {
+          blogPostId,
+          userId: user.id
+        },
+        data: {
+          comments: {
+            increment: 1
+          }
+        }
+      })
+    }
+
+    revalidatePath(postType === 'community' ? `/community-blogs/${postSlug}` : `/blog/${postSlug}`)
     
     return { success: true, comment }
   } catch (error) {
@@ -134,26 +234,11 @@ export async function createComment(
 }
 
 // Edit a comment
-export async function editComment(commentId: string, content: string) {
+export async function editComment(commentId: string, content: string, postType: 'church' | 'community' = 'church') {
   try {
     const user = await getCurrentUser()
     if (!user) {
       return { success: false, error: 'You must be logged in to edit comments' }
-    }
-
-    // Get the comment
-    const comment = await prisma.blogComment.findUnique({
-      where: { id: commentId },
-      include: { blogPost: true }
-    })
-
-    if (!comment) {
-      return { success: false, error: 'Comment not found' }
-    }
-
-    // Check if user owns the comment or is admin
-    if (comment.userId !== user.id && user.role !== 'ADMIN') {
-      return { success: false, error: 'You can only edit your own comments' }
     }
 
     // Validate content
@@ -165,30 +250,85 @@ export async function editComment(commentId: string, content: string) {
       return { success: false, error: 'Comment must be less than 1000 characters' }
     }
 
-    // Update comment
-    const updatedComment = await prisma.blogComment.update({
-      where: { id: commentId },
-      data: {
-        content: content.trim(),
-        isEdited: true,
-        editedAt: new Date()
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            profileImage: true
+    if (postType === 'community') {
+      // Get the community comment
+      const comment = await prisma.userBlogComment.findUnique({
+        where: { id: commentId },
+        include: { userBlogPost: true }
+      })
+
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user owns the comment or is admin
+      if (comment.userId !== user.id && user.role !== 'ADMIN') {
+        return { success: false, error: 'You can only edit your own comments' }
+      }
+
+      // Update community comment
+      const updatedComment = await prisma.userBlogComment.update({
+        where: { id: commentId },
+        data: {
+          content: content.trim(),
+          isEdited: true,
+          editedAt: new Date()
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
           }
         }
-      }
-    })
+      })
 
-    revalidatePath(`/blog/${comment.blogPost.slug}`)
-    
-    return { success: true, comment: updatedComment }
+      revalidatePath(`/community-blogs/${comment.userBlogPost.slug}`)
+      return { success: true, comment: updatedComment }
+    } else {
+      // Get the church comment
+      const comment = await prisma.blogComment.findUnique({
+        where: { id: commentId },
+        include: { blogPost: true }
+      })
+
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user owns the comment or is admin
+      if (comment.userId !== user.id && user.role !== 'ADMIN') {
+        return { success: false, error: 'You can only edit your own comments' }
+      }
+
+      // Update church comment
+      const updatedComment = await prisma.blogComment.update({
+        where: { id: commentId },
+        data: {
+          content: content.trim(),
+          isEdited: true,
+          editedAt: new Date()
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              profileImage: true
+            }
+          }
+        }
+      })
+
+      revalidatePath(`/blog/${comment.blogPost.slug}`)
+      return { success: true, comment: updatedComment }
+    }
   } catch (error) {
     console.error('Error editing comment:', error)
     return { success: false, error: 'Failed to edit comment' }
@@ -196,38 +336,63 @@ export async function editComment(commentId: string, content: string) {
 }
 
 // Delete a comment
-export async function deleteComment(commentId: string) {
+export async function deleteComment(commentId: string, postType: 'church' | 'community' = 'church') {
   try {
     const user = await getCurrentUser()
     if (!user) {
       return { success: false, error: 'You must be logged in to delete comments' }
     }
 
-    // Get the comment
-    const comment = await prisma.blogComment.findUnique({
-      where: { id: commentId },
-      include: { blogPost: true }
-    })
+    if (postType === 'community') {
+      // Get the community comment
+      const comment = await prisma.userBlogComment.findUnique({
+        where: { id: commentId },
+        include: { userBlogPost: true }
+      })
 
-    if (!comment) {
-      return { success: false, error: 'Comment not found' }
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user owns the comment or is admin
+      if (comment.userId !== user.id && user.role !== 'ADMIN') {
+        return { success: false, error: 'You can only delete your own comments' }
+      }
+
+      // Delete comment (cascade will delete replies and likes)
+      await prisma.userBlogComment.delete({
+        where: { id: commentId }
+      })
+
+      revalidatePath(`/community-blogs/${comment.userBlogPost.slug}`)
+      return { success: true }
+    } else {
+      // Get the church comment
+      const comment = await prisma.blogComment.findUnique({
+        where: { id: commentId },
+        include: { blogPost: true }
+      })
+
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user owns the comment or is admin
+      if (comment.userId !== user.id && user.role !== 'ADMIN') {
+        return { success: false, error: 'You can only delete your own comments' }
+      }
+
+      // Delete comment (cascade will delete replies and likes)
+      await prisma.blogComment.delete({
+        where: { id: commentId }
+      })
+
+      // Revalidate both the blog post page and admin comments page
+      revalidatePath(`/blog/${comment.blogPost.slug}`)
+      revalidatePath('/admin/comments')
+      
+      return { success: true }
     }
-
-    // Check if user owns the comment or is admin
-    if (comment.userId !== user.id && user.role !== 'ADMIN') {
-      return { success: false, error: 'You can only delete your own comments' }
-    }
-
-    // Delete comment (cascade will delete replies and likes)
-    await prisma.blogComment.delete({
-      where: { id: commentId }
-    })
-
-    // Revalidate both the blog post page and admin comments page
-    revalidatePath(`/blog/${comment.blogPost.slug}`)
-    revalidatePath('/admin/comments')
-    
-    return { success: true }
   } catch (error) {
     console.error('Error deleting comment:', error)
     return { success: false, error: 'Failed to delete comment' }
@@ -235,70 +400,131 @@ export async function deleteComment(commentId: string) {
 }
 
 // Like/unlike a comment
-export async function toggleCommentLike(commentId: string) {
+export async function toggleCommentLike(commentId: string, postType: 'church' | 'community' = 'church') {
   try {
     const user = await getCurrentUser()
     if (!user) {
       return { success: false, error: 'You must be logged in to like comments' }
     }
 
-    // Check if comment exists
-    const comment = await prisma.blogComment.findUnique({
-      where: { id: commentId },
-      include: { blogPost: true }
-    })
+    if (postType === 'community') {
+      // Check if community comment exists
+      const comment = await prisma.userBlogComment.findUnique({
+        where: { id: commentId },
+        include: { userBlogPost: true }
+      })
 
-    if (!comment) {
-      return { success: false, error: 'Comment not found' }
-    }
-
-    // Check if user already liked the comment
-    const existingLike = await prisma.commentLike.findUnique({
-      where: {
-        commentId_userId: {
-          commentId,
-          userId: user.id
-        }
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
       }
-    })
 
-    if (existingLike) {
-      // Unlike
-      await prisma.commentLike.delete({
-        where: { id: existingLike.id }
-      })
-
-      await prisma.blogComment.update({
-        where: { id: commentId },
-        data: {
-          likes: {
-            decrement: 1
+      // Check if user already liked the comment
+      const existingLike = await prisma.userBlogCommentLike.findUnique({
+        where: {
+          commentId_userId: {
+            commentId,
+            userId: user.id
           }
         }
       })
 
-      revalidatePath(`/blog/${comment.blogPost.slug}`)
-      return { success: true, liked: false }
+      if (existingLike) {
+        // Unlike
+        await prisma.userBlogCommentLike.delete({
+          where: { id: existingLike.id }
+        })
+
+        await prisma.userBlogComment.update({
+          where: { id: commentId },
+          data: {
+            likes: {
+              decrement: 1
+            }
+          }
+        })
+
+        revalidatePath(`/community-blogs/${comment.userBlogPost.slug}`)
+        return { success: true, liked: false }
+      } else {
+        // Like
+        await prisma.userBlogCommentLike.create({
+          data: {
+            commentId,
+            userId: user.id
+          }
+        })
+
+        await prisma.userBlogComment.update({
+          where: { id: commentId },
+          data: {
+            likes: {
+              increment: 1
+            }
+          }
+        })
+
+        revalidatePath(`/community-blogs/${comment.userBlogPost.slug}`)
+        return { success: true, liked: true }
+      }
     } else {
-      // Like
-      await prisma.commentLike.create({
-        data: {
-          commentId,
-          userId: user.id
-        }
+      // Check if church comment exists
+      const comment = await prisma.blogComment.findUnique({
+        where: { id: commentId },
+        include: { blogPost: true }
       })
 
-      await prisma.blogComment.update({
-        where: { id: commentId },
-        data: {
-          likes: {
-            increment: 1
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user already liked the comment
+      const existingLike = await prisma.commentLike.findUnique({
+        where: {
+          commentId_userId: {
+            commentId,
+            userId: user.id
           }
         }
       })
 
-      revalidatePath(`/blog/${comment.blogPost.slug}`)
-      return { success: true, liked: true }
+      if (existingLike) {
+        // Unlike
+        await prisma.commentLike.delete({
+          where: { id: existingLike.id }
+        })
+
+        await prisma.blogComment.update({
+          where: { id: commentId },
+          data: {
+            likes: {
+              decrement: 1
+            }
+          }
+        })
+
+        revalidatePath(`/blog/${comment.blogPost.slug}`)
+        return { success: true, liked: false }
+      } else {
+        // Like
+        await prisma.commentLike.create({
+          data: {
+            commentId,
+            userId: user.id
+          }
+        })
+
+        await prisma.blogComment.update({
+          where: { id: commentId },
+          data: {
+            likes: {
+              increment: 1
+            }
+          }
+        })
+
+        revalidatePath(`/blog/${comment.blogPost.slug}`)
+        return { success: true, liked: true }
+      }
     }
   } catch (error) {
     console.error('Error toggling comment like:', error)
@@ -310,7 +536,8 @@ export async function toggleCommentLike(commentId: string) {
 export async function reportComment(
   commentId: string,
   reason: string,
-  description?: string
+  description?: string,
+  postType: 'church' | 'community' = 'church'
 ) {
   try {
     const user = await getCurrentUser()
@@ -318,50 +545,97 @@ export async function reportComment(
       return { success: false, error: 'You must be logged in to report comments' }
     }
 
-    // Check if comment exists
-    const comment = await prisma.blogComment.findUnique({
-      where: { id: commentId }
-    })
-
-    if (!comment) {
-      return { success: false, error: 'Comment not found' }
-    }
-
-    // Check if user already reported this comment
-    const existingReport = await prisma.commentReport.findFirst({
-      where: {
-        commentId,
-        userId: user.id
-      }
-    })
-
-    if (existingReport) {
-      return { success: false, error: 'You have already reported this comment' }
-    }
-
-    // Create report
-    await prisma.commentReport.create({
-      data: {
-        commentId,
-        userId: user.id,
-        reason,
-        description
-      }
-    })
-
-    // Flag comment if it has multiple reports
-    const reportCount = await prisma.commentReport.count({
-      where: { commentId }
-    })
-
-    if (reportCount >= 3) {
-      await prisma.blogComment.update({
-        where: { id: commentId },
-        data: { status: 'FLAGGED' }
+    if (postType === 'community') {
+      // Check if community comment exists
+      const comment = await prisma.userBlogComment.findUnique({
+        where: { id: commentId }
       })
-    }
 
-    return { success: true }
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user already reported this comment
+      const existingReport = await prisma.userBlogCommentReport.findFirst({
+        where: {
+          commentId,
+          userId: user.id
+        }
+      })
+
+      if (existingReport) {
+        return { success: false, error: 'You have already reported this comment' }
+      }
+
+      // Create report
+      await prisma.userBlogCommentReport.create({
+        data: {
+          commentId,
+          userId: user.id,
+          reason,
+          description
+        }
+      })
+
+      // Flag comment if it has multiple reports
+      const reportCount = await prisma.userBlogCommentReport.count({
+        where: { commentId }
+      })
+
+      if (reportCount >= 3) {
+        await prisma.userBlogComment.update({
+          where: { id: commentId },
+          data: { status: 'FLAGGED' }
+        })
+      }
+
+      return { success: true }
+    } else {
+      // Check if church comment exists
+      const comment = await prisma.blogComment.findUnique({
+        where: { id: commentId }
+      })
+
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      // Check if user already reported this comment
+      const existingReport = await prisma.commentReport.findFirst({
+        where: {
+          commentId,
+          userId: user.id
+        }
+      })
+
+      if (existingReport) {
+        return { success: false, error: 'You have already reported this comment' }
+      }
+
+      // Create report
+      await prisma.commentReport.create({
+        data: {
+          commentId,
+          userId: user.id,
+          reason,
+          description
+        }
+      })
+
+      // Flag comment if it has multiple reports
+      const reportCount = await prisma.commentReport.count({
+        where: { commentId }
+      })
+
+      if (reportCount >= 3) {
+        await prisma.blogComment.update({
+          where: { id: commentId },
+          data: { status: 'FLAGGED' }
+        })
+      }
+
+      return { success: true }
+    }
   } catch (error) {
     console.error('Error reporting comment:', error)
     return { success: false, error: 'Failed to report comment' }
@@ -369,32 +643,52 @@ export async function reportComment(
 }
 
 // Pin/unpin a comment (Admin only)
-export async function togglePinComment(commentId: string) {
+export async function togglePinComment(commentId: string, postType: 'church' | 'community' = 'church') {
   try {
     const user = await getCurrentUser()
     if (!user || user.role !== 'ADMIN') {
       return { success: false, error: 'Only admins can pin comments' }
     }
 
-    const comment = await prisma.blogComment.findUnique({
-      where: { id: commentId },
-      include: { blogPost: true }
-    })
+    if (postType === 'community') {
+      const comment = await prisma.userBlogComment.findUnique({
+        where: { id: commentId },
+        include: { userBlogPost: true }
+      })
 
-    if (!comment) {
-      return { success: false, error: 'Comment not found' }
-    }
-
-    const updatedComment = await prisma.blogComment.update({
-      where: { id: commentId },
-      data: {
-        isPinned: !comment.isPinned
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
       }
-    })
 
-    revalidatePath(`/blog/${comment.blogPost.slug}`)
-    
-    return { success: true, isPinned: updatedComment.isPinned }
+      const updatedComment = await prisma.userBlogComment.update({
+        where: { id: commentId },
+        data: {
+          isPinned: !comment.isPinned
+        }
+      })
+
+      revalidatePath(`/community-blogs/${comment.userBlogPost.slug}`)
+      return { success: true, isPinned: updatedComment.isPinned }
+    } else {
+      const comment = await prisma.blogComment.findUnique({
+        where: { id: commentId },
+        include: { blogPost: true }
+      })
+
+      if (!comment) {
+        return { success: false, error: 'Comment not found' }
+      }
+
+      const updatedComment = await prisma.blogComment.update({
+        where: { id: commentId },
+        data: {
+          isPinned: !comment.isPinned
+        }
+      })
+
+      revalidatePath(`/blog/${comment.blogPost.slug}`)
+      return { success: true, isPinned: updatedComment.isPinned }
+    }
   } catch (error) {
     console.error('Error toggling pin status:', error)
     return { success: false, error: 'Failed to update pin status' }
