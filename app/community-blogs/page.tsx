@@ -773,6 +773,22 @@ function CommunityBlogsContent() {
                         )}
                       </AnimatePresence>
                       
+                      {/* Shimmer overlay while loading (does not affect layout) */}
+                      {isSearching && (
+                        <motion.div
+                          className="absolute inset-0 overflow-hidden rounded-full pointer-events-none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: [0, 1, 1, 0] }}
+                          transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.2 }}
+                        >
+                          <motion.div
+                            className="absolute top-0 bottom-0 left-[-40%] w-1/2 bg-gradient-to-r from-white/0 via-white/30 to-white/0 blur-sm"
+                            initial={{ x: '-50%' }}
+                            animate={{ x: ['-50%', '160%'] }}
+                            transition={{ duration: 1.2, ease: 'easeInOut', repeat: Infinity, repeatType: 'loop' }}
+                          />
+                        </motion.div>
+                      )}
                     				{/* Button content - keep size constant while loading */}
                       				<motion.div 
                         className="relative z-10 flex items-center justify-center"
