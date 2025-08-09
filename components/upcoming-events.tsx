@@ -5,6 +5,7 @@ import { Calendar, Clock, MapPin, Users } from "lucide-react"
 import Link from "next/link"
 import { getPublicEvents } from "@/lib/public-event-actions"
 import { MotionDiv } from "./motion-div"
+import { formatTime12Hour } from "@/lib/time-utils"
 
 export async function UpcomingEvents() {
   const allEvents = await getPublicEvents()
@@ -58,7 +59,7 @@ export async function UpcomingEvents() {
                   <div className="space-y-2 mb-4 text-slate-600 dark:text-gray-300 text-sm">
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4" />
-                      <span>{event.time}</span>
+                      <span>{formatTime12Hour(event.time)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4" />

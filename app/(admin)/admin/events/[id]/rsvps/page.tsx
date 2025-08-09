@@ -25,6 +25,7 @@ import type { User } from "@prisma/client"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
+import { formatTime12Hour } from "@/lib/time-utils"
 
 interface EventRSVP {
   id: string
@@ -171,7 +172,7 @@ export default function EventRSVPsPage({ params }: { params: Promise<{ id: strin
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          <span>{event.time}</span>
+                          <span>{formatTime12Hour(event.time)}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="w-4 h-4" />

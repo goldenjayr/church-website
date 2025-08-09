@@ -23,6 +23,7 @@ import { EventRSVPModal } from "@/components/event-rsvp-modal"
 import { EventShare } from "@/components/event-share"
 import { toast } from "sonner"
 import type { Event } from "@prisma/client"
+import { formatTime12Hour } from "@/lib/time-utils"
 
 interface EventDetailsClientProps {
   event: Event & {
@@ -117,7 +118,7 @@ export function EventDetailsClient({ event }: EventDetailsClientProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{event.time}</span>
+                    <span>{formatTime12Hour(event.time)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
@@ -207,7 +208,7 @@ export function EventDetailsClient({ event }: EventDetailsClientProps) {
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm mb-1">Time</p>
-                          <p className="text-gray-600 dark:text-gray-400">{event.time}</p>
+                          <p className="text-gray-600 dark:text-gray-400">{formatTime12Hour(event.time)}</p>
                         </div>
                       </li>
                       <li className="flex items-start gap-4">

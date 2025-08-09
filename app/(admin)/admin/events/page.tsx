@@ -15,6 +15,7 @@ import { getEvents, deleteEvent } from "@/lib/event-actions"
 import { LoginForm } from "@/components/admin/login-form"
 import { AdminPageLayout } from "@/components/admin/admin-layout"
 import { toast } from "sonner"
+import { formatTime12Hour } from "@/lib/time-utils"
 
 export default function AdminEventsPage() {
   const router = useRouter()
@@ -147,7 +148,7 @@ export default function AdminEventsPage() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                                  <span>{event.time}</span>
+                                  <span>{formatTime12Hour(event.time)}</span>
                                 </div>
                               </div>
                             </div>

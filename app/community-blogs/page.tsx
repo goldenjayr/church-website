@@ -420,7 +420,7 @@ function CommunityBlogsContent() {
       
       // Then load bookmarks separately for the sidebar, passing the user explicitly
       if (currentUser) {
-        await loadBookmarks(currentUser)
+        await loadBookmarks(currentUser, true) // true = initial load
       }
     } catch (error) {
       console.error("Error initializing:", error)
@@ -583,13 +583,17 @@ function CommunityBlogsContent() {
   }
 
   // Load user's bookmarks
-  const loadBookmarks = async (currentUser?: any) => {
+  const loadBookmarks = async (currentUser?: any, isInitialLoad: boolean = false) => {
     const activeUser = currentUser || user
     if (!activeUser) {
       return
     }
 
-    setLoadingBookmarks(true)
+    // Only show loading spinner on initial load
+    if (isInitialLoad) {
+      setLoadingBookmarks(true)
+    }
+    
     try {
       const response = await fetch('/api/bookmarks?limit=100', {
         credentials: 'include' // Ensure cookies are sent
@@ -627,7 +631,9 @@ function CommunityBlogsContent() {
       setBookmarkedPosts(new Set())
       setSavedPosts([])
     } finally {
-      setLoadingBookmarks(false)
+      if (isInitialLoad) {
+        setLoadingBookmarks(false)
+      }
     }
   }
 
@@ -636,6 +642,28 @@ function CommunityBlogsContent() {
     if (!user) {
       toast.error('Please sign in to bookmark posts')
       return
+    }
+
+    // Optimistically update the UI immediately
+    const wasBookmarked = bookmarkedPosts.has(postId)
+    
+    if (wasBookmarked) {
+      // Optimistically remove from bookmarks
+      setBookmarkedPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
+      // Optimistically remove from saved posts
+      setSavedPosts(prev => prev.filter(post => post.id !== postId))
+    } else {
+      // Optimistically add to bookmarks
+      setBookmarkedPosts(prev => new Set([...prev, postId]))
+      // Find the post from the current posts list and add to saved posts
+      const postToAdd = posts.find(p => p.id === postId)
+      if (postToAdd) {
+        setSavedPosts(prev => [postToAdd, ...prev])
+      }
     }
 
     try {
@@ -656,31 +684,41 @@ function CommunityBlogsContent() {
 
       if (response.ok) {
         if (data.isBookmarked) {
-          // Add to bookmarks
-          setBookmarkedPosts(prev => new Set([...prev, postId]))
           toast.success('Added to bookmarks')
         } else {
-          // Remove from bookmarks
+          toast.success('Removed from bookmarks')
+        }
+        // Don't reload - we already updated optimistically
+      } else {
+        // Revert optimistic update on error
+        if (wasBookmarked) {
+          setBookmarkedPosts(prev => new Set([...prev, postId]))
+        } else {
           setBookmarkedPosts(prev => {
             const newSet = new Set(prev)
             newSet.delete(postId)
             return newSet
           })
-          toast.success('Removed from bookmarks')
         }
-
-        // Reload saved posts for sidebar
-        if (user) {
-          await loadBookmarks(user)
-        }
-      } else {
+        // Don't reload - just show error
         toast.error(data.error || 'Failed to update bookmark')
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error)
+      // Revert optimistic update on error
+      if (wasBookmarked) {
+        setBookmarkedPosts(prev => new Set([...prev, postId]))
+      } else {
+        setBookmarkedPosts(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(postId)
+          return newSet
+        })
+      }
+      // Don't reload - just show error
       toast.error('Failed to update bookmark')
     }
-  }, [user, bookmarkedPosts])
+  }, [user, bookmarkedPosts, posts])
 
   if (initialLoading) {
     return (
@@ -997,14 +1035,35 @@ function CommunityBlogsContent() {
 
               {/* Saved Posts */}
               {user && (
-                <div className="bg-white rounded-lg shadow-sm p-4">
+                <motion.div 
+                  className="bg-white rounded-lg shadow-sm p-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
                   <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <BookmarkCheck className="w-4 h-4 text-blue-600" />
+                    <motion.div
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: [0, -10, 10, 0] }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      <BookmarkCheck className="w-4 h-4 text-blue-600" />
+                    </motion.div>
                     Saved Posts
                     {savedPosts.length > 0 && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                      <motion.span 
+                        className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ 
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 25,
+                          delay: 0.3 
+                        }}
+                      >
                         {savedPosts.length}
-                      </span>
+                      </motion.span>
                     )}
                   </h3>
                   <style jsx>{`
@@ -1030,69 +1089,137 @@ function CommunityBlogsContent() {
                       scrollbar-color: #cbd5e1 #f1f5f9;
                     }
                   `}</style>
-                  <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar pr-1">
+                  <div className="space-y-1.5 max-h-96 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
                     {loadingBookmarks ? (
                       <div className="flex items-center justify-center py-8">
-                        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-600"></div>
+                        <motion.div
+                          className="rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-600"
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                        />
                       </div>
                     ) : savedPosts.length > 0 ? (
-                      savedPosts.map((post: any) => {
-                        if (!post) return null
-                        return (
-                          <Link
-                            key={post.id}
-                            href={getBlogPostUrl(post)}
-                            className="block group"
-                          >
-                            <div className="px-2.5 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 border border-transparent hover:border-blue-100 group">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-slate-700 group-hover:text-blue-700 line-clamp-2 leading-relaxed">
-                                    {post.title}
-                                  </p>
-                                  <p className="text-[10px] text-slate-500 mt-0.5">
-                                    by {post.author?.name || 'Anonymous'}
-                                  </p>
+                      <AnimatePresence>
+                        {savedPosts.map((post: any, index: number) => {
+                          if (!post) return null
+                          return (
+                            <motion.div
+                              key={post.id}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ 
+                                opacity: 1, 
+                                x: 0,
+                                transition: {
+                                  duration: 0.2,
+                                  delay: index * 0.03,
+                                  ease: "easeOut"
+                                }
+                              }}
+                              exit={{ 
+                                opacity: 0,
+                                transition: {
+                                  duration: 0.1
+                                }
+                              }}
+                              className="mb-1.5"
+                            >
+                              <Link
+                                href={getBlogPostUrl(post)}
+                                className="block group"
+                              >
+                                <div className="px-2.5 py-2 rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 border border-transparent hover:border-blue-100 hover:translate-x-0.5">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-slate-700 group-hover:text-blue-700 line-clamp-2 leading-relaxed">
+                                        {post.title}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500 mt-0.5">
+                                        by {post.author?.name || 'Anonymous'}
+                                      </p>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 hover:bg-red-50 flex-shrink-0 transition-opacity duration-200"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        handleToggleBookmark(post.id, post.postType)
+                                      }}
+                                      title="Remove from bookmarks"
+                                    >
+                                      <motion.div
+                                        whileHover={{ rotate: 90, scale: 1.2 }}
+                                        transition={{ duration: 0.2 }}
+                                      >
+                                        <X className="w-3 h-3 text-slate-400 hover:text-red-500 transition-colors" />
+                                      </motion.div>
+                                    </Button>
+                                  </div>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-red-50 flex-shrink-0"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleToggleBookmark(post.id, post.postType)
-                                  }}
-                                  title="Remove from bookmarks"
-                                >
-                                  <X className="w-3 h-3 text-slate-400 hover:text-red-500 transition-colors" />
-                                </Button>
-                              </div>
-                            </div>
-                          </Link>
-                        )
-                      })
+                              </Link>
+                            </motion.div>
+                          )
+                        })}
+                      </AnimatePresence>
                     ) : (
-                      <div className="text-center py-8">
-                        <Bookmark className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-slate-600">
+                      <motion.div 
+                        className="text-center py-8"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ 
+                            type: "spring",
+                            stiffness: 200,
+                            damping: 20,
+                            delay: 0.1
+                          }}
+                        >
+                          <Bookmark className="w-10 h-10 text-slate-200 mx-auto mb-3" />
+                        </motion.div>
+                        <motion.p 
+                          className="text-sm font-medium text-slate-600"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                        >
                           No saved posts yet
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                        </motion.p>
+                        <motion.p 
+                          className="text-xs text-slate-400 mt-1 leading-relaxed"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                        >
                           Click the bookmark icon on any post to save it for later
-                        </p>
-                      </div>
+                        </motion.p>
+                      </motion.div>
                     )}
                   </div>
                   {savedPosts.length > 10 && (
-                    <Link
-                      href="/community-blogs/bookmarks"
-                      className="block text-center pt-3 mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium border-t border-slate-100 transition-colors"
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5 }}
+                      whileHover={{ x: 2 }}
                     >
-                      View all {savedPosts.length} saved posts →
-                    </Link>
+                      <Link
+                        href="/community-blogs/bookmarks"
+                        className="block text-center pt-3 mt-2 text-xs text-blue-600 hover:text-blue-700 font-medium border-t border-slate-100 transition-colors"
+                      >
+                        View all {savedPosts.length} saved posts →
+                      </Link>
+                    </motion.div>
                   )}
-                </div>
+                </motion.div>
               )}
 
               {/* Quick Actions */}

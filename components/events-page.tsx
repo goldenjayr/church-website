@@ -30,6 +30,7 @@ import {
 import { Event } from "@prisma/client"
 import Link from "next/link"
 import { format, isPast, isToday, isTomorrow, differenceInDays, addDays } from "date-fns"
+import { formatTime12Hour } from "@/lib/time-utils"
 
 interface EventWithRSVPCount extends Event {
   _count?: {
@@ -285,7 +286,7 @@ export function EventsPage(props: IProps) {
                           </div>
                           <div className="flex items-center text-slate-600">
                             <Clock className="w-4 h-4 mr-2 text-green-500" />
-                            <span>{event.time}</span>
+                            <span>{formatTime12Hour(event.time)}</span>
                           </div>
                           <div className="flex items-center text-slate-600 col-span-2">
                             <MapPin className="w-4 h-4 mr-2 text-red-500" />
@@ -583,7 +584,7 @@ export function EventsPage(props: IProps) {
                           </div>
                           <div className="flex items-center text-slate-600">
                             <Clock className="w-4 h-4 mr-2 text-green-500" />
-                            <span>{event.time}</span>
+                            <span>{formatTime12Hour(event.time)}</span>
                           </div>
                           <div className="flex items-center text-slate-600">
                             <MapPin className="w-4 h-4 mr-2 text-red-500" />
@@ -717,7 +718,7 @@ export function EventsPage(props: IProps) {
                               </div>
                               <div className="flex items-center text-slate-600">
                                 <Clock className="w-4 h-4 mr-2 text-green-500" />
-                                <span>{event.time}</span>
+                                <span>{formatTime12Hour(event.time)}</span>
                               </div>
                               <div className="flex items-center text-slate-600">
                                 <MapPin className="w-4 h-4 mr-2 text-red-500" />
