@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin, User, LogOut, LayoutDashboard, LogIn, Sparkles } from "lucide-react"
+import { Menu, X, Heart, Calendar, BookOpen, Users, MapPin, User, LogOut, LayoutDashboard, LogIn, Sparkles, MessageSquare } from "lucide-react"
 import { logout } from "@/lib/auth-actions"
 import { useRouter } from "next/navigation"
 import type { User as UserType } from "@prisma/client"
@@ -127,7 +127,7 @@ export function NavigationOptimized() {
 
   // Auth section component with loading state
   const AuthSection = () => {
-    // During SSR or initial mount, show nothing to prevent flash
+    // During SSR or initial mount, show consistent layout to prevent flash
     if (!mounted) {
       return (
         <div className="flex items-center gap-3">
@@ -137,11 +137,17 @@ export function NavigationOptimized() {
               Donate
             </Link>
           </Button>
+          <Button asChild variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Link href="/community-blogs">
+              <MessageSquare className="w-4 h-4 mr-1.5" />
+              Community
+            </Link>
+          </Button>
         </div>
       )
     }
 
-    // Show loading state only if we're actually loading (no cache)
+    // Show loading state with consistent button layout
     if (isLoading) {
       return (
         <div className="flex items-center gap-3">
@@ -149,6 +155,12 @@ export function NavigationOptimized() {
             <Link href="/donate">
               <Heart className="w-4 h-4 mr-1.5" />
               Donate
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Link href="/community-blogs">
+              <MessageSquare className="w-4 h-4 mr-1.5" />
+              Community
             </Link>
           </Button>
           <div className="flex items-center gap-2">
@@ -167,6 +179,12 @@ export function NavigationOptimized() {
               <Link href="/donate">
                 <Heart className="w-4 h-4 mr-1.5" />
                 Donate
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Link href="/community-blogs">
+                <MessageSquare className="w-4 h-4 mr-1.5" />
+                Community
               </Link>
             </Button>
 
@@ -230,6 +248,18 @@ export function NavigationOptimized() {
           </>
         ) : (
           <>
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm">
+              <Link href="/donate">
+                <Heart className="w-4 h-4 mr-1.5" />
+                Donate
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Link href="/community-blogs">
+                <MessageSquare className="w-4 h-4 mr-1.5" />
+                Community
+              </Link>
+            </Button>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -243,13 +273,6 @@ export function NavigationOptimized() {
                 </Link>
               </Button>
             </motion.div>
-
-            <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm">
-              <Link href="/donate">
-                <Heart className="w-4 h-4 mr-1.5" />
-                Donate
-              </Link>
-            </Button>
           </>
         )}
       </div>

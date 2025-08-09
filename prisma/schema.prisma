@@ -44,12 +44,15 @@ model User {
 
   // Relations
   blogPosts BlogPost[]
+  userBlogPosts UserBlogPost[]  // User-created public blogs
   events    Event[]
   passwordResetTokens PasswordResetToken[]
   blogPostViews BlogPostView[]
   blogPostLikes BlogPostLike[]
+  userBlogLikes UserBlogLike[]  // Likes on user-created blogs
   engagements UserEngagement[]
   comments BlogComment[]
+  userBlogComments UserBlogComment[]  // Comments on user-created blogs
   commentLikes CommentLike[]
   commentReports CommentReport[]
 }
@@ -659,4 +662,69 @@ model CommentReport {
   @@index([commentId])
   @@index([userId])
   @@index([status])
+}
+
+// User-created blog posts for public blogs feature
+model UserBlogPost {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  content         String      // Rich text content (HTML)
+  excerpt         String?
+  coverImage      String?     // Featured image
+  published       Boolean     @default(false)
+  tags            String[]
+  authorId        String
+  viewCount       Int         @default(0)
+  likeCount       Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  publishedAt     DateTime?
+
+  // Relations
+  author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes    UserBlogLike[]
+  comments UserBlogComment[]
+
+  @@index([authorId])
+  @@index([published])
+  @@index([slug])
+  @@index([createdAt])
+}
+
+model UserBlogLike {
+  id             String       @id @default(cuid())
+  userBlogPostId String
+  userId         String
+  createdAt      DateTime     @default(now())
+
+  // Relations
+  userBlogPost   UserBlogPost @relation(fields: [userBlogPostId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userBlogPostId, userId])
+  @@index([userBlogPostId])
+  @@index([userId])
+}
+
+model UserBlogComment {
+  id             String          @id @default(cuid())
+  content        String          // The comment text
+  userBlogPostId String          // Which user blog post this comment belongs to
+  userId         String          // Who wrote the comment
+  parentId       String?         // For nested replies
+  likes          Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  // Relations
+  userBlogPost   UserBlogPost    @relation(fields: [userBlogPostId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id])
+  parent         UserBlogComment?  @relation("UserBlogCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies        UserBlogComment[] @relation("UserBlogCommentReplies")
+
+  @@index([userBlogPostId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
 }

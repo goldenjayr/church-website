@@ -392,4 +392,47 @@ export class BlogEngagementService {
     const data = `${ipAddress}-${userAgent}-${new Date().toDateString()}`;
     return createHash('sha256').update(data).digest('hex');
   }
+
+  /**
+   * Track a view for a community blog post with anti-bot and rate limiting
+   */
+  static async trackCommunityView(data: ViewTrackingData): Promise<{ success: boolean; reason?: string }> {
+    try {
+      // Check if it's a bot
+      const isBot = this.detectBot(data.userAgent);
+      if (isBot) {
+        return { success: false, reason: 'Bot detected' };
+      }
+
+      // Rate limiting check
+      const rateLimitKey = `community-view:${data.ipAddress}:${data.blogPostId}`;
+      const viewCount = await redis.incr(rateLimitKey);
+      
+      if (viewCount === 1) {
+        // Set expiry for 1 hour
+        await redis.expire(rateLimitKey, 3600);
+      } else if (viewCount > 10) {
+        // More than 10 views from same IP in an hour
+        return { success: false, reason: 'Rate limit exceeded' };
+      }
+
+      // Check for duplicate view in the last 30 minutes
+      const duplicateKey = `community-duplicate:${data.sessionId}:${data.blogPostId}`;
+      const isDuplicate = await redis.get(duplicateKey);
+      
+      if (isDuplicate) {
+        return { success: false, reason: 'Duplicate view' };
+      }
+
+      // Mark this view to prevent duplicates
+      await redis.set(duplicateKey, '1', { ex: 1800 }); // 30 minutes
+
+      // For community blogs, we're updating the view count directly in the route
+      // This method just handles the anti-bot and rate limiting
+      return { success: true };
+    } catch (error) {
+      console.error('Error tracking community view:', error);
+      return { success: false, reason: 'Internal error' };
+    }
+  }
 }

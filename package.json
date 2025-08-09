@@ -17,7 +17,8 @@
     "seed:all": "tsx scripts/seed-all.ts",
     "migrate:categories": "tsx scripts/migrate-blog-categories.ts",
     "test:blog": "tsx scripts/test-html-rendering.ts",
-    "verify:all": "tsx scripts/verify-functionality.ts"
+    "verify:all": "tsx scripts/verify-functionality.ts",
+    "cleanup:base64-blogs": "tsx scripts/cleanup-base64-blogs.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

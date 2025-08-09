@@ -152,6 +152,13 @@ export default function UserDashboard() {
               <Link href="/donate" className="text-slate-600 hover:text-slate-900 transition-colors">
                 Donate
               </Link>
+              <Link 
+                href="/community-blogs" 
+                className="text-slate-600 hover:text-slate-900 transition-colors font-medium flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-green-50 px-3 py-1.5 rounded-lg border border-blue-200 hover:border-blue-300 hover:shadow-sm transition-all"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Community
+              </Link>
             </nav>
 
             <div className="flex items-center gap-4">
@@ -296,7 +303,7 @@ export default function UserDashboard() {
                     className="w-full justify-start"
                     asChild
                   >
-                    <Link href="/profile">
+                  <Link href="/community-blogs">
                       <User className="w-4 h-4 mr-2" />
                       Edit Profile
                     </Link>

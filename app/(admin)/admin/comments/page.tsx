@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth-actions"
 import { prisma } from "@/lib/prisma-client"
 import { AdminCommentsClient } from "./admin-comments-client"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminCommentsPage() {
   const user = await getCurrentUser()
 
