@@ -8,7 +8,7 @@ import { Calendar, User, Tag, ArrowLeft, Clock } from "lucide-react"
 import Link from "next/link"
 import { getAuthorDisplay } from "@/lib/author-utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BlogEngagement, BlogEngagementStats } from "@/components/blog/blog-engagement"
+import { UnifiedBlogEngagement, UnifiedBlogEngagementCompact } from "@/components/blog/unified-blog-engagement"
 import { CommentSection } from "@/components/blog/comment-section"
 import { getOptimizedImageUrl } from "@/lib/cloudinary-client"
 import { getBlogPostUrl } from "@/lib/combined-blog-utils"
@@ -130,8 +130,11 @@ export function UnifiedBlogPost({ post, relatedPosts = [], currentUser, postType
               </div>
             </div>
 
-            {/* Engagement System - Same for both types */}
-            <BlogEngagement slug={post.slug} />
+            {/* Engagement System - Unified for both types */}
+            <UnifiedBlogEngagement 
+              slug={post.slug} 
+              blogType={postType === 'church' ? 'admin' : 'user'}
+            />
           </motion.div>
         </div>
       </section>
@@ -300,9 +303,12 @@ export function UnifiedBlogPost({ post, relatedPosts = [], currentUser, postType
                             {relatedPost.excerpt || 'No excerpt available'}
                           </p>
 
-                          {/* Engagement stats - Same for both types */}
+                          {/* Engagement stats - Using unified compact component */}
                           <div className="mb-3">
-                            <BlogEngagementStats slug={relatedPost.slug} />
+                            <UnifiedBlogEngagementCompact 
+                              slug={relatedPost.slug} 
+                              blogType={relatedPost.authorId ? 'user' : 'admin'}
+                            />
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-slate-500 mb-4">

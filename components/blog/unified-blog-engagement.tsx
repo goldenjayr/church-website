@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Heart, Eye, Share2, Link2, Twitter, Facebook, Linkedin, Sparkles, TrendingUp, Users, MessageCircle, Send, Mail, LinkIcon } from 'lucide-react';
-import { useBlogEngagement, useBlogShare } from '@/hooks/use-blog-engagement';
+import React, { useState } from 'react';
+import { Heart, Eye, Share2, Twitter, Facebook, Linkedin, MessageCircle, LinkIcon, Sparkles } from 'lucide-react';
+import { useUnifiedBlogEngagement, useUnifiedBlogShare } from '@/hooks/use-unified-blog-engagement';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -20,14 +20,35 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-interface BlogEngagementProps {
+interface UnifiedBlogEngagementProps {
   slug: string;
+  blogType?: 'admin' | 'user';
   className?: string;
+  showComments?: boolean;
 }
 
-export function BlogEngagement({ slug, className }: BlogEngagementProps) {
-  const { views, likes, hasLiked, isLoading, toggleLike, isAuthenticated } = useBlogEngagement(slug);
-  const { shareOnTwitter, shareOnFacebook, shareOnLinkedIn, copyLink } = useBlogShare(slug);
+/**
+ * Unified blog engagement component that works for both admin and user blog posts
+ * Automatically detects blog type from URL if not specified
+ */
+export function UnifiedBlogEngagement({ 
+  slug, 
+  blogType, 
+  className,
+  showComments = true 
+}: UnifiedBlogEngagementProps) {
+  const { 
+    views, 
+    likes, 
+    comments, 
+    hasLiked, 
+    isLoading, 
+    toggleLike, 
+    isAuthenticated,
+    blogType: detectedType 
+  } = useUnifiedBlogEngagement(slug, blogType);
+  
+  const { shareOnTwitter, shareOnFacebook, shareOnLinkedIn, copyLink } = useUnifiedBlogShare(slug, blogType || detectedType);
   const [isLiking, setIsLiking] = useState(false);
   const [showSparkles, setShowSparkles] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -123,7 +144,7 @@ export function BlogEngagement({ slug, className }: BlogEngagementProps) {
           staggerChildren: 0.1
         }}
       >
-        {/* Views Counter - Modern Glass Effect */}
+        {/* Views Counter */}
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="group flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-br from-gray-50 to-gray-100/50 backdrop-blur-sm border border-gray-200/60 rounded-full hover:from-gray-100 hover:to-gray-200/50 transition-all duration-300 cursor-default">
@@ -138,7 +159,24 @@ export function BlogEngagement({ slug, className }: BlogEngagementProps) {
           </TooltipContent>
         </Tooltip>
 
-        {/* Like Button - Modern Animated Design */}
+        {/* Comments Counter (for community blogs) */}
+        {showComments && comments !== undefined && comments > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="group flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-br from-gray-50 to-gray-100/50 backdrop-blur-sm border border-gray-200/60 rounded-full hover:from-gray-100 hover:to-gray-200/50 transition-all duration-300 cursor-default">
+                <MessageCircle className="w-4 h-4 text-gray-600 group-hover:text-gray-800 transition-colors" />
+                <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
+                  {formatNumber(comments)}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent className="bg-gray-900 text-white border-gray-800">
+              <p className="text-xs">{comments} {comments === 1 ? 'comment' : 'comments'}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* Like Button */}
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -201,7 +239,7 @@ export function BlogEngagement({ slug, className }: BlogEngagementProps) {
           </TooltipContent>
         </Tooltip>
 
-        {/* Share Button - Modern Dropdown */}
+        {/* Share Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="group flex items-center justify-center w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full shadow-lg shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 active:scale-95">
@@ -288,49 +326,33 @@ export function BlogEngagement({ slug, className }: BlogEngagementProps) {
   );
 }
 
-// Compact version for list views - TRACKS VIEWS (use for main post only)
-export function BlogEngagementCompact({ slug, className }: BlogEngagementProps) {
-  const { views, likes, isLoading } = useBlogEngagement(slug);
-
-  if (isLoading) {
-    return (
-      <div className={cn('flex items-center gap-3 text-sm text-gray-500', className)}>
-        <div className="animate-pulse flex items-center gap-3">
-          <div className="h-4 w-12 bg-gray-200 rounded" />
-          <div className="h-4 w-12 bg-gray-200 rounded" />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn('flex items-center gap-3 text-sm text-gray-500', className)}>
-      <span className="flex items-center gap-1">
-        <Eye className="w-4 h-4" />
-        {formatNumber(views)}
-      </span>
-      <span className="flex items-center gap-1">
-        <Heart className="w-4 h-4" />
-        {formatNumber(likes)}
-      </span>
-    </div>
-  );
-}
-
-// Stats-only version for related posts - DOES NOT TRACK VIEWS
-export function BlogEngagementStats({ slug, className }: BlogEngagementProps) {
-  const [stats, setStats] = useState({ views: 0, likes: 0, isLoading: true });
+/**
+ * Compact version for list views - DOES NOT track views
+ * Use this for blog lists, related posts, etc.
+ */
+export function UnifiedBlogEngagementCompact({ 
+  slug, 
+  blogType, 
+  className,
+  showComments = false 
+}: UnifiedBlogEngagementProps) {
+  const [stats, setStats] = useState({ views: 0, likes: 0, comments: 0, isLoading: true });
   
-  useEffect(() => {
+  React.useEffect(() => {
     // Only fetch stats, don't track views
     const loadStats = async () => {
       try {
-        const response = await fetch(`/api/blog/${slug}/stats`);
+        const endpoint = blogType === 'user' || (typeof window !== 'undefined' && window.location.pathname.includes('/community-blogs/'))
+          ? `/api/community-blogs/${slug}/stats`
+          : `/api/blog/${slug}/stats`;
+        
+        const response = await fetch(endpoint);
         if (response.ok) {
           const data = await response.json();
           setStats({
             views: data.totalViews || 0,
             likes: data.totalLikes || 0,
+            comments: data.totalComments || 0,
             isLoading: false,
           });
         }
@@ -341,7 +363,7 @@ export function BlogEngagementStats({ slug, className }: BlogEngagementProps) {
     };
     
     loadStats();
-  }, [slug]);
+  }, [slug, blogType]);
 
   if (stats.isLoading) {
     return (
@@ -349,6 +371,7 @@ export function BlogEngagementStats({ slug, className }: BlogEngagementProps) {
         <div className="animate-pulse flex items-center gap-3">
           <div className="h-4 w-12 bg-gray-200 rounded" />
           <div className="h-4 w-12 bg-gray-200 rounded" />
+          {showComments && <div className="h-4 w-12 bg-gray-200 rounded" />}
         </div>
       </div>
     );
@@ -364,6 +387,12 @@ export function BlogEngagementStats({ slug, className }: BlogEngagementProps) {
         <Heart className="w-4 h-4" />
         {formatNumber(stats.likes)}
       </span>
+      {showComments && stats.comments > 0 && (
+        <span className="flex items-center gap-1">
+          <MessageCircle className="w-4 h-4" />
+          {formatNumber(stats.comments)}
+        </span>
+      )}
     </div>
   );
 }

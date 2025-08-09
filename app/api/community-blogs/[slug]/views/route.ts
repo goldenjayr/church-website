@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { BlogEngagementService } from '@/lib/services/blog-engagement.service';
+import { UnifiedBlogEngagementService } from '@/lib/services/unified-blog-engagement.service';
 import { getCurrentUser } from '@/lib/auth-actions';
-import requestIp from 'request-ip';
 
 const prisma = new PrismaClient();
+
+function getClientIp(request: NextRequest): string {
+  // Get IP from various headers
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) {
+    return realIp;
+  }
+  
+  return '127.0.0.1'; // Default for local development
+}
 
 export async function POST(
   request: NextRequest,
@@ -12,7 +26,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const { referrer, sessionId } = await request.json();
+    const body = await request.json().catch(() => ({}));
     
     // Get the user blog post
     const post = await prisma.userBlogPost.findUnique({
@@ -31,35 +45,31 @@ export async function POST(
     const user = await getCurrentUser();
     
     // Get IP address and user agent
-    const ipAddress = requestIp.getClientIp(request) || 'unknown';
+    const ipAddress = getClientIp(request);
     const userAgent = request.headers.get('user-agent') || 'unknown';
     
-    // Track the view
-    const result = await BlogEngagementService.trackCommunityView({
+    // Generate or use existing session ID
+    const sessionId = body.sessionId || UnifiedBlogEngagementService.generateSessionId(ipAddress, userAgent);
+    
+    // Use unified service to track the view with proper rate limiting
+    const result = await UnifiedBlogEngagementService.trackView({
       blogPostId: post.id,
+      blogType: 'user',
       userId: user?.id,
       ipAddress,
       userAgent,
-      referrer,
-      sessionId: sessionId || BlogEngagementService.generateSessionId(ipAddress, userAgent),
+      referrer: body.referrer,
+      sessionId,
     });
 
-    if (result.success) {
-      // Update view count on the post
-      await prisma.userBlogPost.update({
-        where: { id: post.id },
-        data: {
-          viewCount: {
-            increment: 1,
-          },
-        },
-      });
-    }
+    // Note: View count is now incremented inside the unified service
+    // No need to increment here separately
 
     return NextResponse.json({
       success: result.success,
-      sessionId: sessionId || BlogEngagementService.generateSessionId(ipAddress, userAgent),
-      cached: !result.success && result.reason === 'Duplicate view',
+      sessionId,
+      cached: result.reason === 'View already counted recently',
+      reason: result.reason,
     });
   } catch (error) {
     console.error('Error tracking view:', error);

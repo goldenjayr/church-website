@@ -3,20 +3,16 @@ import { useRouter } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth-actions';
 import type { User } from '@prisma/client';
 
-interface BlogEngagementData {
+interface UnifiedBlogEngagementData {
   views: number;
   likes: number;
+  comments?: number;
   hasLiked: boolean;
   isLoading: boolean;
+  blogType?: 'admin' | 'user';
 }
 
-interface EngagementMetrics {
-  scrollDepth: number;
-  timeOnPage: number;
-  clicks: number;
-}
-
-// Custom debounce implementation to avoid lodash dependency
+// Helper functions for debounce and throttle
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -28,7 +24,6 @@ function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-// Custom throttle for scroll events
 function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
@@ -43,14 +38,20 @@ function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-export function useBlogEngagement(slug: string) {
+/**
+ * Unified hook for blog engagement - works with both admin and user blog posts
+ * Automatically detects the blog type based on the route
+ */
+export function useUnifiedBlogEngagement(slug: string, forceType?: 'admin' | 'user') {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [data, setData] = useState<BlogEngagementData>({
+  const [data, setData] = useState<UnifiedBlogEngagementData>({
     views: 0,
     likes: 0,
+    comments: 0,
     hasLiked: false,
     isLoading: true,
+    blogType: forceType,
   });
   
   const startTime = useRef<number>(Date.now());
@@ -61,25 +62,33 @@ export function useBlogEngagement(slug: string) {
   const lastEngagementUpdate = useRef<number>(0);
   const pendingEngagement = useRef<boolean>(false);
 
-  // Memoize session ID to avoid repeated storage access
+  // Determine blog type from URL if not forced
+  const blogType = useMemo(() => {
+    if (forceType) return forceType;
+    if (typeof window === 'undefined') return 'admin';
+    
+    const path = window.location.pathname;
+    if (path.includes('/community-blogs/')) return 'user';
+    return 'admin';
+  }, [forceType]);
+
+  // Session ID management
   const [sessionId, setSessionId] = useState<string>(() => {
     if (typeof window === 'undefined') {
       return generateSessionId();
     }
-    return getOrCreateSessionId();
+    return getOrCreateSessionId(blogType);
   });
   
-  // Set the proper session ID once mounted
   useEffect(() => {
-    const id = getOrCreateSessionId();
+    const id = getOrCreateSessionId(blogType);
     setSessionId(id);
-  }, []);
+  }, [blogType]);
 
   // Load current user with caching
   useEffect(() => {
     let cancelled = false;
     const loadUser = async () => {
-      // Check if we're in the browser before using sessionStorage
       if (typeof window !== 'undefined') {
         const cachedUser = sessionStorage.getItem('cached_user');
         if (cachedUser) {
@@ -101,70 +110,63 @@ export function useBlogEngagement(slug: string) {
     return () => { cancelled = true; };
   }, []);
 
-  // Optimized view tracking with request coalescing
+  // Track view with unified endpoint
   const trackView = useCallback(async () => {
     if (viewTracked.current) return;
     
     try {
-      // Use requestIdleCallback for non-critical tracking
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          if (!viewTracked.current) {
-            sendViewRequest();
-          }
-        });
-      } else {
-        sendViewRequest();
-      }
+      // Use unified endpoint
+      const endpoint = blogType === 'user' 
+        ? `/api/community-blogs/${slug}/views`
+        : `/api/blog/${slug}/views`;
       
-      async function sendViewRequest() {
-        const response = await fetch(`/api/blog/${slug}/views`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            referrer: document.referrer,
-            sessionId,
-          }),
-        });
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          referrer: document.referrer,
+          sessionId,
+        }),
+      });
 
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          viewTracked.current = true;
-          // Update session ID if server provided a new one
-          if (data.sessionId && data.sessionId !== sessionId) {
-            sessionStorage.setItem('blog_session_id', data.sessionId);
-          }
-        } else if (data.cached) {
-          viewTracked.current = true;
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        viewTracked.current = true;
+        if (data.sessionId && data.sessionId !== sessionId) {
+          const storageKey = blogType === 'user' ? 'community_blog_session_id' : 'blog_session_id';
+          sessionStorage.setItem(storageKey, data.sessionId);
         }
+      } else if (data.cached) {
+        viewTracked.current = true;
       }
     } catch (error) {
       console.error('Error tracking view:', error);
     }
-  }, [slug, sessionId]);
+  }, [slug, sessionId, blogType]);
 
-  // Optimized engagement tracking with batching
+  // Track engagement metrics
   const trackEngagement = useCallback(async () => {
-    // Avoid tracking if less than 10 seconds since last update
     const now = Date.now();
     if (now - lastEngagementUpdate.current < 10000) return;
-    
-    // Prevent concurrent requests
     if (pendingEngagement.current) return;
-    pendingEngagement.current = true;
     
-    const timeOnPage = Math.floor((now - startTime.current) / 1000);
+    pendingEngagement.current = true;
     lastEngagementUpdate.current = now;
     
+    const timeOnPage = Math.floor((now - startTime.current) / 1000);
+    
     try {
-      // Use AbortController for timeout
+      const endpoint = blogType === 'user'
+        ? `/api/community-blogs/${slug}/engagement`
+        : `/api/blog/${slug}/engagement`;
+      
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
       
-      await fetch(`/api/blog/${slug}/engagement`, {
+      await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -186,55 +188,54 @@ export function useBlogEngagement(slug: string) {
     } finally {
       pendingEngagement.current = false;
     }
-  }, [slug, sessionId]);
+  }, [slug, sessionId, blogType]);
 
-  // Optimized debounced tracking
   const debouncedTrackEngagement = useMemo(
     () => debounce(trackEngagement, 5000),
     [trackEngagement]
   );
 
-  // Load stats immediately, track view in background
+  // Load stats and track view
   useEffect(() => {
     let cancelled = false;
     
     const loadData = async () => {
       try {
-        // Load stats immediately - don't wait for view tracking
-        const statsResponse = await fetch(`/api/blog/${slug}/stats`);
+        const endpoint = blogType === 'user'
+          ? `/api/community-blogs/${slug}/stats`
+          : `/api/blog/${slug}/stats`;
+        
+        const statsResponse = await fetch(endpoint);
         
         if (!cancelled && statsResponse.ok) {
           const stats = await statsResponse.json();
           setData({
             views: stats.totalViews || 0,
             likes: stats.totalLikes || 0,
+            comments: stats.totalComments,
             hasLiked: stats.hasLiked || false,
             isLoading: false,
+            blogType,
           });
         }
       } catch (error) {
         console.error('Error loading blog stats:', error);
         if (!cancelled) {
-          setData(prev => ({ ...prev, isLoading: false }));
+          setData(prev => ({ ...prev, isLoading: false, blogType }));
         }
       }
     };
 
-    // Load stats immediately
     loadData();
-    
-    // Track view in background - completely independent
     trackView().catch(err => {
       console.error('Error tracking view:', err);
-      // Don't affect UI - view tracking is non-critical
     });
     
     return () => { cancelled = true; };
-  }, [slug, trackView]);
+  }, [slug, trackView, blogType]);
 
-  // Optimized scroll tracking with throttling and passive listener
+  // Track scroll depth
   useEffect(() => {
-    // Pre-calculate values that don't change
     let ticking = false;
     
     const updateScrollDepth = () => {
@@ -255,27 +256,24 @@ export function useBlogEngagement(slug: string) {
       debouncedTrackEngagement();
     }, 250);
 
-    // Use passive listener for better scroll performance
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [debouncedTrackEngagement]);
 
-  // Optimized click tracking with delegation
+  // Track clicks
   useEffect(() => {
     const handleClick = throttle((e: MouseEvent) => {
-      // Only track meaningful clicks (not on empty space)
       if (e.target && (e.target as HTMLElement).tagName) {
         clickCount.current++;
         debouncedTrackEngagement();
       }
     }, 1000);
 
-    // Use capture phase for better performance
     document.addEventListener('click', handleClick, { capture: true, passive: true });
     return () => document.removeEventListener('click', handleClick, { capture: true });
   }, [debouncedTrackEngagement]);
 
-  // Smart interval management - only track when page is visible
+  // Periodic engagement tracking with visibility handling
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     
@@ -283,7 +281,7 @@ export function useBlogEngagement(slug: string) {
       if (!interval && document.visibilityState === 'visible') {
         interval = setInterval(() => {
           trackEngagement();
-        }, 45000); // Increased to 45 seconds to reduce server load
+        }, 45000);
         engagementInterval.current = interval;
       }
     };
@@ -300,15 +298,11 @@ export function useBlogEngagement(slug: string) {
         startTracking();
       } else {
         stopTracking();
-        // Track engagement when page becomes hidden
         trackEngagement();
       }
     };
     
-    // Start tracking if page is visible
     startTracking();
-    
-    // Listen for visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
@@ -317,35 +311,40 @@ export function useBlogEngagement(slug: string) {
     };
   }, [trackEngagement]);
 
-  // Optimized beforeunload tracking
+  // Track before unload
   useEffect(() => {
     const handleBeforeUnload = () => {
       const timeOnPage = Math.floor((Date.now() - startTime.current) / 1000);
       
-      // Only send if we have meaningful data
       if (timeOnPage > 2 || maxScrollDepth.current > 5 || clickCount.current > 0) {
+        const endpoint = blogType === 'user'
+          ? `/api/community-blogs/${slug}/engagement`
+          : `/api/blog/${slug}/engagement`;
+        
         const data = new FormData();
         data.append('sessionId', sessionId);
         data.append('timeOnPage', timeOnPage.toString());
         data.append('scrollDepth', maxScrollDepth.current.toString());
         data.append('clicks', clickCount.current.toString());
         
-        navigator.sendBeacon(`/api/blog/${slug}/engagement`, data);
+        navigator.sendBeacon(endpoint, data);
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [slug, sessionId]);
+  }, [slug, sessionId, blogType]);
 
   // Toggle like with optimistic updates
   const toggleLike = useCallback(async () => {
     if (!user) {
-      router.push(`/login?redirect=/blog/${slug}`);
+      const redirectPath = blogType === 'user' 
+        ? `/login?redirect=/community-blogs/${slug}`
+        : `/login?redirect=/blog/${slug}`;
+      router.push(redirectPath);
       return;
     }
 
-    // Optimistic update
     const previousData = data;
     setData(prev => ({
       ...prev,
@@ -354,7 +353,11 @@ export function useBlogEngagement(slug: string) {
     }));
 
     try {
-      const response = await fetch(`/api/blog/${slug}/likes`, {
+      const endpoint = blogType === 'user'
+        ? `/api/community-blogs/${slug}/likes`
+        : `/api/blog/${slug}/likes`;
+      
+      const response = await fetch(endpoint, {
         method: previousData.hasLiked ? 'DELETE' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -363,25 +366,29 @@ export function useBlogEngagement(slug: string) {
 
       if (response.ok) {
         const result = await response.json();
-        // Update with server data
         setData(prev => ({
           ...prev,
           likes: result.likeCount,
           hasLiked: result.liked,
         }));
         
-        // Fetch fresh stats to ensure consistency
-        // Small delay to allow cache invalidation to propagate
+        // Refresh stats after a short delay
         setTimeout(async () => {
           try {
-            const statsResponse = await fetch(`/api/blog/${slug}/stats`);
+            const statsEndpoint = blogType === 'user'
+              ? `/api/community-blogs/${slug}/stats`
+              : `/api/blog/${slug}/stats`;
+            
+            const statsResponse = await fetch(statsEndpoint);
             if (statsResponse.ok) {
               const stats = await statsResponse.json();
               setData({
                 views: stats.totalViews || 0,
                 likes: stats.totalLikes || 0,
+                comments: stats.totalComments,
                 hasLiked: stats.hasLiked || false,
                 isLoading: false,
+                blogType,
               });
             }
           } catch (error) {
@@ -389,15 +396,13 @@ export function useBlogEngagement(slug: string) {
           }
         }, 500);
       } else {
-        // Revert on error
         setData(previousData);
       }
     } catch (error) {
       console.error('Error toggling like:', error);
-      // Revert on error
       setData(previousData);
     }
-  }, [user, data, slug, router]);
+  }, [user, data, slug, router, blogType]);
 
   return {
     ...data,
@@ -407,13 +412,12 @@ export function useBlogEngagement(slug: string) {
 }
 
 // Helper function to get or create session ID
-function getOrCreateSessionId(): string {
-  // Check if we're in the browser
+function getOrCreateSessionId(blogType: 'admin' | 'user'): string {
   if (typeof window === 'undefined') {
-    return generateSessionId(); // Return a temporary ID for SSR
+    return generateSessionId();
   }
   
-  const SESSION_KEY = 'blog_session_id';
+  const SESSION_KEY = blogType === 'user' ? 'community_blog_session_id' : 'blog_session_id';
   let sessionId = sessionStorage.getItem(SESSION_KEY);
   
   if (!sessionId) {
@@ -429,55 +433,52 @@ function generateSessionId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Hook for tracking share events
-export function useBlogShare(slug: string) {
+// Hook for share functionality (works for both blog types)
+export function useUnifiedBlogShare(slug: string, blogType?: 'admin' | 'user') {
+  const type = blogType || (typeof window !== 'undefined' && window.location.pathname.includes('/community-blogs/') ? 'user' : 'admin');
+  
   const trackShare = useCallback(async (platform: string) => {
     try {
-      await fetch(`/api/blog/${slug}/share`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          platform,
-          sessionId: getOrCreateSessionId(),
-        }),
-      });
+      console.log(`Shared ${type} blog on ${platform}`);
     } catch (error) {
       console.error('Error tracking share:', error);
     }
-  }, [slug]);
+  }, [type]);
 
   const shareOnTwitter = useCallback(() => {
-    const url = `${window.location.origin}/blog/${slug}`;
+    const urlPath = type === 'user' ? `/community-blogs/${slug}` : `/blog/${slug}`;
+    const url = `${window.location.origin}${urlPath}`;
     const text = document.title;
     window.open(
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`,
       '_blank'
     );
     trackShare('twitter');
-  }, [slug, trackShare]);
+  }, [slug, trackShare, type]);
 
   const shareOnFacebook = useCallback(() => {
-    const url = `${window.location.origin}/blog/${slug}`;
+    const urlPath = type === 'user' ? `/community-blogs/${slug}` : `/blog/${slug}`;
+    const url = `${window.location.origin}${urlPath}`;
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
       '_blank'
     );
     trackShare('facebook');
-  }, [slug, trackShare]);
+  }, [slug, trackShare, type]);
 
   const shareOnLinkedIn = useCallback(() => {
-    const url = `${window.location.origin}/blog/${slug}`;
+    const urlPath = type === 'user' ? `/community-blogs/${slug}` : `/blog/${slug}`;
+    const url = `${window.location.origin}${urlPath}`;
     window.open(
       `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
       '_blank'
     );
     trackShare('linkedin');
-  }, [slug, trackShare]);
+  }, [slug, trackShare, type]);
 
   const copyLink = useCallback(async () => {
-    const url = `${window.location.origin}/blog/${slug}`;
+    const urlPath = type === 'user' ? `/community-blogs/${slug}` : `/blog/${slug}`;
+    const url = `${window.location.origin}${urlPath}`;
     try {
       await navigator.clipboard.writeText(url);
       trackShare('copy');
@@ -486,7 +487,7 @@ export function useBlogShare(slug: string) {
       console.error('Error copying link:', error);
       return false;
     }
-  }, [slug, trackShare]);
+  }, [slug, trackShare, type]);
 
   return {
     shareOnTwitter,

@@ -50,6 +50,7 @@ model User {
   blogPostViews BlogPostView[]
   blogPostLikes BlogPostLike[]
   userBlogLikes UserBlogLike[]  // Likes on user-created blogs
+  userBlogPostLikes UserBlogPostLike[] @relation("UserBlogPostLikes")  // New unified likes
   engagements UserEngagement[]
   comments BlogComment[]
   userBlogComments UserBlogComment[]  // Comments on user-created blogs
@@ -677,11 +678,13 @@ model UserBlogPost {
   content         String      // Rich text content (HTML)
   excerpt         String?
   coverImage      String?     // Featured image
+  imageUrl        String?     // Alternative image field
   published       Boolean     @default(false)
   tags            String[]
   authorId        String
   viewCount       Int         @default(0)
   likeCount       Int         @default(0)
+  lastViewedAt    DateTime?   // Track when the post was last viewed
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   publishedAt     DateTime?
@@ -689,6 +692,7 @@ model UserBlogPost {
   // Relations
   author   User @relation(fields: [authorId], references: [id], onDelete: Cascade)
   likes    UserBlogLike[]
+  likesV2  UserBlogPostLike[]  // New unified like model
   comments UserBlogComment[]
   bookmarks UserBlogBookmark[]
 
@@ -696,6 +700,7 @@ model UserBlogPost {
   @@index([published])
   @@index([slug])
   @@index([createdAt])
+  @@index([lastViewedAt])
 }
 
 model UserBlogLike {
@@ -787,6 +792,22 @@ model UserBlogCommentLike {
 
   @@unique([commentId, userId])
   @@index([commentId])
+  @@index([userId])
+}
+
+// New unified like model for user blog posts
+model UserBlogPostLike {
+  id         String       @id @default(cuid())
+  postId     String
+  userId     String
+  createdAt  DateTime     @default(now())
+
+  // Relations
+  post       UserBlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user       User         @relation("UserBlogPostLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
   @@index([userId])
 }
 

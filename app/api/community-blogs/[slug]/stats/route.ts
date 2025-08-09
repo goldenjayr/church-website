@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getCurrentUser } from '@/lib/auth-actions';
-import { Redis } from '@upstash/redis';
+import { UnifiedBlogEngagementService } from '@/lib/services/unified-blog-engagement.service';
 
 const prisma = new PrismaClient();
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
 
 export async function GET(
   request: NextRequest,
@@ -16,32 +12,14 @@ export async function GET(
   try {
     const { slug } = await params;
     
-    // Try to get from cache first
-    const cacheKey = `community-blog:stats:${slug}`;
-    const cached = await redis.get(cacheKey);
+    // Get current user
+    const user = await getCurrentUser();
+    const userId = user?.id;
     
-    if (cached) {
-      return NextResponse.json(cached);
-    }
-    
-    // Get the user blog post with stats
+    // Get the user blog post
     const post = await prisma.userBlogPost.findUnique({
       where: { slug },
-      select: {
-        id: true,
-        viewCount: true,
-        likeCount: true,
-        likes: {
-          select: {
-            userId: true,
-          },
-        },
-        _count: {
-          select: {
-            comments: true,
-          },
-        },
-      },
+      select: { id: true },
     });
 
     if (!post) {
@@ -51,21 +29,19 @@ export async function GET(
       );
     }
 
-    // Check if current user has liked
-    const user = await getCurrentUser();
-    const hasLiked = user ? post.likes.some(like => like.userId === user.id) : false;
+    // Use unified service to get stats
+    const stats = await UnifiedBlogEngagementService.getBlogPostStats(
+      post.id,
+      'user',
+      userId
+    );
 
-    const stats = {
-      totalViews: post.viewCount,
-      totalLikes: post.likeCount,
-      totalComments: post._count.comments,
-      hasLiked,
-    };
-
-    // Cache for 5 minutes
-    await redis.set(cacheKey, JSON.stringify(stats), { ex: 300 });
-
-    return NextResponse.json(stats);
+    return NextResponse.json({
+      totalViews: stats.totalViews,
+      totalLikes: stats.totalLikes,
+      totalComments: stats.totalComments || 0,
+      hasLiked: stats.hasLiked,
+    });
   } catch (error) {
     console.error('Error fetching stats:', error);
     return NextResponse.json(

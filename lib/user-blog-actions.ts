@@ -163,17 +163,8 @@ export async function getUserBlogPostBySlug(slug: string) {
       }
     })
 
-    if (post && post.published) {
-      // Increment view count
-      await prisma.userBlogPost.update({
-        where: { id: post.id },
-        data: {
-          viewCount: {
-            increment: 1
-          }
-        }
-      })
-    }
+    // View counting is now handled by the unified engagement service
+    // through the API routes with proper rate limiting and duplicate prevention
 
     return post
   } catch (error) {
